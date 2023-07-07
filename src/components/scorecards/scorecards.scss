@@ -1,0 +1,117 @@
+@import '../../globalStyles.scss';
+
+.holeWrapper {
+  &.ace {
+    background-color: $ace;
+  }
+
+  &.condor {
+    background-color: $condor;
+    color: white;
+  }
+
+  &.albatross {
+    background-color: $albatross;
+    color: white;
+  }
+
+  &.eagle {
+    background-color: $eagle;
+    color: white;
+  }
+
+  &.birdie {
+    background-color: $birdie;
+    color: white;
+  }
+
+  &.par{
+    background-color: white;
+  }
+
+  &.bogey {
+    background-color: $bogey;
+  }
+
+  &.doubleBogey {
+    background-color: $doubleBogey;
+  }
+
+  &.overDoubleBogey {
+    background-color: $overDoubleBogey;
+  }
+}
+
+
+@media (min-width: $lv) {
+  .mobileView {
+    display: none;
+  }
+
+  .allScore {
+    text-align: center !important;
+  }
+
+  
+  .holeWrapper {
+    margin-left: $margin-sm;
+    margin-right: $margin-sm;
+    margin-top: $margin-sm;
+    height: 40px;
+    width: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .parHole {
+    text-align: center;
+  
+    .hole {
+      font-size: $font-sm;
+      margin: 0;
+    }
+  
+    .par {
+      font-size: $font-xs;
+      margin-top: 0;
+      margin-bottom: $margin-lg;
+    }
+  }
+  
+}
+
+
+@media (max-width: $sv) {
+  .desktopView {
+    display: none !important;
+  }
+
+  .holeWrapper {
+    margin-left: $margin-sm;
+    margin-right: $margin-sm;
+    margin-top: $margin-sm;
+    height: 40px;
+    width: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+  }
+
+  .parHole {
+    text-align: center;
+  
+    .hole {
+      font-size: $font-sm;
+      margin: 0;
+    }
+  
+    .par {
+      font-size: $font-xs;
+      margin-top: 0;
+      margin-bottom: $margin-lg;
+    }
+  }
+  
+}

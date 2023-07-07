@@ -1,0 +1,34 @@
+@import "../../globalStyles.scss";
+
+@media (min-width: $lv) {
+  .addScorecard {
+    .MuiFormControl-root {
+      width: 100%;
+
+      .formItem {
+        margin-top: $margin-md;
+      }
+    }
+
+    .submitButton {
+      margin-top: $margin-md;
+    }
+  }
+}
+
+
+@media (max-width: $sv) {
+  .addScorecard {
+    .MuiFormControl-root {
+      width: 100%;
+
+      .formItem {
+        margin-top: $margin-md;
+      }
+    }
+
+    .submitButton {
+      margin-top: $margin-md;
+    }
+  }
+}

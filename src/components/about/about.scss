@@ -1,0 +1,90 @@
+@import '../../globalStyles.scss';
+
+h1 {
+  font-size: 2.5rem;
+  margin-top: 0;
+}
+
+p {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: $lv) {
+  .courseName {
+    font-size: 1rem;
+  }
+  .holeWrapper {
+    height: 30px;
+    width: 30px;
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .seasonStats {
+    p {
+      font-size: 1rem;
+    }
+  }
+  .winner {
+    font-size: 1.2rem;
+    margin-bottom: 0
+  }
+  .rest {
+    font-size: 1rem;
+  }
+
+  .playerContainer {
+    flex-wrap: wrap;
+    display: flex;
+    justify-content: center;
+    column-gap: 20px;
+  }
+
+  .playerProfile {
+    .playerPic {
+      height: 175px;
+      width: 175px;
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+
+    .playerPic:hover{
+      transform: scale(1.05);
+    }
+  }
+
+  .modalPic {
+    float: left;
+    margin-right: 32px;
+    max-width: 500px;
+    height: 100%;
+  }
+
+  .modalContent{
+    margin-left: 32px
+  }
+
+  .playerBubble {
+    text-align: center;
+  }
+}
+/* Responsive styles for smaller screens */
+@media (max-width: $sv) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  p {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  button {
+    padding: 5px 10px;
+    font-size: 1rem;
+  }
+}

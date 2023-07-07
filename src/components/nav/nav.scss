@@ -1,0 +1,19 @@
+@import '../../globalStyles.scss';
+
+button {
+  a {
+    text-decoration: none;
+    color: white;
+    font-size: $font-sm;
+    text-align: center;
+  }
+}
+
+li {
+  a {
+    text-decoration: none;
+    color: black;
+    font-size: $font-sm;
+    text-align: center;
+  }
+}

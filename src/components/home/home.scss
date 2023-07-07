@@ -1,0 +1,101 @@
+@import '../../globalStyles.scss';
+
+body {
+  background-color: white !important;
+}
+
+img {
+  width: 100%;
+}
+
+
+@media (min-width: $lv) {
+  .home {
+    font-family: Roboto, sans-serif;
+    min-height: calc(100vh - 120px);
+
+    .hero {
+      background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../images/fullGroup.jpg');
+      background-size: 100%;
+      width: 100%;
+      color: white;
+      height: 505px;
+
+      .homeText {
+        padding-top: 263px;
+        padding-left: 200px;
+
+        h1 {
+          font-size: 3rem;
+        }
+
+        h6 {
+          font-size: 1rem;
+        }
+      }
+    }
+
+    .textContent {
+      text-align: center;
+      background-color: #f2f2f2;
+      padding: $padding-lg;
+
+      h2 {
+        font-size: 38px;
+        line-height: 36px;
+        font-weight: 300;
+        
+      }
+    }
+
+    .aboutContent {
+      text-align: center;
+      background-color: #fff;
+      padding: $padding-lg;
+
+      h2 {
+        font-size: 38px;
+        line-height: 36px;
+        font-weight: 300;
+        font-family: Roboto, sans-serif;
+      }
+    }
+  }
+}
+
+@media (max-width: $sv) {
+  .home {
+    font-family: Roboto, sans-serif;
+    min-height: calc(100vh - 100px);
+
+    .hero {
+      background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../images/fullGroup.jpg');
+      background-size: 100%;
+      width: 100%;
+      color: white;
+
+      .homeText {
+        padding-top: 15px;
+        padding-left: 20px;
+
+        h1 {
+          font-size: 2.75rem;
+          text-align: center;
+        }
+      }
+    }
+
+    .textContent {
+      text-align: center;
+      background-color: #f2f2f2;
+      padding: $padding-lg;
+      margin-top: -30px;
+    }
+
+    .aboutContent {
+      text-align: center;
+      background-color: #fff;
+      padding: $padding-lg;
+    }
+  }
+}

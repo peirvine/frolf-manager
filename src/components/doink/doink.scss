@@ -1,0 +1,15 @@
+@import "../../globalStyles.scss";
+
+@media (min-width: $lv) {
+  .doinkTable {
+    width: 300px !important;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: $sv) {
+  .doinkTable {
+    width: 90%;
+    margin: 0 auto;
+  }
+}

@@ -1,0 +1,34 @@
+@import './globalStyles.scss';
+
+@media (min-width: $lv) {
+  .frolfLeague {
+    .content {
+      width: 65%;
+      margin-top: $margin-lg;
+      margin-right: auto;
+      margin-left: auto;
+      min-height: calc(100vh - 135px);
+  
+      .paperContent {
+        padding: $padding-md;
+      }
+    }
+  }
+}
+
+
+@media (max-width: $sv) {
+  .frolfLeague {
+    .content {
+      width: 90%;
+      margin-top: $margin-lg;
+      margin-right: auto;
+      margin-left: auto;
+      min-height: calc(100vh - 120px);
+  
+      .paperContent {
+        padding: $padding-md;
+      }
+    }
+  }
+}
