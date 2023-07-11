@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useAuth0 } from "@auth0/auth0-react";
+// import { useAuth0 } from "@auth0/auth0-react";
 import { Tab, Tabs, Box, Typography } from "@mui/material"
 import useWindowDimensions from '../../services/windowSize';
 import ScorecardManager from './scorecardManager';
@@ -36,7 +36,7 @@ function a11yProps(index) {
 export default function Admin () {
   const [value, setValue] = useState(0);
 
-  const { height, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
 
   const handleChange = (event, newValue) => {
     setValue(newValue);

@@ -40,7 +40,7 @@ const pages = [
 
 export default function Nav() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
   
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);

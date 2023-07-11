@@ -1,6 +1,8 @@
+/* eslint-disable array-callback-return */
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react'
 import { useAuth0 } from "@auth0/auth0-react";
-import { Button, Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell } from '@mui/material'
+import { Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell } from '@mui/material'
 import DoinkUser from './doinkUser'
 
 import { addNewDoinkUser, getAllDoinkBalance } from '../../services/doinkService' 

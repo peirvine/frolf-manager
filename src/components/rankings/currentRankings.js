@@ -19,7 +19,7 @@ import Chip from '@mui/material/Chip';
 import Modal from '@mui/material/Modal';
 import CloseIcon from '@mui/icons-material/Close';
 
-import { toPng, toBlob } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 
 import HistoricalRankings from './historicalRankings'
 
@@ -31,7 +31,7 @@ export default function CurrentRankings () {
   const [rankings, setRankings] = useState()
   const imageRef = useRef(null);
   const [open, setOpen] = useState(false)
-  const handleOpen = () => setOpen(true);
+  // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   const [user, setUser] = useState('')

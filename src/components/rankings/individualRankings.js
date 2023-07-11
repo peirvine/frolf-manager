@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Box from '@mui/material/Box';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -8,7 +8,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Grid from '@mui/material/Unstable_Grid2';
-import CloseIcon from '@mui/icons-material/Close';
 
 import { getHistoricalRankingsFromGoogle } from '../../services/googleSheetsService';
 
@@ -23,6 +22,7 @@ export default function IndividualRankings (props) {
     }
     getHistoricalRankingsFromGoogle().then((value) => {
       let returnValue = []
+      // eslint-disable-next-line array-callback-return
       value.map(x => {
         returnValue.push({"course": x.name, "rating": x[user]})
       })

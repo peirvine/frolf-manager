@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import {Box, Modal, Typography} from '@mui/material';
+// import {Box, Modal, Typography} from '@mui/material';
 
 export default function PlayerProfile(player) {
+  // eslint-disable-next-line no-unused-vars
   const [open, setOpen] = useState(false)
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  // const handleOpen = () => setOpen(true);
+  // const handleClose = () => setOpen(false);
  
   return (
     <div className="playerProfile">

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import {Box, Modal, Typography} from '@mui/material';
+import {Box, Modal } from '@mui/material';
 
 export default function PlayerProfile(player) {
   const [open, setOpen] = useState(false)
-  const handleOpen = () => setOpen(true);
+  // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   const style = {
@@ -28,7 +28,7 @@ export default function PlayerProfile(player) {
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <img src={player.image} alt="player image" className="modalPic" />
+          <img src={player.image} alt="player" className="modalPic" />
           <div className="modalContent">
             <h3>{player.name}</h3>
             <p>Favorite Course: {player.favoriteCourse}</p>
@@ -38,7 +38,7 @@ export default function PlayerProfile(player) {
       </Modal>
 
       <div className="playerBubble">
-        <img src={player.image} alt="player image" className='playerPic' onClick={() => setOpen(true)}/>
+        <img src={player.image} alt="player" className='playerPic' onClick={() => setOpen(true)}/>
         <h3>{player.name}</h3>
       </div>
     </div>
