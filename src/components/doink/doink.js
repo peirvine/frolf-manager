@@ -58,7 +58,7 @@ export default function Doink() {
           {alertMessage}
         </Alert>
       </Collapse>
-      {userRegistered && (<h3 onClick={() => registerDonkPlayer(user)}>Register Me</h3>)}
+      {!userRegistered && (<h3 onClick={() => registerDonkPlayer(user)}>Register Me</h3>)}
       <TableContainer size="medium" className="doinkTable">
         <Table aria-label="simple table">
           <TableHead>
