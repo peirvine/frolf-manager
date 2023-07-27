@@ -10,7 +10,8 @@ import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import ParkIcon from '@mui/icons-material/Park';
-import { useAuth0 } from "@auth0/auth0-react";
+import { auth, signInWithGoogle, logout } from "../../firebase"
+import { useAuthState } from "react-firebase-hooks/auth";
 
 import { NavLink } from "react-router-dom";
 import './nav.scss'
@@ -40,7 +41,7 @@ const pages = [
 
 export default function Nav() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
-  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
+  const [user] = useAuthState(auth);
   
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -111,7 +112,7 @@ export default function Nav() {
                   {page.display}
                 </MenuItem>
               ))}
-              {isAuthenticated ? (
+              {user ? (
                 <>
                   <MenuItem
                     key={'doink fund'}
@@ -120,11 +121,11 @@ export default function Nav() {
                     to={"/doink"}>
                       Doink Fund
                   </MenuItem>
-                  <Button onClick={() => logout({ returnTo: window.location.origin })}>Log Out</Button>
+                  <Button onClick={() => logout()}>Log Out</Button>
                 </>
                 ) : (
                 <MenuItem>
-                  <Button onClick={() => loginWithRedirect()}>Log In</Button>
+                  <Button onClick={() => signInWithGoogle()}>Log In</Button>
                 </MenuItem>
               )}
             </Menu>
@@ -159,7 +160,7 @@ export default function Nav() {
                 {page.display}
               </Button>
             ))}
-            { isAuthenticated && (
+            { user && (
               <Button
                 key={'doink fund'}
                 sx={{ my: 2, color: 'white', display: 'block' }}
@@ -172,18 +173,18 @@ export default function Nav() {
             )}
           </Box>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {isAuthenticated ? 
+            {user ? 
               (
                 <Button 
                   sx={{ my: 2, color: 'white', display: 'block' }}
-                  onClick={() => logout({ returnTo: window.location.origin })}
+                  onClick={() => logout()}
                 >
                   Log Out
                 </Button>
               ) : (
                 <Button 
                   sx={{ my: 2, color: 'white', display: 'block' }}
-                  onClick={() => loginWithRedirect()}
+                  onClick={() => signInWithGoogle()}
                 >
                   Log In
                 </Button>

@@ -4,13 +4,13 @@ import { IconButton, TableCell, TableRow, Alert, Snackbar } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-import { updateDoink } from '../../services/doinkService' 
+import { updateDoinkBalance } from '../../firebase'
 
 
 export default function DoinkUser(props) {
   const player = props.player
-  const isUser = player.Name === props.user
-  const [doinkHolder, setDoinkHolder] = useState(player.Balance)
+  const isUser = player.uid === props.user
+  const [doinkHolder, setDoinkHolder] = useState(player.doinks)
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
@@ -22,16 +22,17 @@ export default function DoinkUser(props) {
     } else {
       newBalance = doinkHolder - 1
     }
-    updateDoink(player.id, newBalance)
+    updateDoinkBalance(player.name, player.uid, newBalance)
       .then(res => {
-        setOpen(true)
-        setVariant('success')
-        setAlertMessage('Doink Updated to ' + res.Balance)
-      })
-      .catch(err => {
-        setOpen(true)
-        setVariant('error')
-        setAlertMessage('Doink not updated, please refresh and try again')
+        if (res) {
+          setOpen(true)
+          setVariant('success')
+          setAlertMessage('Doink Updated')
+        } else {
+          setOpen(true)
+          setVariant('error')
+          setAlertMessage('Doink not updated, please refresh and try again')
+        }
       })
     setDoinkHolder(newBalance)
   }
@@ -44,7 +45,7 @@ export default function DoinkUser(props) {
             {alertMessage}
           </Alert>
         </Snackbar>
-        {player.Name}
+        {player.name}
       </TableCell>
       <TableCell align="center"> 
         <IconButton aria-label="delete" size="medium" onClick={() => reportDoink("down")} variant="filled" disabled={!isUser}>

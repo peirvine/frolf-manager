@@ -1,9 +1,11 @@
 /* eslint-disable array-callback-return */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react'
-import { useAuth0 } from "@auth0/auth0-react";
 import { Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell } from '@mui/material'
 import DoinkUser from './doinkUser'
+import { registerDonkPlayer, getDoinks } from '../../firebase'
+import { auth } from "../../firebase"
+import { useAuthState } from "react-firebase-hooks/auth";
 
 import { addNewDoinkUser, getAllDoinkBalance } from '../../services/doinkService' 
 
@@ -15,35 +17,38 @@ export default function Doink() {
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
-  const { isAuthenticated, user } = useAuth0();
   const [sumDoink, setSumDoink] = useState(0)
+  const [user] = useAuthState(auth);
+  let doinks = []
 
-  const createDoink = (name) => {
-    if (data.filter(e => e.Name === name).length > 0) {
-      setUserRegistered(true)
-      setVariant('error')
-      setAlertMessage(name + ' is already registered for the Doink Fund')
-      setOpen(true)
-    } else {
-      addNewDoinkUser(name)
-      setUserRegistered(true)
-      setVariant('success')
-      setAlertMessage(name + ' is now registered for the Doink Fund')
-      setOpen(true)
-    }
-  }
+  // const createDoink = (name) => {
+  //   if (data.filter(e => e.Name === name).length > 0) {
+  //     setUserRegistered(true)
+  //     setVariant('error')
+  //     setAlertMessage(name + ' is already registered for the Doink Fund')
+  //     setOpen(true)
+  //   } else {
+  //     addNewDoinkUser(name)
+  //     setUserRegistered(true)
+  //     setVariant('success')
+  //     setAlertMessage(name + ' is now registered for the Doink Fund')
+  //     setOpen(true)
+  //   }
+  // }
 
   useEffect(() => {
-    getAllDoinkBalance().then(res => {
+    getDoinks().then(res => {
       let holder = 0
+      let users = []
       setData(res)
-      res.map(x => {
-        holder += x.Balance
+      res.forEach(x => {
+        holder += x.data().doinks
+        users.push(x.data().name)
       })
+      setUserRegistered(users.indexOf(user.displayName) > -1)
       setSumDoink(holder)
-      setUserRegistered(res.filter(e => e.Name === user.name).length > 0)
     })
-  }, [setData, setUserRegistered, user.name, setSumDoink])
+  }, [setData, setUserRegistered, user.displayName, setSumDoink])
 
   return (
     <div className="doink">
@@ -53,6 +58,7 @@ export default function Doink() {
           {alertMessage}
         </Alert>
       </Collapse>
+      {userRegistered && (<h3 onClick={() => registerDonkPlayer(user)}>Register Me</h3>)}
       <TableContainer size="medium" className="doinkTable">
         <Table aria-label="simple table">
           <TableHead>
@@ -63,10 +69,11 @@ export default function Doink() {
           </TableHead>
           <TableBody>
             {data && (
-              data.map(player => {
-                return <DoinkUser player={player} user={user.name} />
+              data.forEach(player => {
+                doinks.push(<DoinkUser player={player.data()} user={user.uid} />)
               })
             )}
+            {doinks}
           </TableBody>    
         </Table>    
       </TableContainer>
