@@ -64,7 +64,6 @@ export const logout = () => {
 };
 
 /****************** Doinks ******************/
-
 export const registerDonkPlayer = async (user) => {
   try {
     const q = query(collection(db, "maftb", "doinkfund", "player"), where("uid", "==", user.uid))
@@ -75,9 +74,11 @@ export const registerDonkPlayer = async (user) => {
         name: user.displayName,
         doinks: 0
       })
-    } 
+    }
+    return true 
   } catch (err) {
     logEvent(analytics, 'A user was unable to register for the doink fund', {error: err} );
+    return false
   }
 }
 
@@ -107,4 +108,36 @@ export const updateDoinkBalance = async (name, user, balance) => {
     logEvent(analytics, 'A user was unable to update their doinks', {error: err} );
   }
   return res
+}
+
+
+/****************** Scorecards ******************/
+export const addScorecardToFirebase = async (card) => {
+  try {
+    await addDoc(collection(db, "maftb", "scorecards", "cards"), {
+      Course: card.course,
+      Layout: card.layout,
+      Players: card.playerArray,
+      Date: card.date,
+      Par: card.par,
+      id: Math.random() * 100
+    })
+    return true 
+  } catch (err) {
+    logEvent(analytics, 'A user was unable to add a scorecard', {error: err} );
+    return false
+  }
+}
+
+export const getScorecards = async () => {
+  const q = query(collection(db, "maftb", "scorecards", "cards"))
+  const res = await getDocs(q)
+  let sorted = []
+  res.forEach(x => {
+    sorted[x.data().Date.substring(0,4)] = []
+  })
+  res.forEach(x => {
+    sorted[x.data().Date.substring(0,4)].push(x.data())
+  })
+  return sorted
 }

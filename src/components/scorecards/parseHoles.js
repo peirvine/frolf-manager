@@ -5,7 +5,7 @@ import './scorecards.scss'
 
 export default function DisplayHoles (props) {
 
-  const prePar = JSON.parse(props.par[0])
+  const prePar = props.par[0]
 
   const par = prePar[0].holes
 

@@ -1,31 +1,5 @@
-// import { DataStore } from '@aws-amplify/datastore';
-// import { Scorecards } from '../models/index';
 import { addScorecardToGoogle } from './googleSheetsService'
-
-export async function getScorecards() {
-  // try {
-  //   return await DataStore.query(Scorecards);
-  // } catch (error) {
-  //   console.log("Error retrieving posts", error);
-  //   return error
-  // }
-}
-
-export async function getScorecardsV2() {
-  // try {
-  //   const data = await DataStore.query(Scorecards);
-  //   let sorted = []
-  //   data.map(x => {
-  //     sorted[x.Date.substring(0,4)] = []
-  //   })
-  //   data.map(x => {
-  //     sorted[x.Date.substring(0,4)].push(x)
-  //   })
-  //   return sorted
-  // } catch (error) {
-  //   return error
-  // }
-}
+import { addScorecardToFirebase } from '../firebase'
 
 export function addScorecard (card) {
   // if (validateCard(card)) {
@@ -35,6 +9,7 @@ export function addScorecard (card) {
   //   return {code: "error", message: "Error, card not valid. Validations failed."}
   // }
 }
+
 
 export async function uDiscDump (card) {
   let returnValue = {}
@@ -80,16 +55,22 @@ export async function uDiscDump (card) {
   }
 
   if (validateCard(returnValue)) {
-    const googleRes = await addScorecardToGoogle(returnValue)
-    if (!googleRes) {
-      return {code: "error", message: "Failed to save to Google, a save to Amazon was not attempted. Try refreshing and submitting again. The card is valid."}
-    }
+    // const googleRes = await addScorecardToGoogle(returnValue)
+    let response = {code: "success", message: "Card added successfully."}
+    const scorecardRes = addScorecardToFirebase(returnValue)
+    response = scorecardRes.then(res => {
+      if (!res) {
+        return {code: "error", message: "Failed to save to Google, a save to Amazon was not attempted. Try refreshing and submitting again. The card is valid."}
+      } else {
+        return {code: "success", message: "Card added successfully."}
+      }
+    })
     
     // const amazonRes = await saveToAmazon(returnValue)
     // if (!amazonRes) {
     //   return {code: "error", message: "Failed to save to Amazon, a save to Google was successful. Reach out to site admins about adding the round."}
     // }
-    return {code: "success", message: "Card added successfully."}
+    return response
   } else {
     return {code: "error", message: "Error, card not valid. Validations failed."}
   }
@@ -115,21 +96,4 @@ function validateCard(card) {
   }
 
   return valid
-}
-
-export async function saveToAmazon (card) {
-  // try {
-  //   await DataStore.save(
-  //     new Scorecards({
-  //       "Course": card.course,
-  //       "Layout": card.layout,
-  //       "Players": card.playerArray,
-  //       "Date": card.date,
-  //       "Par": card.par
-  //     })
-  //   );
-  //   return true
-  // } catch {
-  //   return false
-  // }
 }

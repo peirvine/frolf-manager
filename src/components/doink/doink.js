@@ -7,8 +7,6 @@ import { registerDonkPlayer, getDoinks } from '../../firebase'
 import { auth } from "../../firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
 
-import { addNewDoinkUser, getAllDoinkBalance } from '../../services/doinkService' 
-
 import './doink.scss'
 
 export default function Doink() {
@@ -36,6 +34,21 @@ export default function Doink() {
   //   }
   // }
 
+  const registerDoinker = (user) => {
+    registerDonkPlayer(user).then(res => {
+      console.log(res)
+      if (res) {
+        setOpen(true)
+        setVariant('success')
+        setAlertMessage(user.displayName + " registered for the Doinkfund")
+      } else {
+        setOpen(true)
+        setVariant('error')
+        setAlertMessage(user.displayName + " could not be registered for the Doinkfund, try again")
+      }
+    })
+  }
+
   useEffect(() => {
     getDoinks().then(res => {
       let holder = 0
@@ -58,7 +71,7 @@ export default function Doink() {
           {alertMessage}
         </Alert>
       </Collapse>
-      {!userRegistered && (<h3 onClick={() => registerDonkPlayer(user)}>Register Me</h3>)}
+      {!userRegistered && (<h3 onClick={() => registerDoinker(user)}>Register Me</h3>)}
       <TableContainer size="medium" className="doinkTable">
         <Table aria-label="simple table">
           <TableHead>
