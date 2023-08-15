@@ -8,8 +8,7 @@ import './scorecards.scss'
 
 export default function ViewScorecards () {
   const [dataV2, setDataV2] = useState()
-  const [expanded, setExpanded] = React.useState(false);
-  let loaded = false
+  const [expanded, setExpanded] = useState(false);
 
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
@@ -27,36 +26,25 @@ export default function ViewScorecards () {
   }
 
   const getCoursePar = (card) => {
-    console.warn('par', card.map((e) => { return e.player; }).indexOf("Par"))
+    // console.warn('par', card.map((e) => { return e.player; }).indexOf("Par"))
     return card[card.map((e) => { return e.player; }).indexOf("Par")]
   }
 
-  useEffect(() => {
-    let ignore = false;
-    getScorecards().then(res => {
-      console.warn('res', res)
-      if (!ignore) {
-        setDataV2(res)
-      }
-    })
-
-    return () => {
-      ignore = true
-    }
-  }, [])
+  useEffect(() => { 
+    const a = getScorecards()
+    setDataV2(a)
+  }, [setDataV2])
   
   return (
     <div className="scorecards">
       <h1>Past Results</h1>
       {dataV2 && (dataV2.map(year => {
-        year.sort((a,b) => (formatDate(a.Date) < formatDate(b.Date)) ? 1 : ((formatDate(b.Date) < formatDate(a.Date)) ? -1 : 0))
+        year.sort((a,b) => (formatDate(a.Date) > formatDate(b.Date)) ? 1 : ((formatDate(b.Date) > formatDate(a.Date)) ? -1 : 0))
         return (
           <div className="test">
             <h2>{year[0].Date.slice(0, 4)}</h2>
             {
               year.map(round => {
-                // console.warn(round)
-                const newCard = sortCard(round.Players)
                 const coursePar = getCoursePar(round.Players)
                 return (
                   <Accordion expanded={expanded === round.id} onChange={handleChange(round.id)}>
@@ -71,7 +59,7 @@ export default function ViewScorecards () {
                       <TableContainer>
                         <Table>
                           <TableBody>
-                            {newCard.map((y) => (
+                            {round.Players.map((y) => (
                               <ScorecardTable card={y} par={round.Par} coursePar={coursePar} />
                             ))}
                           </TableBody>

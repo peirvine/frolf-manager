@@ -4,10 +4,9 @@ import './scorecards.scss'
 
 
 export default function DisplayHoles (props) {
+  const prePar = props.par
 
-  const prePar = props.par[0]
-
-  const par = prePar[0].holes
+  const par = prePar.holes
 
   return (
     <div id="displayHoles">

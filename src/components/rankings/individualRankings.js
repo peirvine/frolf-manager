@@ -30,8 +30,6 @@ export default function IndividualRankings (props) {
     })
   }, [setData, props.user])
 
-  console.log(props)
-  console.log(data)
   return (
     <Box className="statsBox">
       <h3>{props.user}</h3>

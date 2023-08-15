@@ -9,12 +9,9 @@ export default function LeagueRankingsHistory ( props ) {
 
   const standings = props.standings
 
-  const sortCard = (card) => {
-    const parsedCard = JSON.parse(card)
-    const firstElement = [parsedCard[0]]
-    parsedCard.shift()
-    const sortedCard = parsedCard.sort((a, b) =>  (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0))
-    return firstElement.concat(sortedCard)
+  const getCoursePar = (card) => {
+    // console.warn('par', card.map((e) => { return e.player; }).indexOf("Par"))
+    return card[card.map((e) => { return e.player; }).indexOf("Par")]
   }
 
   const handleChange = (panel) => (event, isExpanded) => {
@@ -22,7 +19,7 @@ export default function LeagueRankingsHistory ( props ) {
   };
   return (
     <div className="leagueRankingsHistory">
-      <Accordion expanded={expanded === props.test} onChange={handleChange(props.test)}>
+      <Accordion expanded={expanded === props.year} onChange={handleChange(props.year)}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
@@ -70,15 +67,17 @@ export default function LeagueRankingsHistory ( props ) {
               <p className="winner">Winner: {props.stats.winner}</p>
               <p className="rest">{props.stats.rest}</p>
               {props.tourney.map((x) => {
-                const newCard = sortCard(x.Players)
+                console.warn(x)
+                const coursePar = getCoursePar(x.Players)
+                console.warn('par', coursePar)
                 return (
                 <> 
                   <p className="courseName"><strong>{x.Course}</strong>: {x.Layout}</p>
                   <TableContainer>
                     <Table>
                       <TableBody>
-                        {newCard.map((y) => (
-                          <ScorecardTable card={y} par={x.Par} coursePar={x.Players} />
+                        {x.Players.map((y) => (
+                          <ScorecardTable card={y} par={x.Par} coursePar={coursePar} />
                         ))}
                       </TableBody>
                     </Table>

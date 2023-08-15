@@ -1,3 +1,4 @@
+/* eslint-disable array-callback-return */
 /* eslint-disable no-unused-vars */
 import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
@@ -18,6 +19,7 @@ import {
   addDoc,
   setDoc,
 } from "firebase/firestore"
+import { getDatabase, ref, set, child, get } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVjXWI3_l6e9OZU-TVmEUE_EXalxJWdTY",
@@ -26,13 +28,15 @@ const firebaseConfig = {
   storageBucket: "such-frolf-fb20a.appspot.com",
   messagingSenderId: "800449624957",
   appId: "1:800449624957:web:61def805c5062902096a14",
-  measurementId: "G-Q0H6ZHJ4QS"
+  measurementId: "G-Q0H6ZHJ4QS",
+  databaseURL: "https://such-frolf-fb20a-default-rtdb.firebaseio.com",
 };
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 const db = getFirestore(app);
+const database = getDatabase(app);
 
 
 /****************** Auth ******************/
@@ -129,15 +133,49 @@ export const addScorecardToFirebase = async (card) => {
   }
 }
 
-export const getScorecards = async () => {
-  const q = query(collection(db, "maftb", "scorecards", "cards"))
-  const res = await getDocs(q)
+export function writeScorecardToDatabase(card) {
+  const db = getDatabase();
+  const id = Math.floor(Math.random() * 100000000)
+  set(ref(db, 'maftb/scorecards/' + id), {
+    Course: card.course,
+    Layout: card.layout,
+    Players: card.playerArray,
+    Date: card.date,
+    Par: card.par,
+    id: id,
+    dateAdded: Date(Date.now()).toString()
+  })
+  .then(() => {
+    console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'A user was unable to add a scorecard', {error: error} );
+  });
+}
+
+export const getScorecards = () => {
+  const dbRef = ref(getDatabase());
   let sorted = []
-  res.forEach(x => {
-    sorted[x.data().Date.substring(0,4)] = []
-  })
-  res.forEach(x => {
-    sorted[x.data().Date.substring(0,4)].push(x.data())
-  })
+  get(child(dbRef, `maftb/scorecards`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      let res = []
+
+      for (const [key, value] of Object.entries(snapshot.val())) {
+        res.push(value)
+      }
+      res.map(x => {
+        sorted[x.Date.substring(0,4)] = []
+      })
+
+      res.map(x => {
+        sorted[x.Date.substring(0,4)].push(x)
+      })
+      return sorted
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch scorecards', {error: error} );
+  });
   return sorted
 }

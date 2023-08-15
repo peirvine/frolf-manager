@@ -1,5 +1,5 @@
 import { addScorecardToGoogle } from './googleSheetsService'
-import { addScorecardToFirebase } from '../firebase'
+import { addScorecardToFirebase, writeScorecardToDatabase } from '../firebase'
 
 export function addScorecard (card) {
   // if (validateCard(card)) {
@@ -58,6 +58,7 @@ export async function uDiscDump (card) {
     // const googleRes = await addScorecardToGoogle(returnValue)
     let response = {code: "success", message: "Card added successfully."}
     const scorecardRes = addScorecardToFirebase(returnValue)
+    writeScorecardToDatabase(returnValue)
     response = scorecardRes.then(res => {
       if (!res) {
         return {code: "error", message: "Failed to save to Google, a save to Amazon was not attempted. Try refreshing and submitting again. The card is valid."}
