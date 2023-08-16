@@ -4,6 +4,31 @@ export const mockCard = {
   "par": "54",
   "date": "2023-03-20 1709",
   "playerArray": [
+    {
+      "player": "Par",
+      "total": "54",
+      "plusMinus": "",
+      "holes": [
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3"
+        ]
+      },
       {
           "player": "Jimmy",
           "total": "69",

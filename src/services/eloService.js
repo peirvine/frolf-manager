@@ -18,7 +18,6 @@ export const calculateElo = (card) => {
 }
 
 const getCardAverage = (card) => {
-  console.log(card)
   let scores = 0
   let numPlayers = card.length
   card.map(player => {
@@ -35,6 +34,11 @@ const getStrokesPerHole = (card, average) => {
 const currentEloAsync = () => {
   const elos = getCurrentElo()
   return elos.then(val => { return val })
+}
+
+const historicalEloAsync = () => {
+  const eloArray = getELOHistory()
+  return eloArray.then(val => {return val})
 }
 
 const getAverageEloOFPlayers = async (players) => {
