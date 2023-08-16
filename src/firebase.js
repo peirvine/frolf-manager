@@ -19,7 +19,7 @@ import {
   addDoc,
   setDoc,
 } from "firebase/firestore"
-import { getDatabase, ref, set, child, get } from "firebase/database";
+import { getDatabase, ref, set, child, get, update } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVjXWI3_l6e9OZU-TVmEUE_EXalxJWdTY",
@@ -178,4 +178,78 @@ export const getScorecards = () => {
     logEvent(analytics, 'Could not fetch scorecards', {error: error} );
   });
   return sorted
+}
+
+
+/****************** ELO ******************/
+export function writeEloTracking(elo) {
+  const db = getDatabase();
+  const id = Math.floor(Math.random() * 100000000)
+  set(ref(db, 'maftb/eloTracking/' + id), {
+    Course: elo.course,
+    Layout: elo.layout,
+    Players: elo.players,
+    cardAverage: elo.average,
+    strokesPerHole: elo.strokesPerHole,
+    pointsPerHole: elo.pointsPerHole,
+    averageEloOfPlayers: elo.averageElo,
+    id: id,
+    dateAdded: Date(Date.now()).toString()
+  })
+  .then(() => {
+    console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
+  });
+}
+
+export function updateCurrentElo(eloArray) {
+  const year = new Date().getFullYear();
+  const db = getDatabase()
+  const updates = {}
+  updates['maftb/currentElo/' + year] = eloArray;
+
+  return update(ref(db), updates).then(() => {
+    // Data saved successfully!
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could write to current ELO', {error: error} );
+  });;
+}
+
+export function getELOHistory () {
+  const dbRef = ref(getDatabase());
+  let elo = []
+  get(child(dbRef, `maftb/eloTracking`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      for (const [key, value] of Object.entries(snapshot.val())) {
+        elo.push(value)
+      }
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo', {error: error} );
+  });
+  console.warn('elo', elo)
+  return elo
+}
+
+export function getCurrentElo () {
+  const dbRef = ref(getDatabase());
+  let elo = []
+  get(child(dbRef, `maftb/currentElo`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      for (const [key, value] of Object.entries(snapshot.val())) {
+        elo.push(value)
+      }
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo', {error: error} );
+  });
+  console.warn('elo', elo)
+  return elo
 }
