@@ -18,12 +18,12 @@ export default function ViewScorecards () {
     return new Date(date.slice(0, date.indexOf(" ")))
   }
 
-  const sortCard = (card) => {
-    const firstElement = [card[0]]
-    card.shift()
-    const sortedCard = card.sort((a, b) =>  (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0))
-    return firstElement.concat(sortedCard)
-  }
+  // const sortCard = (card) => {
+  //   const firstElement = [card[0]]
+  //   card.shift()
+  //   const sortedCard = card.sort((a, b) =>  (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0))
+  //   return firstElement.concat(sortedCard)
+  // }
 
   const getCoursePar = (card) => {
     // console.warn('par', card.map((e) => { return e.player; }).indexOf("Par"))

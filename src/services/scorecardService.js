@@ -1,4 +1,4 @@
-import { addScorecardToGoogle } from './googleSheetsService'
+// import { addScorecardToGoogle } from './googleSheetsService'
 import { addScorecardToFirebase, writeScorecardToDatabase } from '../firebase'
 
 export function addScorecard (card) {
