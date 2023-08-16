@@ -32,11 +32,20 @@ const getStrokesPerHole = (card, average) => {
   return average / card[0].holes.length
 }
 
-const getAverageEloOFPlayers = (players) => {
+const currentEloAsync = () => {
   const elos = getCurrentElo()
-  // get list of players
-  // get elo of players
-  // average them bithces
+  return elos.then(val => { return val })
+}
+
+const getAverageEloOFPlayers = async (players) => {
+  const elos = await currentEloAsync()
+  let presentPlayers = []
+  players.map(player => presentPlayers.push(player.player))
+  let sumElo = 0
+  presentPlayers.map(player => {
+    sumElo += elos[player.toLowerCase()]
+  })
+  return sumElo / presentPlayers.length
 }
 
 const formatPlayers = () => {

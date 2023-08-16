@@ -232,24 +232,20 @@ export function getELOHistory () {
   }).catch((error) => {
     logEvent(analytics, 'Could not fetch elo', {error: error} );
   });
-  console.warn('elo', elo)
   return elo
 }
 
 export function getCurrentElo () {
+  const year = new Date().getFullYear();
   const dbRef = ref(getDatabase());
-  let elo = []
-  get(child(dbRef, `maftb/currentElo`)).then((snapshot) => {
+  let elo = get(child(dbRef, `maftb/currentElo/` + year)).then((snapshot) => {
     if (snapshot.exists()) {
-      for (const [key, value] of Object.entries(snapshot.val())) {
-        elo.push(value)
-      }
+      return snapshot.val()
     } else {
       console.log("No data available");
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not fetch elo', {error: error} );
   });
-  console.warn('elo', elo)
   return elo
 }
