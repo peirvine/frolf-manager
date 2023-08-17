@@ -1,5 +1,5 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getELOHistory, updateCurrentElo, getCurrentElo } from "../firebase";
+import { writeEloTracking, getELOHistory, updateCurrentElo, getCurrentElo, addEloToPlayer, getElosOfPlayer } from "../firebase";
 
 
 export const calculateElo = async (card) => {
@@ -13,15 +13,23 @@ export const calculateElo = async (card) => {
   let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray)
   const formattedPlayers = formatPlayers()
   const pointsPerThrow = calculatePointsPerThrow()
-  calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
-  const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerHole, averageEloOfPlayers, formattedPlayers)
-  // updateCurrentElo(prettyElo)
+  const cardElo = calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
+  updateEloHistory(cardElo)
+  const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerHole, averageEloOfPlayers, cardElo)
+  console.warn('prettyElo', prettyElo)
+  // updateCurrentElo(formattedPlayers)
   // writeEloTracking(prettyElo)
+}
+
+const tempFunc = () => {
+  return {
+    player: 'lane',
+    elo: [1000, 950]
+  }
 }
 
 // TODO: Remove the need for this. This method will be impossible for multiple leagues, but MAFTB it's fine
 const translateUsers = player => {
-  console.warn('player', player)
   if ("alex oelke".match(player.toLowerCase())) {
     return "alex"
   }
@@ -45,7 +53,7 @@ const translateUsers = player => {
   }
   if ("samir ramakrishnan".match(player.toLowerCase())) {
     return "samir"
-    }
+  }
 }
 
 const getCardAverage = (card) => {
@@ -72,6 +80,37 @@ const historicalEloAsync = () => {
   return eloArray.then(val => {return val})
 }
 
+const getPlayerEloHistory = async (player) => {
+  return getElosOfPlayer(player).then(res => { return res })
+}
+
+const updateEloHistory = async (cards) => {
+  console.warn('cards', cards)
+  let returnObject = {}
+  for (const person in cards) {
+    const res = await getPlayerEloHistory(person)
+    if (res === undefined) {
+      returnObject[person] = cards[person]
+      const apiObj = {
+        player: person,
+        elo: [cards[person]]
+      }
+      addEloToPlayer(apiObj)
+    } else {
+      console.warn('hmm', res)
+      res.unshift(cards[person])
+      console.warn('hm2', res)
+      returnObject[person] = res
+      const apiObj = {
+        player: person,
+        elo: res
+      }
+      addEloToPlayer(apiObj)
+    }
+  }
+  console.warn('return', returnObject)
+}
+
 const getAverageEloOFPlayers = async (players) => {
   const elos = await currentEloAsync()
   let presentPlayers = []
@@ -88,21 +127,24 @@ const calculatePointsPerThrow = () => {
 }
 
 const calculatePlayerElo = (groupAverage, playerScore, pointsPerThrow, averageEloOfPlayers) => {
-  console.warn('elo calc', ((groupAverage - playerScore) * pointsPerThrow) + averageEloOfPlayers)
+  return ((groupAverage - playerScore) * pointsPerThrow) + averageEloOfPlayers
 }
 
 const calculateCardElo = (players, pointsPerThrow, cardAverage, averageEloOfPlayers) => {
+  let eloArray = []
   players.map(player => {
-    calculatePlayerElo(84.9, player.total, pointsPerThrow, averageEloOfPlayers)
+    const prettyPlayer = translateUsers(player.player)
+    eloArray[prettyPlayer] = calculatePlayerElo(cardAverage, player.total, pointsPerThrow, averageEloOfPlayers)
   })
+  return eloArray
 }
 
 const formatPlayers = () => {
   return {
     peter: 1000,
     lane: 1000,
-    alex: 1000,
     jimmy: 1000,
+    alex: 1000,
     benton: 1000,
     rob: 1000,
     greg: 1000,
