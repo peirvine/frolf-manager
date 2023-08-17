@@ -232,18 +232,19 @@ export function getElosOfPlayer(player) {
   return elos
 }
 
-export function updateCurrentElo(eloArray) {
+export function getElosOfAllPlayers() {
+  const dbRef = ref(getDatabase());
   const year = new Date().getFullYear();
-  const db = getDatabase()
-  const updates = {}
-  updates['maftb/currentElo/' + year] = eloArray;
-  
-  return update(ref(db), updates).then(() => {
-    // Data saved successfully!
-  })
-  .catch((error) => {
-    logEvent(analytics, 'Could write to current ELO', {error: error} );
-  });;
+  const elos = get(child(dbRef, `maftb/playerEloHistory/` + year + '/')).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      logEvent(analytics, 'No elos found, though there is not an error');
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo', {error: error} );
+  });
+  return elos
 }
 
 export function getELOHistory () {
@@ -276,4 +277,18 @@ export function getCurrentElo () {
     logEvent(analytics, 'Could not fetch elo', {error: error} );
   });
   return elo
+}
+
+export function updateCurrentElo(eloArray) {
+  const year = new Date().getFullYear();
+  const db = getDatabase()
+  const updates = {}
+  updates['maftb/currentElo/' + year] = eloArray;
+  
+  return update(ref(db), updates).then(() => {
+    // Data saved successfully!
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could write to current ELO', {error: error} );
+  });;
 }

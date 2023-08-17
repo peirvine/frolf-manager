@@ -1,5 +1,6 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getELOHistory, updateCurrentElo, getCurrentElo, addEloToPlayer, getElosOfPlayer } from "../firebase";
+import { writeEloTracking, getELOHistory, getCurrentElo, addEloToPlayer, getElosOfPlayer, updateCurrentElo, getElosOfAllPlayers } from "../firebase";
+import { weighting } from "./eloConstants";
 
 
 export const calculateElo = async (card) => {
@@ -11,21 +12,18 @@ export const calculateElo = async (card) => {
   // const players = formatPlayers(players)
   const pointsPerHole = 5
   let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray)
-  const formattedPlayers = formatPlayers()
+
   const pointsPerThrow = calculatePointsPerThrow()
   const cardElo = calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
-  updateEloHistory(cardElo)
-  const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerHole, averageEloOfPlayers, cardElo)
-  console.warn('prettyElo', prettyElo)
-  // updateCurrentElo(formattedPlayers)
-  // writeEloTracking(prettyElo)
-}
 
-const tempFunc = () => {
-  return {
-    player: 'lane',
-    elo: [1000, 950]
-  }
+  // Adds the most recent ELO to the players history
+  updateEloHistory(cardElo)
+
+  const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerHole, averageEloOfPlayers, cardElo)
+  writeEloTracking(prettyElo)
+
+// updates current elo of player
+  updateCurrentElos(cardElo)
 }
 
 // TODO: Remove the need for this. This method will be impossible for multiple leagues, but MAFTB it's fine
@@ -85,7 +83,6 @@ const getPlayerEloHistory = async (player) => {
 }
 
 const updateEloHistory = async (cards) => {
-  console.warn('cards', cards)
   let returnObject = {}
   for (const person in cards) {
     const res = await getPlayerEloHistory(person)
@@ -93,13 +90,11 @@ const updateEloHistory = async (cards) => {
       returnObject[person] = cards[person]
       const apiObj = {
         player: person,
-        elo: [cards[person]]
+        elo: [cards[person], 1000]
       }
       addEloToPlayer(apiObj)
     } else {
-      console.warn('hmm', res)
       res.unshift(cards[person])
-      console.warn('hm2', res)
       returnObject[person] = res
       const apiObj = {
         player: person,
@@ -108,7 +103,6 @@ const updateEloHistory = async (cards) => {
       addEloToPlayer(apiObj)
     }
   }
-  console.warn('return', returnObject)
 }
 
 const getAverageEloOFPlayers = async (players) => {
@@ -139,19 +133,6 @@ const calculateCardElo = (players, pointsPerThrow, cardAverage, averageEloOfPlay
   return eloArray
 }
 
-const formatPlayers = () => {
-  return {
-    peter: 1000,
-    lane: 1000,
-    jimmy: 1000,
-    alex: 1000,
-    benton: 1000,
-    rob: 1000,
-    greg: 1000,
-    samir: 1000,
-  }
-}
-
 const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerHole, averageEloOfPlayers, formattedPlayers) => {
   return {
     course,
@@ -163,3 +144,25 @@ const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerHol
     players: formattedPlayers,
   }
 }
+
+const updateCurrentElos = async () => {
+  const res = await getElosOfAllPlayers()
+  let returnVal = {}
+  for (const person in res) {
+    returnVal[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
+  }
+  console.warn('returnVal', returnVal)
+  updateCurrentElo(returnVal)
+}
+
+const weightedAverage = (nums, weights) => {
+  const [sum, weightSum] = weights.reduce(
+    (acc, w, i) => {
+      acc[0] = acc[0] + nums[i] * w;
+      acc[1] = acc[1] + w;
+      return acc;
+    },
+    [0, 0]
+  );
+  return sum / weightSum;
+};
