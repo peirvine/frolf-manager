@@ -23,7 +23,8 @@ import { toBlob } from 'html-to-image';
 
 import HistoricalRankings from './historicalRankings'
 
-import { getRankingsFromGoogle } from '../../services/googleSheetsService';
+// import { getRankingsFromGoogle } from '../../services/googleSheetsService';
+import { getCurrentElo, getDelta, getEloGraphData } from '../../firebase'
 
 import './rankings.scss'
 import { calculateElo, resetCurrentElo } from '../../services/eloService';
@@ -31,6 +32,8 @@ import { mockCard } from '../../services/mockData';
 
 export default function CurrentRankings () {
   const [rankings, setRankings] = useState()
+  const [deltas, setDeltas] = useState()
+  const [eloGraph, setEloGraph] = useState()
   const imageRef = useRef(null);
   const [open, setOpen] = useState(false)
   // const handleOpen = () => setOpen(true);
@@ -66,27 +69,59 @@ export default function CurrentRankings () {
   }
 
   useEffect(() => {
-    getRankingsFromGoogle().then((value) => {
-      setRankings(value.values);
+    getCurrentElo().then((value) => {
+      setRankings(value);
     })
-  }, [setRankings]);
+    getDelta().then((value) => {
+      setDeltas(value)
+    })
+    getEloGraphData().then((value) => {
+      setEloGraph(value)
+    })
+  }, []);
 
   const getIcon = value => {
-    if (value <= 1 && value >= -1) {
-      return <Chip icon={<UnfoldMoreIcon className="changeIcon"/>} label={value} color="primary" variant="outlined" />
-    } else if (value > 1 && value < 10 ) {
-      return  <Chip icon={<KeyboardArrowUpIcon className="changeIcon" />} label={value} color="success" variant="outlined" />
-    } else if (value >= 10 && value < 15 ) {
-      return  <Chip icon={<KeyboardDoubleArrowUpIcon className="changeIcon" />} label={value} color="success" variant="outlined" />
-    } else if (value >= 15) {
-      return  <Chip icon={<SwitchAccessShortcutIcon className="changeIcon" />} label={value} color="success" variant="outlined" />
-    } else if (value < -1 && value > -10 ) {
-      return  <Chip icon={<KeyboardArrowDownIcon className="changeIcon" />} label={value} color="error" variant="outlined" />
-    } else if (value <= -10 && value > -15 ) {
-      return  <Chip icon={<KeyboardDoubleArrowDownIcon className="changeIcon" />} label={value} color="error" variant="outlined" />
-    } else if (value <= -15) {
-      return  <Chip icon={<TrendingDownIcon className="changeIcon" />} label={value} color="error" variant="outlined" />
+    const roundedValue = Math.round(value * 10) / 10
+    if (roundedValue <= 1 && roundedValue >= -1) {
+      return <Chip icon={<UnfoldMoreIcon className="changeIcon"/>} label={roundedValue} color="primary" variant="outlined" />
+    } else if (roundedValue > 1 && roundedValue < 10 ) {
+      return  <Chip icon={<KeyboardArrowUpIcon className="changeIcon" />} label={roundedValue} color="success" variant="outlined" />
+    } else if (roundedValue >= 10 && roundedValue < 15 ) {
+      return  <Chip icon={<KeyboardDoubleArrowUpIcon className="changeIcon" />} label={roundedValue} color="success" variant="outlined" />
+    } else if (roundedValue >= 15) {
+      return  <Chip icon={<SwitchAccessShortcutIcon className="changeIcon" />} label={roundedValue} color="success" variant="outlined" />
+    } else if (roundedValue < -1 && roundedValue > -10 ) {
+      return  <Chip icon={<KeyboardArrowDownIcon className="changeIcon" />} label={roundedValue} color="error" variant="outlined" />
+    } else if (roundedValue <= -10 && roundedValue > -15 ) {
+      return  <Chip icon={<KeyboardDoubleArrowDownIcon className="changeIcon" />} label={roundedValue} color="error" variant="outlined" />
+    } else if (roundedValue <= -15) {
+      return  <Chip icon={<TrendingDownIcon className="changeIcon" />} label={roundedValue} color="error" variant="outlined" />
     }
+  }
+
+  function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+  const formatRankings = (passedRankings) => {
+    console.warn(deltas)
+    let playerRankings = []
+    for (const player in passedRankings) {
+      playerRankings.push(
+        <TableRow
+          key={player}
+          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+          // onClick={() => handleShowStats(player[0])}
+        >
+          <TableCell align="center">
+            {capitalizeFirstLetter(player)}
+          </TableCell>
+          <TableCell align="center">{Math.round(passedRankings[player] * 10) /10}</TableCell>
+          {deltas && (<TableCell align="center">{getIcon(deltas[player])}</TableCell>)}
+        </TableRow>
+      )
+    }
+    return playerRankings
   }
 
   return (
@@ -116,19 +151,7 @@ export default function CurrentRankings () {
               </TableRow>
             </TableHead>
             <TableBody>
-              {rankings && (rankings.map((player) => (
-                <TableRow
-                  key={player[0]}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                  onClick={() => handleShowStats(player[0])}
-                >
-                  <TableCell align="center">
-                    {player[0]}
-                  </TableCell>
-                  <TableCell align="center">{player[1]}</TableCell>
-                  <TableCell align="center">{getIcon(player[2])}</TableCell>
-                </TableRow>
-              )))}
+              {rankings && (formatRankings(rankings))}
             </TableBody>
           </Table>
         </TableContainer>
@@ -136,7 +159,7 @@ export default function CurrentRankings () {
       <div className="getImg">
         <Button variant="contained" onClick={() => getImage()}>Share Rankings</Button>
       </div>
-      <HistoricalRankings />
+      <HistoricalRankings eloGraph={eloGraph} />
       <h3>About our ELO Ranking System</h3>
       <p>The ELO ranking system is a widely used method for ranking players or teams in games and sports. It was originally developed by Hungarian-American physicist Arpad Elo in the 1960s to rank chess players, but has since been adapted for use in a variety of other competitive activities, including soccer, basketball, and video games.</p>
       <p>The basic idea behind the ELO ranking system is to assign each player or team a numerical rating based on their performance in previous matches. When two players or teams compete against each other, their ratings are used to calculate the expected outcome of the match, and the actual outcome is compared to the expected outcome to determine how much each player's rating should change.</p>

@@ -1,5 +1,5 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getCurrentElo, addEloToPlayer, getElosOfPlayer, updateCurrentElo, getElosOfAllPlayers } from "../firebase";
+import { writeEloTracking, getCurrentElo, addEloToPlayer, getElosOfPlayer, updateCurrentElo, getElosOfAllPlayers, setDelta, setEloGraphData } from "../firebase";
 import { weighting, pointPerThrowRef } from "./eloConstants";
 
 
@@ -14,6 +14,10 @@ export const calculateElo = async (card) => {
   const pointsPerThrow = calculatePointsPerThrow(strokesPerHole)
   const cardElo = await calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
 
+  const previousElo = await getCurrentElo()
+
+  await calculateDelta(previousElo, cardElo)
+
   // Adds the most recent ELO to the players history
   await updateEloHistory(cardElo)
 
@@ -22,6 +26,8 @@ export const calculateElo = async (card) => {
 
 // updates current elo of player
   await updateCurrentElos(cardElo)
+
+  await graphData(card.course, card.date, previousElo, cardElo)
 }
 
 export const resetCurrentElo = () => {
@@ -183,3 +189,23 @@ const weightedAverage = (nums, weights) => {
   );
   return sum / weightSum;
 };
+
+const calculateDelta = (previous, updated) => {
+  let deltaObject = {}
+  for (const player in previous) {
+    if (updated[player] === undefined) {
+      deltaObject[player] = 0
+    } else {
+      deltaObject[player] = updated[player] - previous[player]
+    }
+  }
+  setDelta(deltaObject)
+}
+
+const graphData = (course, date, previous, elos) => {
+  let holderElo = previous
+  for (let player in elos) {
+    holderElo[player] = elos[player]
+  }
+  setEloGraphData({course, date, holderElo})
+}

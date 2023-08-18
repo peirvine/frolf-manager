@@ -19,7 +19,7 @@ import {
   addDoc,
   setDoc,
 } from "firebase/firestore"
-import { getDatabase, ref, set, child, get, update } from "firebase/database";
+import { getDatabase, ref, set, child, get, update, push } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVjXWI3_l6e9OZU-TVmEUE_EXalxJWdTY",
@@ -293,4 +293,58 @@ export function updateCurrentElo(eloArray) {
   .catch((error) => {
     logEvent(analytics, 'Could write to current ELO', {error: error} );
   });;
+}
+
+export function getDelta () {
+  const year = new Date().getFullYear();
+  const dbRef = ref(getDatabase());
+  let elo = get(child(dbRef, `maftb/eloDelta/` + year)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo delta', {error: error} );
+  });
+  return elo
+}
+
+export function setDelta(deltaObject) {
+  const db = getDatabase();
+  const year = new Date().getFullYear();
+  set(ref(db, 'maftb/eloDelta/' + year ), deltaObject)
+  .then(() => {
+    // console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELO delta', {error: error} );
+  });
+}
+
+export function setEloGraphData(graphObj) {
+  const db = getDatabase();
+  const year = new Date().getFullYear();
+  set(push(ref(db, 'maftb/eloGraphData/' + year ), graphObj))
+  .then(() => {
+    // console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELO graph', {error: error} );
+  });
+}
+
+export function getEloGraphData() {
+  const year = new Date().getFullYear();
+  const dbRef = ref(getDatabase());
+  let eloGraph = get(child(dbRef, `maftb/eloGraphData/` + year)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo delta', {error: error} );
+  });
+  return eloGraph
 }
