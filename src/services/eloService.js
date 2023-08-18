@@ -9,20 +9,19 @@ export const calculateElo = async (card) => {
   parLocation === 0 ? playerArray.shift() : playerArray.splice(0, parLocation)
   const cardAverage = getCardAverage(playerArray)
   const strokesPerHole = getStrokesPerHole(playerArray, cardAverage)
-  // const players = formatPlayers(players)
   let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray)
 
   const pointsPerThrow = calculatePointsPerThrow(strokesPerHole)
-  const cardElo = calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
+  const cardElo = await calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
 
   // Adds the most recent ELO to the players history
-  updateEloHistory(cardElo)
+  await updateEloHistory(cardElo)
 
   const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, cardElo)
-  writeEloTracking(prettyElo)
+  await writeEloTracking(prettyElo)
 
 // updates current elo of player
-  updateCurrentElos(cardElo)
+  await updateCurrentElos(cardElo)
 }
 
 export const resetCurrentElo = () => {
@@ -90,11 +89,9 @@ const getPlayerEloHistory = async (player) => {
 }
 
 const updateEloHistory = async (cards) => {
-  let returnObject = {}
   for (const person in cards) {
     const res = await getPlayerEloHistory(person)
-    if (res === undefined) {
-      returnObject[person] = cards[person]
+    if (res === 'null') {
       const apiObj = {
         player: person,
         elo: [cards[person], 1000]
@@ -102,7 +99,6 @@ const updateEloHistory = async (cards) => {
       addEloToPlayer(apiObj)
     } else {
       res.unshift(cards[person])
-      returnObject[person] = res
       const apiObj = {
         player: person,
         elo: res
@@ -154,13 +150,12 @@ const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerThr
 }
 
 const updateCurrentElos = async () => {
+  let elos = await currentEloAsync()
   const res = await getElosOfAllPlayers()
-  let returnVal = {}
   for (const person in res) {
-    returnVal[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
+    elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
   }
-  console.warn('returnVal', returnVal)
-  updateCurrentElo(returnVal)
+  updateCurrentElo(elos)
 }
 
 const weightedAverage = (nums, weights) => {

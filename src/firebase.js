@@ -206,6 +206,7 @@ export function writeEloTracking(elo) {
 }
 
 export function addEloToPlayer(elo) {
+  console.warn('elo', elo)
   const db = getDatabase();
   const year = new Date().getFullYear();
   set(ref(db, 'maftb/playerEloHistory/' + year + '/' + elo.player), elo.elo)
@@ -224,7 +225,8 @@ export function getElosOfPlayer(player) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      logEvent(analytics, 'No elos found, though there is not an error');
+      logEvent(analytics, 'No elo of signle player found, though there is not an error', {player: player});
+      return 'null'
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not fetch elo', {error: error} );
@@ -235,11 +237,12 @@ export function getElosOfPlayer(player) {
 export function getElosOfAllPlayers() {
   const dbRef = ref(getDatabase());
   const year = new Date().getFullYear();
-  const elos = get(child(dbRef, `maftb/playerEloHistory/` + year + '/')).then((snapshot) => {
+  const elos = get(child(dbRef, `maftb/playerEloHistory/` + year)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
       logEvent(analytics, 'No elos found, though there is not an error');
+      return 'null'
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not fetch elo', {error: error} );
