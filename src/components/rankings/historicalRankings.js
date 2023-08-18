@@ -9,9 +9,7 @@ export default function HistoricalRankings (props) {
     data['date'] = props.eloGraph[x].date
     graph.push(data)
   }
-  console.warn(graph)
   graph.sort((a,b) => {return new Date(a.date.substring(0,10)) - new Date(b.date.substring(0,10))})
-  console.warn('graph2', graph)
   return (
     <div className="graph">
       <h3>Season ELO Ratings</h3>

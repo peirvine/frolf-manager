@@ -1,3 +1,4 @@
+/* eslint-disable array-callback-return */
 /* eslint-disable no-unused-vars */
 import { useRef, useEffect, useState } from 'react'
 import IndividualRankings from './individualRankings';
@@ -105,23 +106,23 @@ export default function CurrentRankings () {
 }
 
   const formatRankings = (passedRankings) => {
-    console.warn(deltas)
+    let sorted = Object.entries(passedRankings).sort((a,b) => b[1]-a[1]).map(el=>el[0])
     let playerRankings = []
-    for (const player in passedRankings) {
+    sorted.map(x => {
       playerRankings.push(
         <TableRow
-          key={player}
+          key={x}
           sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
           // onClick={() => handleShowStats(player[0])}
         >
           <TableCell align="center">
-            {capitalizeFirstLetter(player)}
+            {capitalizeFirstLetter(x)}
           </TableCell>
-          <TableCell align="center">{Math.round(passedRankings[player] * 10) /10}</TableCell>
-          {deltas && (<TableCell align="center">{getIcon(deltas[player])}</TableCell>)}
+          <TableCell align="center">{Math.round(passedRankings[x] * 10) /10}</TableCell>
+          {deltas && (<TableCell align="center">{getIcon(deltas[x])}</TableCell>)}
         </TableRow>
       )
-    }
+    })
     return playerRankings
   }
 
