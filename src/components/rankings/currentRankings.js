@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useRef, useEffect, useState } from 'react'
 import IndividualRankings from './individualRankings';
 import Table from '@mui/material/Table';
