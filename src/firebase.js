@@ -192,7 +192,7 @@ export function writeEloTracking(elo) {
     Players: elo.players,
     cardAverage: elo.average,
     strokesPerHole: elo.strokesPerHole,
-    pointsPerHole: elo.pointsPerHole,
+    pointsPerThrow: elo.pointsPerThrow,
     averageEloOfPlayers: elo.averageEloOfPlayers,
     id: id,
     dateAdded: Date(Date.now()).toString()

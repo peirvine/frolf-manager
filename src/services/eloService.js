@@ -1,29 +1,41 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getELOHistory, getCurrentElo, addEloToPlayer, getElosOfPlayer, updateCurrentElo, getElosOfAllPlayers } from "../firebase";
-import { weighting } from "./eloConstants";
+import { writeEloTracking, getCurrentElo, addEloToPlayer, getElosOfPlayer, updateCurrentElo, getElosOfAllPlayers } from "../firebase";
+import { weighting, pointPerThrowRef } from "./eloConstants";
 
 
 export const calculateElo = async (card) => {
   const parLocation = card.playerArray.map((e) => { return e.player; }).indexOf("Par")
   const playerArray = card.playerArray
-  const parCard = parLocation === 0 ? playerArray.shift() : playerArray.splice(0, parLocation)
+  parLocation === 0 ? playerArray.shift() : playerArray.splice(0, parLocation)
   const cardAverage = getCardAverage(playerArray)
   const strokesPerHole = getStrokesPerHole(playerArray, cardAverage)
   // const players = formatPlayers(players)
-  const pointsPerHole = 5
   let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray)
 
-  const pointsPerThrow = calculatePointsPerThrow()
+  const pointsPerThrow = calculatePointsPerThrow(strokesPerHole)
   const cardElo = calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
 
   // Adds the most recent ELO to the players history
   updateEloHistory(cardElo)
 
-  const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerHole, averageEloOfPlayers, cardElo)
+  const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, cardElo)
   writeEloTracking(prettyElo)
 
 // updates current elo of player
   updateCurrentElos(cardElo)
+}
+
+export const resetCurrentElo = () => {
+  updateCurrentElo({
+    alex: 1000,
+    benton: 1000,
+    greg: 1000,
+    jimmy: 1000,
+    lane: 1000,
+    peter: 1000,
+    rob: 1000,
+    samir: 1000,
+  })
 }
 
 // TODO: Remove the need for this. This method will be impossible for multiple leagues, but MAFTB it's fine
@@ -73,11 +85,6 @@ const currentEloAsync = () => {
   return elos.then(val => { return val })
 }
 
-const historicalEloAsync = () => {
-  const eloArray = getELOHistory()
-  return eloArray.then(val => {return val})
-}
-
 const getPlayerEloHistory = async (player) => {
   return getElosOfPlayer(player).then(res => { return res })
 }
@@ -116,8 +123,9 @@ const getAverageEloOFPlayers = async (players) => {
   return sumElo / presentPlayers.length
 }
 
-const calculatePointsPerThrow = () => {
-  return 7.98230623
+const calculatePointsPerThrow = (strokesPerHole) => {
+  const roundedSPH = Math.round(strokesPerHole * 10) / 10
+  return pointPerThrowRef[roundedSPH]
 }
 
 const calculatePlayerElo = (groupAverage, playerScore, pointsPerThrow, averageEloOfPlayers) => {
@@ -133,13 +141,13 @@ const calculateCardElo = (players, pointsPerThrow, cardAverage, averageEloOfPlay
   return eloArray
 }
 
-const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerHole, averageEloOfPlayers, formattedPlayers) => {
+const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, formattedPlayers) => {
   return {
     course,
     layout,
     average: cardAverage,
     strokesPerHole,
-    pointsPerHole,
+    pointsPerThrow,
     averageEloOfPlayers,
     players: formattedPlayers,
   }
