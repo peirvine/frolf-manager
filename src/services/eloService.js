@@ -4,6 +4,7 @@ import { weighting, pointPerThrowRef } from "./eloConstants";
 
 
 export const calculateElo = async (card) => {
+  const previousElo = await getCurrentElo()
   const parLocation = card.playerArray.map((e) => { return e.player; }).indexOf("Par")
   const playerArray = card.playerArray
   parLocation === 0 ? playerArray.shift() : playerArray.splice(0, parLocation)
@@ -14,10 +15,6 @@ export const calculateElo = async (card) => {
   const pointsPerThrow = calculatePointsPerThrow(strokesPerHole)
   const cardElo = await calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
 
-  const previousElo = await getCurrentElo()
-
-  await calculateDelta(previousElo, cardElo)
-
   // Adds the most recent ELO to the players history
   await updateEloHistory(cardElo)
 
@@ -25,9 +22,11 @@ export const calculateElo = async (card) => {
   await writeEloTracking(prettyElo)
 
 // updates current elo of player
-  await updateCurrentElos(cardElo)
+  const currentElo = await updateCurrentElos(cardElo)
 
-  await graphData(card.course, card.date, previousElo, cardElo)
+  await calculateDelta(previousElo, currentElo)
+
+  await graphData(card.course, card.date, previousElo, currentElo)
 }
 
 export const resetCurrentElo = () => {
@@ -176,6 +175,7 @@ const updateCurrentElos = async () => {
     elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
   }
   updateCurrentElo(elos)
+  return elos
 }
 
 const weightedAverage = (nums, weights) => {
