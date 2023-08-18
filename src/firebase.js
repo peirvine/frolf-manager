@@ -19,7 +19,7 @@ import {
   addDoc,
   setDoc,
 } from "firebase/firestore"
-import { getDatabase, ref, set, child, get } from "firebase/database";
+import { getDatabase, ref, set, child, get, update } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVjXWI3_l6e9OZU-TVmEUE_EXalxJWdTY",
@@ -146,7 +146,7 @@ export function writeScorecardToDatabase(card) {
     dateAdded: Date(Date.now()).toString()
   })
   .then(() => {
-    console.warn('success')
+    // console.warn('success')
   })
   .catch((error) => {
     logEvent(analytics, 'A user was unable to add a scorecard', {error: error} );
@@ -178,4 +178,117 @@ export const getScorecards = () => {
     logEvent(analytics, 'Could not fetch scorecards', {error: error} );
   });
   return sorted
+}
+
+
+/****************** ELO ******************/
+export function writeEloTracking(elo) {
+  const db = getDatabase();
+  const id = Math.floor(Math.random() * 100000000)
+  const year = new Date().getFullYear();
+  set(ref(db, 'maftb/eloTracking/' + year + '/' + id), {
+    Course: elo.course,
+    Layout: elo.layout,
+    Players: elo.players,
+    cardAverage: elo.average,
+    strokesPerHole: elo.strokesPerHole,
+    pointsPerThrow: elo.pointsPerThrow,
+    averageEloOfPlayers: elo.averageEloOfPlayers,
+    id: id,
+    dateAdded: Date(Date.now()).toString()
+  })
+  .then(() => {
+    // console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
+  });
+}
+
+export function addEloToPlayer(elo) {
+  const db = getDatabase();
+  const year = new Date().getFullYear();
+  set(ref(db, 'maftb/playerEloHistory/' + year + '/' + elo.player), elo.elo)
+  .then(() => {
+    // console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
+  });
+}
+
+export function getElosOfPlayer(player) {
+  const dbRef = ref(getDatabase());
+  const year = new Date().getFullYear();
+  const elos = get(child(dbRef, `maftb/playerEloHistory/` + year + '/' + player)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      logEvent(analytics, 'No elos found, though there is not an error');
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo', {error: error} );
+  });
+  return elos
+}
+
+export function getElosOfAllPlayers() {
+  const dbRef = ref(getDatabase());
+  const year = new Date().getFullYear();
+  const elos = get(child(dbRef, `maftb/playerEloHistory/` + year + '/')).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      logEvent(analytics, 'No elos found, though there is not an error');
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo', {error: error} );
+  });
+  return elos
+}
+
+export function getELOHistory () {
+  const dbRef = ref(getDatabase());
+  let elo = []
+  get(child(dbRef, `maftb/eloTracking`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      for (const [key, value] of Object.entries(snapshot.val())) {
+        elo.push(value)
+      }
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo', {error: error} );
+  });
+  return elo
+}
+
+export function getCurrentElo () {
+  const year = new Date().getFullYear();
+  const dbRef = ref(getDatabase());
+  let elo = get(child(dbRef, `maftb/currentElo/` + year)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo', {error: error} );
+  });
+  return elo
+}
+
+export function updateCurrentElo(eloArray) {
+  const year = new Date().getFullYear();
+  const db = getDatabase()
+  const updates = {}
+  updates['maftb/currentElo/' + year] = eloArray;
+  
+  return update(ref(db), updates).then(() => {
+    // Data saved successfully!
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could write to current ELO', {error: error} );
+  });;
 }

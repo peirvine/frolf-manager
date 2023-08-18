@@ -1,5 +1,6 @@
 // import { addScorecardToGoogle } from './googleSheetsService'
 import { addScorecardToFirebase, writeScorecardToDatabase } from '../firebase'
+import { calculateElo } from './eloService'
 
 export function addScorecard (card) {
   // if (validateCard(card)) {
@@ -59,6 +60,7 @@ export async function uDiscDump (card) {
     let response = {code: "success", message: "Card added successfully."}
     const scorecardRes = addScorecardToFirebase(returnValue)
     writeScorecardToDatabase(returnValue)
+    calculateElo(returnValue)
     response = scorecardRes.then(res => {
       if (!res) {
         return {code: "error", message: "Failed to save to Google, a save to Amazon was not attempted. Try refreshing and submitting again. The card is valid."}

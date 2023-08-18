@@ -26,6 +26,8 @@ import HistoricalRankings from './historicalRankings'
 import { getRankingsFromGoogle } from '../../services/googleSheetsService';
 
 import './rankings.scss'
+import { calculateElo, resetCurrentElo } from '../../services/eloService';
+import { mockCard } from '../../services/mockData';
 
 export default function CurrentRankings () {
   const [rankings, setRankings] = useState()
@@ -101,6 +103,8 @@ export default function CurrentRankings () {
         </div>
       </Modal>
       <h1>Current Rankings</h1>
+      <Button onClick={() => calculateElo(mockCard)}>Elo Bitches</Button>
+      <Button onClick={() => resetCurrentElo()}>Reset My Elo</Button>
       <div ref={imageRef}>
         <TableContainer component={Paper} size="medium" className="rankingsTable">
           <Table aria-label="simple table">
