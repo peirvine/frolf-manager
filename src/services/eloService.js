@@ -71,9 +71,15 @@ const getCardAverage = (card) => {
   let scores = 0
   let numPlayers = card.length
   card.map(player => {
-    scores += parseInt(player.total)
+    if (translateUsers(player.player) !== null) {
+      scores += parseInt(player.total)
+    } else {
+      numPlayers--
+    }
+    
   })
   const average = scores / numPlayers
+  console.log(average)
   return average
 }
 

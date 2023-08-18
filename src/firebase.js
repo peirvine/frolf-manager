@@ -206,7 +206,6 @@ export function writeEloTracking(elo) {
 }
 
 export function addEloToPlayer(elo) {
-  console.warn('elo', elo)
   const db = getDatabase();
   const year = new Date().getFullYear();
   set(ref(db, 'maftb/playerEloHistory/' + year + '/' + elo.player), elo.elo)
