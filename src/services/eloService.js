@@ -63,6 +63,8 @@ const translateUsers = player => {
   if ("samir ramakrishnan".match(player.toLowerCase())) {
     return "samir"
   }
+
+  return null
 }
 
 const getCardAverage = (card) => {
@@ -111,7 +113,11 @@ const updateEloHistory = async (cards) => {
 const getAverageEloOFPlayers = async (players) => {
   const elos = await currentEloAsync()
   let presentPlayers = []
-  players.map(player => presentPlayers.push(translateUsers(player.player)))
+  players.map(player => {
+    if (translateUsers(player.player) !== null) {
+      presentPlayers.push(translateUsers(player.player))
+    }
+  })
   let sumElo = 0
   presentPlayers.map(player => {
     sumElo += elos[player.toLowerCase()]
@@ -131,8 +137,10 @@ const calculatePlayerElo = (groupAverage, playerScore, pointsPerThrow, averageEl
 const calculateCardElo = (players, pointsPerThrow, cardAverage, averageEloOfPlayers) => {
   let eloArray = []
   players.map(player => {
-    const prettyPlayer = translateUsers(player.player)
-    eloArray[prettyPlayer] = calculatePlayerElo(cardAverage, player.total, pointsPerThrow, averageEloOfPlayers)
+    if (translateUsers(player.player) !== null) {
+      const prettyPlayer = translateUsers(player.player)
+      eloArray[prettyPlayer] = calculatePlayerElo(cardAverage, player.total, pointsPerThrow, averageEloOfPlayers)
+    }
   })
   return eloArray
 }
