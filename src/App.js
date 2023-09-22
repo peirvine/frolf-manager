@@ -15,6 +15,7 @@ import About from './components/about/about'
 import Footer from './components/footer/footer'
 import Admin from './components/admin/admin'
 import Doink from './components/doink/doink'
+import UserDashboard from './components/userDashboard/userDashboard'
 
 import './App.scss';
 
@@ -54,6 +55,7 @@ function App() {
                   <Route path="/rankings" component={CurrentRankings} />
                   {user && (<Route path="/admin" component={Admin} />)}
                   {user && (<Route path="/doink" component={Doink} />)}
+                  {user && (<Route path="/dashboard" component={UserDashboard} />)}
                 </Paper>
               </div>
           </Switch>

@@ -20,6 +20,7 @@ import {
   setDoc,
 } from "firebase/firestore"
 import { getDatabase, ref, set, child, get, update, push } from "firebase/database";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVjXWI3_l6e9OZU-TVmEUE_EXalxJWdTY",
@@ -37,6 +38,10 @@ const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 const db = getFirestore(app);
 const database = getDatabase(app);
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaEnterpriseProvider('6LcVbkMoAAAAAGRpwcBp_iOR5CVzLNVyHawnjdEx'),
+  isTokenAutoRefreshEnabled: true // Set to true to allow auto-refresh.
+});
 
 
 /****************** Auth ******************/
@@ -339,6 +344,33 @@ export function getEloGraphData() {
   const dbRef = ref(getDatabase());
   let eloGraph = get(child(dbRef, `maftb/eloGraphData/` + year)).then((snapshot) => {
     if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo delta', {error: error} );
+  });
+  return eloGraph
+}
+
+/****************** Player Dashboard ******************/
+export const getUserData = async (user) => {
+  try {
+    const q = query(collection(db, "maftb", "players", "player"), where("uid", "==", user.uid))
+    const docs = await getDocs(q)
+    return docs
+  } catch (err) {
+    logEvent(analytics, 'could not get user data', {error: err})
+  }
+}
+
+export const getLeagueName = (league) => {
+  const year = new Date().getFullYear();
+  const dbRef = ref(getDatabase());
+  let eloGraph = get(child(dbRef, `maftb/leagueIndex/` + league)).then((snapshot) => {
+    if (snapshot.exists()) {
+      console.warn('snpashot', snapshot.val())
       return snapshot.val()
     } else {
       console.log("No data available");

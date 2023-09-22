@@ -1,5 +1,5 @@
 // import { addScorecardToGoogle } from './googleSheetsService'
-import { addScorecardToFirebase, writeScorecardToDatabase } from '../firebase'
+import { writeScorecardToDatabase } from '../firebase'
 import { calculateElo } from './eloService'
 
 export function addScorecard (card) {
@@ -58,21 +58,17 @@ export async function uDiscDump (card) {
   if (validateCard(returnValue)) {
     // const googleRes = await addScorecardToGoogle(returnValue)
     let response = {code: "success", message: "Card added successfully."}
-    const scorecardRes = addScorecardToFirebase(returnValue)
+    // addScorecardToFirebase(returnValue)
     writeScorecardToDatabase(returnValue)
     calculateElo(returnValue)
-    response = scorecardRes.then(res => {
-      if (!res) {
-        return {code: "error", message: "Failed to save to Google, a save to Amazon was not attempted. Try refreshing and submitting again. The card is valid."}
-      } else {
-        return {code: "success", message: "Card added successfully."}
-      }
-    })
+    // response = scorecardRes.then(res => {
+    //   if (!res) {
+    //     return {code: "error", message: "Failed to save to the database. Try refreshing and submitting again. The card is valid."}
+    //   } else {
+    //     return {code: "success", message: "Card added successfully."}
+    //   }
+    // })
     
-    // const amazonRes = await saveToAmazon(returnValue)
-    // if (!amazonRes) {
-    //   return {code: "error", message: "Failed to save to Amazon, a save to Google was successful. Reach out to site admins about adding the round."}
-    // }
     return response
   } else {
     return {code: "error", message: "Error, card not valid. Validations failed."}

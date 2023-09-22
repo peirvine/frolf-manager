@@ -27,6 +27,7 @@ export const calculateElo = async (card) => {
   await calculateDelta(previousElo, currentElo)
 
   await graphData(card.course, card.date, previousElo, currentElo)
+  return true
 }
 
 export const resetCurrentElo = () => {

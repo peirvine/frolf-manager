@@ -26,14 +26,14 @@ export default function ViewScorecards () {
   // }
 
   const getCoursePar = (card) => {
-    // console.warn('par', card.map((e) => { return e.player; }).indexOf("Par"))
     return card[card.map((e) => { return e.player; }).indexOf("Par")]
   }
 
   useEffect(() => { 
     const a = getScorecards()
+    console.warn('a', a)
     setDataV2(a)
-  }, [setDataV2])
+  }, [])
   
   return (
     <div className="scorecards">

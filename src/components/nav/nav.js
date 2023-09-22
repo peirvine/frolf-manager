@@ -10,6 +10,7 @@ import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import ParkIcon from '@mui/icons-material/Park';
+import Avatar from '@mui/material/Avatar';
 import { auth, signInWithGoogle, logout } from "../../firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
 
@@ -49,7 +50,21 @@ export default function Nav() {
 
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
+    setAnchorEl(null)
   };
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  const handleLogout = () => {
+    setAnchorEl(null)
+    logout()
+  }
 
   return (
     <AppBar position="static">
@@ -121,6 +136,13 @@ export default function Nav() {
                     to={"/doink"}>
                       Doink Fund
                   </MenuItem>
+                  <MenuItem
+                    key={'profile'}
+                    onClick={handleCloseNavMenu}
+                    component={ NavLink }
+                    to={"/dashboard"}>
+                      My Profile
+                  </MenuItem>
                   <Button onClick={() => logout()}>Log Out</Button>
                 </>
                 ) : (
@@ -175,12 +197,36 @@ export default function Nav() {
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {user ? 
               (
-                <Button 
-                  sx={{ my: 2, color: 'white', display: 'block' }}
-                  onClick={() => logout()}
-                >
-                  Log Out
-                </Button>
+                <div>
+                  <Button
+                    id="basic-button"
+                    aria-controls={open ? 'basic-menu' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? 'true' : undefined}
+                    onClick={handleClick}
+                  >
+                    <Avatar alt={stringAvatar(user.displayName)} sx={{ width: 40, height: 40, fontSize: 16, bgcolor: 'dodgerblue' }} src={user.photoURL} />
+                  </Button>
+                  <Menu
+                    id="basic-menu"
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleClose}
+                    MenuListProps={{
+                      'aria-labelledby': 'basic-button',
+                    }}
+                  >
+                     <MenuItem
+                        key={'dashboard'}
+                        onClick={handleCloseNavMenu}
+                        component={ NavLink }
+                        to={'/dashboard'}
+                      >
+                        Profile
+                      </MenuItem>
+                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                  </Menu>
+                </div>
               ) : (
                 <Button 
                   sx={{ my: 2, color: 'white', display: 'block' }}
@@ -195,4 +241,10 @@ export default function Nav() {
       </Container>
     </AppBar>
   );
+}
+
+function stringAvatar(name) {
+  return {
+    children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
+  };
 }
