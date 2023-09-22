@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
 import { auth, getUserData, getLeagueName } from "../../firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
