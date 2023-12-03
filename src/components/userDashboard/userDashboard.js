@@ -18,7 +18,6 @@ export default function UserDashboard () {
   const handleLeagueName = (league) => {
     const res = getLeagueName(league)
     const a = res.then(x => {
-      console.warn('x', x)
       return x
     })
     console.log(a)

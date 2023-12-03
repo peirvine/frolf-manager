@@ -10,6 +10,14 @@ export default function ViewScorecards () {
   const [dataV2, setDataV2] = useState()
   const [expanded, setExpanded] = useState(false);
 
+  useEffect(() => { 
+    const a = getScorecards()
+    setDataV2(a)
+    // getScorecards().then((value) => {
+    //   setDataV2(value);
+    // })
+  }, [])
+
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
   };
@@ -28,12 +36,6 @@ export default function ViewScorecards () {
   const getCoursePar = (card) => {
     return card[card.map((e) => { return e.player; }).indexOf("Par")]
   }
-
-  useEffect(() => { 
-    const a = getScorecards()
-    console.warn('a', a)
-    setDataV2(a)
-  }, [])
   
   return (
     <div className="scorecards">

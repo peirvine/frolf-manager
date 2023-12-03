@@ -139,6 +139,7 @@ export const addScorecardToFirebase = async (card) => {
 }
 
 export function writeScorecardToDatabase(card) {
+  console.warn('card', card)
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   set(ref(db, 'maftb/scorecards/' + id), {
@@ -332,7 +333,7 @@ export function setEloGraphData(graphObj) {
   const year = new Date().getFullYear();
   set(push(ref(db, 'maftb/eloGraphData/' + year ), graphObj))
   .then(() => {
-    // console.warn('success')
+    console.warn('success')
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the ELO graph', {error: error} );
