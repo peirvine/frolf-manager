@@ -161,22 +161,9 @@ export function writeScorecardToDatabase(card) {
 
 export const getScorecards = () => {
   const dbRef = ref(getDatabase());
-  let sorted = []
-  get(child(dbRef, `maftb/scorecards`)).then((snapshot) => {
+  let sorted = get(child(dbRef, `maftb/scorecards`)).then((snapshot) => {
     if (snapshot.exists()) {
-      let res = []
-
-      for (const [key, value] of Object.entries(snapshot.val())) {
-        res.push(value)
-      }
-      res.map(x => {
-        sorted[x.Date.substring(0,4)] = []
-      })
-
-      res.map(x => {
-        sorted[x.Date.substring(0,4)].push(x)
-      })
-      return sorted
+      return snapshot.val()
     } else {
       console.log("No data available");
     }

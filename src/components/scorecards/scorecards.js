@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable array-callback-return */
 import React, {useState, useEffect} from "react"
 import { getScorecards } from "../../firebase"
 import ScorecardTable from "./scorecardTable";
@@ -12,11 +14,27 @@ export default function ViewScorecards () {
 
   useEffect(() => { 
     const a = getScorecards()
-    setDataV2(a)
-    // getScorecards().then((value) => {
-    //   setDataV2(value);
-    // })
+    a.then(res => {
+      sortData(res)
+    })
   }, [])
+
+  const sortData = (data) => {
+    let res = []
+    let sorted = []
+
+    for (const [key, value] of Object.entries(data)) {
+      res.push(value)
+    }
+    res.map(x => {
+      sorted[x.Date.substring(0,4)] = []
+    })
+
+    res.map(x => {
+      sorted[x.Date.substring(0,4)].push(x)
+    })
+    setDataV2(sorted)
+  }
 
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
