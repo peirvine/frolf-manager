@@ -10,8 +10,13 @@ export default function LeagueRankingsHistory ( props ) {
   const standings = props.standings
 
   const getCoursePar = (card) => {
-    // console.warn('par', card.map((e) => { return e.player; }).indexOf("Par"))
     return card[card.map((e) => { return e.player; }).indexOf("Par")]
+  }
+
+  const sortCard = (card, coursePar) => {
+    const newCard = card.filter(e => e.player !== "Par")
+    const sortedCard = newCard.sort((a, b) =>  (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0))
+    return [coursePar].concat(sortedCard)
   }
 
   const handleChange = (panel) => (event, isExpanded) => {
@@ -68,13 +73,16 @@ export default function LeagueRankingsHistory ( props ) {
               <p className="rest">{props.stats.rest}</p>
               {props.tourney.map((x) => {
                 const coursePar = getCoursePar(x.Players)
+                const sortedCard = sortCard(x.Players, coursePar)
+                console.warn(sortedCard)
+                console.warn('x', x)
                 return (
                 <> 
                   <p className="courseName"><strong>{x.Course}</strong>: {x.Layout}</p>
                   <TableContainer>
                     <Table>
                       <TableBody>
-                        {x.Players.map((y) => (
+                        {sortedCard.map((y) => (
                           <ScorecardTable card={y} par={x.Par} coursePar={coursePar} />
                         ))}
                       </TableBody>

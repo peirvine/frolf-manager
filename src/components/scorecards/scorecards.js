@@ -7,7 +7,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import './scorecards.scss'
 
 export default function ViewScorecards () {
-  const [dataV2, setDataV2] = useState()
+  const [dataV2, setDataV2] = useState([])
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => { 
@@ -26,12 +26,11 @@ export default function ViewScorecards () {
     return new Date(date.slice(0, date.indexOf(" ")))
   }
 
-  // const sortCard = (card) => {
-  //   const firstElement = [card[0]]
-  //   card.shift()
-  //   const sortedCard = card.sort((a, b) =>  (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0))
-  //   return firstElement.concat(sortedCard)
-  // }
+  const sortCard = (card, coursePar) => {
+    const newCard = card.filter(e => e.player !== "Par")
+    const sortedCard = newCard.sort((a, b) =>  (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0))
+    return [coursePar].concat(sortedCard)
+  }
 
   const getCoursePar = (card) => {
     return card[card.map((e) => { return e.player; }).indexOf("Par")]
@@ -48,6 +47,7 @@ export default function ViewScorecards () {
             {
               year.map(round => {
                 const coursePar = getCoursePar(round.Players)
+                const sortedCard = sortCard(round.Players, coursePar)
                 return (
                   <Accordion expanded={expanded === round.id} onChange={handleChange(round.id)}>
                     <AccordionSummary
@@ -61,7 +61,7 @@ export default function ViewScorecards () {
                       <TableContainer>
                         <Table>
                           <TableBody>
-                            {round.Players.map((y) => (
+                            {sortedCard.map((y) => (
                               <ScorecardTable card={y} par={round.Par} coursePar={coursePar} />
                             ))}
                           </TableBody>

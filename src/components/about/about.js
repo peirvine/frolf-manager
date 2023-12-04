@@ -1,6 +1,6 @@
 import LeagueRankingsHistory from "./leagueRankingsHistory"
 // import Players from "./players"
-import { standings2022, tourney2022, stats2022, standings2023, tourney2023 } from './yearlyStandings'
+import { standings2022, tourney2022, stats2022, standings2023, tourney2023, stats2023 } from './yearlyStandings'
 
 import "./about.scss"
 
@@ -30,7 +30,7 @@ export default function About () {
       </div> */}
       <div className="aboutHistory">
         <h2>League History</h2>
-        <LeagueRankingsHistory year={"2023"} standings={standings2023} tourney={tourney2023} stats={stats2022} />
+        <LeagueRankingsHistory year={"2023"} standings={standings2023} tourney={tourney2023} stats={stats2023} />
         <LeagueRankingsHistory year={"2022"} standings={standings2022} tourney={tourney2022} stats={stats2022} />
       </div>
     </div>

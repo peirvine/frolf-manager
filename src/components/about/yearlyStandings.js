@@ -567,6 +567,31 @@ export const tourney2022 = [
       },
       {
         "holes": [
+          "4",
+          "2",
+          "2",
+          "3",
+          "3",
+          "2",
+          "3",
+          "4",
+          "3",
+          "4",
+          "3",
+          "4",
+          "5",
+          "4",
+          "2",
+          "3",
+          "3",
+          "3"
+        ],
+        "player": "Alex",
+        "plusMinus": "3",
+        "total": "57"
+      },
+      {
+        "holes": [
           "5",
           "3",
           "3",
@@ -589,7 +614,82 @@ export const tourney2022 = [
         "player": "Greg L",
         "plusMinus": "3",
         "total": "57"
-      }
+      },
+      {
+        "holes": [
+          "3",
+          "3",
+          "2",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "2",
+          "4",
+          "4",
+          "3",
+          "4",
+          "4",
+          "3",
+          "4"
+        ],
+        "player": "Rob",
+        "plusMinus": "3",
+        "total": "57"
+      },
+      {
+        "holes": [
+          "3",
+          "2",
+          "3",
+          "3",
+          "2",
+          "2",
+          "2",
+          "3",
+          "3",
+          "3",
+          "2",
+          "3",
+          "3",
+          "3",
+          "3",
+          "5",
+          "2",
+          "2"
+        ],
+        "player": "Samir",
+        "plusMinus": "-5",
+        "total": "49"
+      },
+      {
+        "holes": [
+          "4",
+          "3",
+          "3",
+          "4",
+          "3",
+          "4",
+          "3",
+          "3",
+          "3",
+          "4",
+          "3",
+          "4",
+          "5",
+          "3",
+          "3",
+          "5",
+          "3",
+          "4"
+        ],
+        "player": "Lane",
+        "plusMinus": "10",
+        "total": "64"
+      },
     ],
     "dateAdded": "Tue Aug 15 2023 16:10:56 GMT-0500 (Central Daylight Time)",
     "id": 99949195
@@ -627,6 +727,56 @@ export const tourney2022 = [
       },
       {
         "holes": [
+          "4",
+          "3",
+          "3",
+          "2",
+          "3",
+          "3",
+          "5",
+          "2",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "5",
+          "4",
+          "3",
+          "3"
+        ],
+        "player": "Benton",
+        "plusMinus": "1",
+        "total": "58"
+      },
+      {
+        "holes": [
+          "3",
+          "4",
+          "3",
+          "3",
+          "3",
+          "2",
+          "4",
+          "3",
+          "3",
+          "4",
+          "3",
+          "2",
+          "3",
+          "3",
+          "5",
+          "6",
+          "3",
+          "3"
+        ],
+        "player": "Greg",
+        "plusMinus": "3",
+        "total": "60"
+      },
+      {
+        "holes": [
           "5",
           "3",
           "4",
@@ -649,6 +799,31 @@ export const tourney2022 = [
         "player": "Rob Renkor",
         "plusMinus": "21",
         "total": "78"
+      },
+      {
+        "holes": [
+          "4",
+          "3",
+          "3",
+          "3",
+          "4",
+          "4",
+          "4",
+          "4",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "3",
+          "4",
+          "5",
+          "4",
+          "3"
+        ],
+        "player": "Samir",
+        "plusMinus": "7",
+        "total": "64"
       },
       {
         "holes": [
@@ -702,6 +877,31 @@ export const tourney2022 = [
       },
       {
         "holes": [
+          "5",
+          "4",
+          "3",
+          "3",
+          "4",
+          "6",
+          "6",
+          "4",
+          "3",
+          "3",
+          "4",
+          "3",
+          "4",
+          "4",
+          "5",
+          "6",
+          "4",
+          "4"
+        ],
+        "player": "Alex",
+        "plusMinus": "18",
+        "total": "75"
+      },
+      {
+        "holes": [
           "4",
           "4",
           "6",
@@ -738,4 +938,13 @@ export const stats2022 = {
   avgPlayer: 'Greg (1017)',
   winner: 'Benton (-1)',
   rest: 'Samir (+2), Greg (+6), Peter (+11), Jimmy (+21), Alex (+21), Rob (+24), Lane (+30)'
+}
+
+export const stats2023 = {
+  numRounds: 22,
+  hardest: 'Elm Creek Park Reserve - Main / Kaposia Park 27 Hole (Full Course) (4.5)',
+  most: 'Basset Creek Park (3)',
+  avgPlayer: 'Greg (1008)',
+  winner: 'Benton (+2)',
+  rest: 'Peter (+6), Greg (+12), Rob (+23), Alex (+32), Lane (+37), Jimmy (IL)'
 }
