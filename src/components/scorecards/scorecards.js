@@ -3,7 +3,7 @@
 import React, {useState, useEffect} from "react"
 import { getScorecards } from "../../firebase"
 import ScorecardTable from "./scorecardTable";
-import { Table, TableBody, TableContainer, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
+import { Table, TableBody, TableContainer, Accordion, AccordionSummary, AccordionDetails, Skeleton  } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import './scorecards.scss'
@@ -57,7 +57,7 @@ export default function ViewScorecards () {
   return (
     <div className="scorecards">
       <h1>Past Results</h1>
-      {dataV2 && (dataV2.map(year => {
+      {dataV2.length !== 0 ? (dataV2.map(year => {
         year.sort((a,b) => (formatDate(a.Date) > formatDate(b.Date)) ? 1 : ((formatDate(b.Date) > formatDate(a.Date)) ? -1 : 0))
         return (
           <div className="test">
@@ -92,7 +92,14 @@ export default function ViewScorecards () {
             }
           </div>
         )
-      }))}
+      })) : (
+        <div className="skeletor">
+          <Skeleton variant="text" width={100} sx={{ fontSize: '1.5em' }} className="individualSkeletor" />
+          <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
+          <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
+          <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
+        </div>
+      )}
     </div>
   )
 }

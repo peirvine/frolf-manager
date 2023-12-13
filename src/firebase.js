@@ -18,6 +18,7 @@ import {
   where,
   addDoc,
   setDoc,
+  updateDoc
 } from "firebase/firestore"
 import { getDatabase, ref, set, child, get, update, push } from "firebase/database";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
@@ -59,7 +60,9 @@ export const signInWithGoogle = async () => {
         name: user.displayName,
         authProvider: "google",
         email: user.email,
-        league: "maftb"
+        league: "",
+        leagues: [],
+        isAdmin: false
       })
     }
   } catch (err) {
@@ -356,9 +359,8 @@ export const getUserData = async (user) => {
 export const getLeagueName = (league) => {
   const year = new Date().getFullYear();
   const dbRef = ref(getDatabase());
-  let eloGraph = get(child(dbRef, `maftb/leagueIndex/` + league)).then((snapshot) => {
+  let eloGraph = get(child(dbRef, `leagueIndex/`)).then((snapshot) => {
     if (snapshot.exists()) {
-      console.warn('snpashot', snapshot.val())
       return snapshot.val()
     } else {
       console.log("No data available");
@@ -367,4 +369,25 @@ export const getLeagueName = (league) => {
     logEvent(analytics, 'Could not fetch elo delta', {error: error} );
   });
   return eloGraph
+}
+
+export const updateUsersLeagues = async (user, leagues) => {
+  console.log(user)
+  const q = query(collection(db, "maftb", "players", "player"), where("uid", "==", user.uid))
+  const docs = await getDocs(q)
+  let id
+  docs.forEach(x => {
+    id = x.id
+  })
+  let res
+  try {
+    await updateDoc(doc(db, "maftb", "players", "player", id), {
+      leagues: leagues
+    });
+    res = true
+  } catch (err) {
+    res = false
+    logEvent(analytics, 'A user was unable to leave their leauge', {error: err} );
+  }
+  return res
 }
