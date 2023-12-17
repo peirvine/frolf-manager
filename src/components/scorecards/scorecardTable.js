@@ -16,7 +16,7 @@ export default function ScorecardTable (props) {
       <TableCell className="allScore desktopView">{parRow ? <ParHole hole={"All"} par={card.total} /> : card.total}</TableCell>
       <div className="mobileView">
         <p>{parRow ? "Course Par" : card.player + "-"} {parRow ? "" : "Total:" + card.total} {parRow ? "" : "Score:" + (card.plusMinus > 0 ? "+" + card.plusMinus : card.plusMinus)}</p> 
-        F<DisplayHoles player={card.holes} par={props.coursePar} parRow={parRow} />
+        <DisplayHoles player={card.holes} par={props.coursePar} parRow={parRow} />
       </div>
     </TableRow>
   )
