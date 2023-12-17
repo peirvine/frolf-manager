@@ -23,31 +23,35 @@ export async function uDiscDump (card) {
     const parRow = remove[0].split(/(Par),/)
     const res = remove.slice(1)
     
-
+    
     const parData = parRow[2].split(',')
+    console.log('pd', parData)
     playerArray.push({
       player: "Par",
-      total: parData[3],
+      total: parData[4],
       plusMinus: '',
-      holes: parData.slice(5)
+      rating: '',
+      holes: parData.slice(7)
     })
   
     
     // eslint-disable-next-line array-callback-return
     res.map(x => {
       const y = x.split(',')
+      console.warn('y', y)
       playerArray.push({
         player: y[0],
-        total: y[4],
-        plusMinus: y[5],
-        holes: y.slice(6),
+        total: y[5],
+        plusMinus: y[6],
+        rating: y[7],
+        holes: y.slice(8),
       })
     })
   
     returnValue = {
       course: parData[0],
       layout: parData[1],
-      par: parData[3],
+      par: parData[4],
       date: parData[2],
       playerArray,
       rawUDiscCard: card
