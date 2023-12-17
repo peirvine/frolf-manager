@@ -153,7 +153,7 @@ export function writeScorecardToDatabase(card) {
     Par: card.par,
     id: id,
     dateAdded: Date(Date.now()).toString(),
-    rawUdiscCard: card.rawUdiscCard
+    rawUDiscCard: card.rawUDiscCard
   })
   .then(() => {
     // console.warn('success')
