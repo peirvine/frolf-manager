@@ -48,11 +48,11 @@ export default function DoinkUser(props) {
         {player.name}
       </TableCell>
       <TableCell align="center"> 
-        <IconButton aria-label="delete" size="medium" onClick={() => reportDoink("down")} variant="filled" disabled={!isUser}>
+        <IconButton aria-label="delete" size="medium" onClick={() => reportDoink("down")} variant="filled" disabled={!isUser || doinkHolder === 0}>
           <RemoveIcon fontSize="inherit" />
         </IconButton>
         {doinkHolder}
-        <IconButton aria-label="delete" size="medium"  onClick={() => reportDoink("up")} variant="filled" disabled={!isUser}>
+        <IconButton aria-label="delete" size="medium"  onClick={() => reportDoink("up")} variant="filled" disabled={!isUser || doinkHolder === 50}>
           <AddIcon fontSize="inherit" />
         </IconButton>
       </TableCell>

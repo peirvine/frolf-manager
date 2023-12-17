@@ -49,7 +49,8 @@ export async function uDiscDump (card) {
       layout: parData[1],
       par: parData[3],
       date: parData[2],
-      playerArray
+      playerArray,
+      rawUDiscCard: card
     }
   } catch (err) {
     return {code: "error", message: "Error, card input not valid." }

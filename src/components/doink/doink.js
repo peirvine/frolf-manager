@@ -101,22 +101,18 @@ export default function Doink() {
             </TableRow>
           </TableHead>
         </Table>
-        <Table>
+        {/* <Table>
           <TableBody>
             <TableRow>
               <TableCell align="center">Greg's Ace Disc</TableCell>
               <TableCell align="center">$10 - Paid by Jimmy</TableCell>
             </TableRow>
-            <TableRow>
-              <TableCell align="center">Beer for BRP</TableCell>
-              <TableCell align="center">$72 - Paid by Peter</TableCell>
-            </TableRow>
           </TableBody>
-        </Table>
+        </Table> */}
         <Table>
           <TableBody>
             <TableRow>
-              <TableCell align="center">Remaining Doink Balance: ${sumDoink - 82}</TableCell>
+              <TableCell align="center">Remaining Doink Balance: ${sumDoink - 0}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
