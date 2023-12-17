@@ -440,38 +440,29 @@ export function removeLeagueMember(league, member) {
   return res
 }
 
-//todo actually make this function work lmao
-export function createNewLeague(leagueInfo, user) {
+export function createNewLeague(leagueInfo) {
   const db = getDatabase()
-  let leagueInit = set(ref(db, leagueInfo.league + '/players/'), user)
+
+  let leagueIndex = set(ref(db, 'leagueIndex'), leagueInfo.newLeagues)
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "New league crated!"}
   })
   .catch((error) => {
-    logEvent(analytics, `The system failed to update the league members of ` + leagueInfo.league, {error: error} );
+    logEvent(analytics, `The system failed to update the league index`, {error: error} );
     return {code: "error", message: "League Not Created"}
   });
+  let doinkFundInit
+  if (leagueInfo.formData.doinkFund) {
+    doinkFundInit = set(ref(db, leagueInfo.formData.leagueAcronym + '/doinkfund/'), leagueInfo.doinkObj)
+    .then(() => {
+      // console.warn('success')
+      return {code: "success", message: "New league crated!"}
+    })
+    .catch((error) => {
+      logEvent(analytics, `The system failed to update the league members of`, {error: error} );
+      return {code: "error", message: "League Not Created"}
+    });
+  }
 
-  let doinkFundInit = set(ref(db, leagueInfo.league + '/doinkfund/'), user)
-  .then(() => {
-    // console.warn('success')
-    return {code: "success", message: "New league crated!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, `The system failed to update the league members of ` + leagueInfo.league, {error: error} );
-    return {code: "error", message: "League Not Created"}
-  });
-
-  let leagueIndex = set(ref(db, 'leagueIndex'), user)
-  .then(() => {
-    // console.warn('success')
-    return {code: "success", message: "New league crated!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, `The system failed to update the league members of ` + leagueInfo.league, {error: error} );
-    return {code: "error", message: "League Not Created"}
-  });
-
-  return leagueInit
+  return leagueIndex
 }

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
-import { auth, getUserData, getLeagueName, updateUsersLeagues, updateLeagueMembers, getLeagueMembers, removeLeagueMember } from "../../firebase"
+import { auth, getUserData, getLeagueName, updateUsersLeagues, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague } from "../../firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
@@ -15,6 +15,9 @@ export default function UserDashboard () {
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
   const [alertLevel, setAlertLevel] = useState("info")
+  const [doink, setDoink] = useState(false)
+  const [leagueName, setLeagueName] = useState("")
+  const [leagueAc, setLeagueAc] = useState("")
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
@@ -24,7 +27,7 @@ export default function UserDashboard () {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: 1000,
+    width: 750,
     bgcolor: 'background.paper',
     border: '1px solid #000',
     boxShadow: 24,
@@ -81,11 +84,11 @@ export default function UserDashboard () {
     })
   }
 
-  const handleJoinLeague = (league, user) => {
+  const handleJoinLeague = (league, user, isAdmin = false) => {
     const updatedLeagueList = userData.leagues.concat({
       id: league,
-      isAdmin: false,
-      membershipStatus: "Pending"
+      isAdmin: isAdmin,
+      membershipStatus: isAdmin ? "Member" : "Pending"
     })
   
     updateUsersLeagues(user, updatedLeagueList).then(res => {
@@ -99,7 +102,7 @@ export default function UserDashboard () {
       leagues: updatedLeagueList
     })
 
-    handleUpdateLeagueMembers(league, user)
+    handleUpdateLeagueMembers(league, user, isAdmin)
 
     if (leaguesToJoin.length === 1) {
       setLeaguesToJoin([])
@@ -113,7 +116,7 @@ export default function UserDashboard () {
     }
   }
 
-  const handleUpdateLeagueMembers = (league, user) => {
+  const handleUpdateLeagueMembers = (league, user, isAdmin = false) => {
     getLeagueMembers(league).then(res => {
       res ? setLeagueMembers(res) : setLeagueMembers([])
     })
@@ -121,8 +124,8 @@ export default function UserDashboard () {
     const userObject = {
       id: user.uid,
       name: user.displayName,
-      isAdmin: false,
-      membershipStatus: "Pending"
+      isAdmin: isAdmin,
+      membershipStatus: isAdmin ? "Member" : "Pending"
     }
 
     const newMembers = leagueMembers.length > 0 ? leagueMembers.concat(userObject) : [userObject]
@@ -133,14 +136,56 @@ export default function UserDashboard () {
     })
   }
 
+  //todo check to make sure acronym doesn't already exist
   const handleCreateNewLeague = user => {
     const userObject = {
       id: user.uid,
       name: user.displayName,
       isAdmin: true,
-      membershipStatus: "Approved"
+      membershipStatus: "Member"
     }
+
+    const formData = {
+      leagueName: leagueName,
+      leagueAcronym: leagueAc,
+      doinkFund: doink,
+    }
+
+    let doinkObj = []
+
+    if (doink) {
+      doinkObj.push({
+        doinks: 0,
+        name: user.displayName,
+        uid: user.uid
+      })
+    }
+    const newLeagues = leagues
+
+    newLeagues[leagueAc.toLowerCase()] = leagueName
+
+    const combinedData = {
+      userObject,
+      formData,
+      newLeagues,
+      doinkObj
+    }
+
+    createNewLeague(combinedData).then(res => {
+      setAlertOpen(true)
+      setAlertMessage(res.message)
+      setAlertLevel(res.code)
+      setLeagueAc("")
+      setLeagueName("")
+      setDoink(false)
+      setOpen(false)
+      handleJoinLeague(leagueAc.toLowerCase(), user, true)
+    })
   }
+
+  const handleChange = (event) => {
+    setDoink(event.target.checked);
+  };
   
   return (
     <div className="userDashboard">
@@ -162,6 +207,7 @@ export default function UserDashboard () {
             }
             sx={{ mb: 2 }}
             severity={alertLevel}
+            variant="filled"
           >
             {alertMessage}
           </Alert>
@@ -229,9 +275,9 @@ export default function UserDashboard () {
         </div>
       ) : null 
       }
-      {/* <h2>Create a new League</h2>
-      <p>Want to get in on the fun? Make your own league (with blackjack and hookers)</p>
-      <Button onClick={() => setOpen(true)}>Create League</Button>
+      <h2>Create a new League</h2>
+      <p>Want to get in on the fun? Make your own league</p>
+      <Button variant="outlined" color="success" onClick={() => setOpen(true)}>Create League</Button>
       <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
@@ -248,24 +294,39 @@ export default function UserDashboard () {
         <Fade in={open}>
           <Box sx={style}>
             <h2>Create a new League</h2>
+            <p>All leagues are subject to approval from DiscGolfManager staff</p>
             <FormGroup>
               <TextField
                 required
                 id="outlined-required"
                 label="League Name"
+                onChange={(e) => setLeagueName(e.target.value)}
+                style={{ marginBottom: 15}}
               />
               <TextField
                 required
                 id="outlined-required"
                 label="League Acronym"
+                onChange={(e) => setLeagueAc(e.target.value)}
+                error={leagueAc.length < 4}
+                helperText={leagueAc.length < 4 ? "League Acronym must be 4 characters long" : null}
               />
               <h4 style={{marginBottom: 0}}>League Extras</h4>
-              <FormControlLabel control={<Checkbox />} label="Doink Fund" style={{width: 200}}/><Help />
-              <Button variant="contained" color="success">Craete League</Button>
+              <Table style={{ width: "33%" }}>
+                <TableRow>
+                  <TableCell>
+                    <FormControlLabel control={<Checkbox checked={doink} onChange={handleChange} />} label="Doink Fund" />
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip placement="right" title="A way to track and penalize tree hits"><Help /></Tooltip>
+                  </TableCell>
+                </TableRow>
+              </Table>
+              <Button variant="contained" color="success" onClick={() => handleCreateNewLeague(user)}>Craete League</Button>
             </FormGroup>
           </Box>
         </Fade>
-      </Modal> */}
+      </Modal>
     </div>
   )
 }
