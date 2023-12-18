@@ -145,7 +145,8 @@ export const addScorecardToFirebase = async (card) => {
 export function writeScorecardToDatabase(card) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
-  set(ref(db, 'maftb/scorecards/' + id), {
+  const newId = card.course + " " + card.date + " " + Math.floor(Math.random() * 100000000)
+  set(ref(db, 'maftb/scorecards/' + newId), {
     Course: card.course,
     Layout: card.layout,
     Players: card.playerArray,

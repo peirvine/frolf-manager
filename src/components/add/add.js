@@ -85,8 +85,6 @@ export default function Add() {
     playerScores[player] = value
   }
 
-  console.warn('user', user)
-
   return (
     <div className="addScorecard">
       <h1>Add a Scorecard</h1>

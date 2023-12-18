@@ -36,7 +36,6 @@ export default function Doink() {
 
   const registerDoinker = (user) => {
     registerDonkPlayer(user).then(res => {
-      console.log(res)
       if (res) {
         setOpen(true)
         setVariant('success')

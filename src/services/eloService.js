@@ -85,7 +85,6 @@ const getCardAverage = (card) => {
     
   })
   const average = scores / numPlayers
-  console.log(average)
   return average
 }
 

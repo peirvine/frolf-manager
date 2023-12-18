@@ -74,8 +74,6 @@ export default function LeagueRankingsHistory ( props ) {
               {props.tourney.map((x) => {
                 const coursePar = getCoursePar(x.Players)
                 const sortedCard = sortCard(x.Players, coursePar)
-                console.warn(sortedCard)
-                console.warn('x', x)
                 return (
                 <> 
                   <p className="courseName"><strong>{x.Course}</strong>: {x.Layout}</p>

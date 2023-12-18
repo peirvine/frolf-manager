@@ -25,7 +25,6 @@ export async function uDiscDump (card) {
     
     
     const parData = parRow[2].split(',')
-    console.log('pd', parData)
     playerArray.push({
       player: "Par",
       total: parData[4],
@@ -38,7 +37,6 @@ export async function uDiscDump (card) {
     // eslint-disable-next-line array-callback-return
     res.map(x => {
       const y = x.split(',')
-      console.warn('y', y)
       playerArray.push({
         player: y[0],
         total: y[5],
