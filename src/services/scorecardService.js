@@ -61,7 +61,6 @@ export async function uDiscDump (card) {
   if (validateCard(returnValue)) {
     // const googleRes = await addScorecardToGoogle(returnValue)
     let response = {code: "success", message: "Card added successfully."}
-    // addScorecardToFirebase(returnValue)
     writeScorecardToDatabase(returnValue)
     calculateElo(returnValue)
     // response = scorecardRes.then(res => {

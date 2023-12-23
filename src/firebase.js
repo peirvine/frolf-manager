@@ -1,5 +1,8 @@
-/* eslint-disable array-callback-return */
 /* eslint-disable no-unused-vars */
+/* eslint-disable array-callback-return */
+
+//todo break this file up
+
 import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import {
@@ -11,14 +14,12 @@ import {
 import {
   getFirestore,
   query,
-  getDoc,
   doc,
   getDocs,
   collection,
   where,
   addDoc,
   setDoc,
-  updateDoc
 } from "firebase/firestore"
 import { getDatabase, ref, set, child, get, update, push, remove } from "firebase/database";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
@@ -50,23 +51,40 @@ const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async () => {
   try {
+    const dbRef = ref(getDatabase());
     const res = await signInWithPopup(auth, googleProvider)
     const user = res.user;
-    const q = query(collection(db, "maftb", "players", "player"), where("uid", "==", user.uid))
-    const docs = await getDocs(q)
-    if (docs.docs.length === 0) {
-      await addDoc(collection(db, "maftb", "players", "player"), {
+    const isUser = await get(child(dbRef, `users/` + res.user.displayName + " " + res.user.uid)).then((snapshot) => {
+      if (snapshot.exists()) {
+        return true
+      } else {
+        logEvent(analytics, 'No player found, going through the sign up flow');
+        return false
+      }
+    }).catch((error) => {
+      logEvent(analytics, 'No player found there is an error :(', {error: error} );
+    });
+
+    if (!isUser) {
+      const db = getDatabase();
+      set(ref(db, 'users/' + res.user.displayName + " " + res.user.uid), {
         uid: user.uid,
         name: user.displayName,
         authProvider: "google",
         email: user.email,
-        league: "",
         leagues: [],
-        isAdmin: false
+        siteAdmin: false,
       })
+      .then(() => {
+        logEvent(analytics, 'Sign up of user successful');
+      })
+      .catch((error) => {
+        console.warn('error 1')
+        logEvent(analytics, 'A user was unable sign up for a league', {error: error} );
+      });
     }
   } catch (err) {
-    // console.error(err);
+    console.warn('err', err)
     logEvent(analytics, 'A user had an error signing in', {error: err} );
   }
 }
@@ -125,23 +143,6 @@ export const updateDoinkBalance = async (name, user, balance) => {
 
 
 /****************** Scorecards ******************/
-export const addScorecardToFirebase = async (card) => {
-  try {
-    await addDoc(collection(db, "maftb", "scorecards", "cards"), {
-      Course: card.course,
-      Layout: card.layout,
-      Players: card.playerArray,
-      Date: card.date,
-      Par: card.par,
-      id: Math.random() * 100
-    })
-    return true 
-  } catch (err) {
-    logEvent(analytics, 'A user was unable to add a scorecard', {error: err} );
-    return false
-  }
-}
-
 export function writeScorecardToDatabase(card) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
@@ -353,14 +354,19 @@ export function getEloGraphData() {
 }
 
 /****************** Player Dashboard ******************/
-export const getUserData = async (user) => {
-  try {
-    const q = query(collection(db, "maftb", "players", "player"), where("uid", "==", user.uid))
-    const docs = await getDocs(q)
-    return docs
-  } catch (err) {
-    logEvent(analytics, 'could not get user data', {error: err})
-  }
+export const getUserDataV2 = (user) => {
+  const dbRef = ref(getDatabase());
+  let userData = get(child(dbRef, `users/` + user.displayName + " " + user.uid)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      // console.log("No data available");
+      logEvent(analytics, 'No userdata available');
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch league data', {error: error} );
+  });
+  return userData
 }
 
 export const getLeagueName = (league) => {
@@ -378,23 +384,19 @@ export const getLeagueName = (league) => {
   return eloGraph
 }
 
-export const updateUsersLeagues = async (user, leagues) => {
-  const q = query(collection(db, "maftb", "players", "player"), where("uid", "==", user.uid))
-  const docs = await getDocs(q)
-  let id
-  docs.forEach(x => {
-    id = x.id
+export const updateUsersLeaguesV2 = async (user, leagues) => {
+  const db = getDatabase()
+  let res = update(ref(db, '/users/' + user.displayName + " " + user.uid), {
+    leagues: leagues
   })
-  let res
-  try {
-    await updateDoc(doc(db, "maftb", "players", "player", id), {
-      leagues: leagues
-    });
-    res = {code: "success", message: "League membership updated successfully!"}
-  } catch (err) {
-    res = {code: "error", message: "Error updating your league membership"}
-    logEvent(analytics, 'A user was unable to update their league membership', {error: err} );
-  }
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "League membership updated successfully!"}
+  })
+  .catch((error) => {
+    logEvent(analytics, "Error updating your league membership", {error: error} );
+    return {code: "error", message: "League Not Updated"}
+  });
   return res
 }
 
@@ -445,13 +447,13 @@ export function createNewLeague(leagueInfo) {
   const db = getDatabase()
 
   let leagueIndex = set(ref(db, 'leagueIndex'), leagueInfo.newLeagues)
-  .then(() => {
-    return {code: "success", message: "New league crated!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, `The system failed to update the league index`, {error: error} );
-    return {code: "error", message: "League Not Created"}
-  });
+    .then(() => {
+      return {code: "success", message: "New league crated!"}
+    })
+    .catch((error) => {
+      logEvent(analytics, `The system failed to update the league index`, {error: error} );
+      return {code: "error", message: "League Not Created"}
+    });
   let doinkFundInit
   if (leagueInfo.formData.doinkFund) {
     doinkFundInit = set(ref(db, leagueInfo.formData.leagueAcronym + '/doinkfund/'), leagueInfo.doinkObj)

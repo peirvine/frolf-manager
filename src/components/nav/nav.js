@@ -85,7 +85,7 @@ export default function Nav() {
               textDecoration: 'none',
             }}
           >
-            Such Frolf
+            {window.location.href.includes("suchfrolf") ? "Such Frolf" : "Disc Golf Manager"}
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
-import { auth, getUserData, getLeagueName, updateUsersLeagues, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague } from "../../firebase"
+import { auth, getUserDataV2, getLeagueName, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2 } from "../../firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
@@ -36,10 +36,8 @@ export default function UserDashboard () {
   };
 
   useEffect(() => { 
-    getUserData(user).then(res => {
-      res.forEach(x => {
-        setUserData(x.data())
-      })
+    getUserDataV2(user).then(res => {
+      setUserData(res)
     })
   }, [user])
 
@@ -65,7 +63,7 @@ export default function UserDashboard () {
 
   const handleLeaveLeague = league => {
     const newLeagueList = userData.leagues.filter( l => { return l.id !== league})
-    updateUsersLeagues(user, newLeagueList).then(res => {
+    updateUsersLeaguesV2(user, newLeagueList).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
@@ -91,7 +89,7 @@ export default function UserDashboard () {
       membershipStatus: isAdmin ? "Member" : "Pending"
     })
   
-    updateUsersLeagues(user, updatedLeagueList).then(res => {
+    updateUsersLeaguesV2(user, updatedLeagueList).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
