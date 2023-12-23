@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
+import Papa from "papaparse"
 import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
@@ -85,6 +86,20 @@ export default function Add() {
     playerScores[player] = value
   }
 
+  const handleCSVUpload = (event) => {
+    console.log(event.target.files[0])
+    Papa.parse(event.target.files[0], {
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        console.log(results.data)
+      },
+    });
+    setOpen(true)
+    setVariant('info')
+    setAlertMessage('File uploaded')
+  }
+
   return (
     <div className="addScorecard">
       <h1>Add a Scorecard</h1>
@@ -99,8 +114,8 @@ export default function Add() {
           <Box sx={{ width: '100%', flexGrow: 1 }}>
             <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
               <Grid item md={6} xs={12}>
-                <h2>Automatic UDisc Import</h2>
-                <p>To do this go to your card in UDisc, click the Hamburger Menu, click "Export to CSV", then copy the data and paste it into the field below. This is the preferred way to import data.</p>
+                <h2>Add Card from UDisc</h2>
+                <p>To do this go to your card in UDisc on the mobile app, click the Hamburger Menu, click "Export to CSV", then copy the data and paste it into the field below. This is the preferred way to import data.</p>
                 <FormControl>
                   <TextField
                     required
@@ -113,6 +128,23 @@ export default function Add() {
                   <Button className="submitButton" variant="contained" onClick={() => handleUdisc()}>Parse UDisc CSV</Button>
                   <Button className="submitButton" variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
                 </FormControl>
+              </Grid>
+              <Grid item md={6} xs={12}>
+                <h2>League CSV Add</h2>
+                <p>If you are adding a league match, click Export to CSV on the Scoring tab and then upload the CSV file into the box below.</p>
+                <Button
+                  variant="contained"
+                  component="label"
+                >
+                  Upload Round
+                  <input
+                    type="file"
+                    accept=".csv"
+                    hidden
+                    onChange={handleCSVUpload}
+                  />
+                </Button>
+                
               </Grid>
               <Grid item md={6} xs={12}>
                 <h2>Manual Add</h2>
