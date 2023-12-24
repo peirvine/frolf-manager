@@ -98,3 +98,76 @@ function validateCard(card) {
 
   return valid
 }
+
+export async function uDiscLeagueAdd (data) {
+  const par = getPar(data.parRow)
+  const playerArray = formatPlayers(data.playerData)
+  const parPlayer = formatPar(data, par)
+  playerArray.push(parPlayer)
+  const date = formatDate()
+
+  const formattedCard = {
+    course: data.course,
+    layout: data.layout,
+    date,
+    par,
+    playerArray,
+    rawUDiscCard: data.playerData
+  }
+  try {
+    writeScorecardToDatabase(formattedCard)
+    calculateElo(formattedCard)
+    return {code: "success", message: "Card added successfully."}
+  } catch (err) {
+    return {code: "error", message: "Error, card not added."}
+  }
+  
+}
+
+function getPar (parRow) {
+  return parRow.reduce((partialSum, a) => partialSum + parseInt(a), 0)
+}
+
+function formatPlayers (playerObject) {
+  let returnObject = []
+
+  // eslint-disable-next-line array-callback-return
+  playerObject.map(player => {
+    let tempHoles = []
+    for (const prop in player) {
+      if (prop.includes('hole')) {
+        tempHoles.push(player[prop])
+      }
+    }
+    let tempPlayer = {
+      player: player.name,
+      total: player.total_score,
+      plusMinus: player.relative_score,
+      rating: '',
+      holes: tempHoles
+    }
+    returnObject.push(tempPlayer)
+  })
+
+  return returnObject
+}
+
+function formatPar (data, par) {
+  return {
+    player: "Par",
+    total: par,
+    plusMinus: "",
+    rating: '',
+    holes: data.parRow
+  }
+}
+
+function formatDate() {
+  const year = new Date().getFullYear()
+  const month = new Date().getMonth()
+  const day = new Date().getDate()
+  const hours = new Date().getHours()
+  const min = new Date().getSeconds()
+
+  return year + "-" + month + "-" + day + " " + hours + min
+}

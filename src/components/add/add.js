@@ -1,73 +1,22 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
+import Papa from "papaparse"
 import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, signInWithGoogle } from "../../firebase"
 import { addScorecard, uDiscDump } from '../../services/scorecardService';
+import LeagueAdd from './leagueAdd';
 
 import './add.scss'
 
 export default function Add() {
-  const [layouts, setLayouts] = useState([])
   const [user] = useAuthState(auth);
-
-  const [chosenCourse, setChosenCourse] = useState('')
-  const [chosenLayout, setChosenLayout] = useState('')
-  const [par, setPar] = useState('')
   const [udisc, setUdisc] = useState("")
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
-  
-  let playerScores = {
-    Alex: '',
-    Benton: '',
-    Greg: '',
-    Jimmy: '',
-    Lane: '',
-    Peter: '',
-    Rob: '',
-    Samir: ''
-  }
-
-  const players = ['Alex', 'Benton', 'Greg', 'Jimmy', 'Lane', 'Peter', 'Rob', 'Samir']
-
-  const frolfCourses = [
-    { label: 'Riverfront 13', layouts: ['Red', 'Blue', 'Other'] },
-    { label: 'Moir Park', layouts: ['Once Around', 'Twice Around'] },
-  ];
-
-  const handleSubmit = () => {
-    const scorecard = {
-      course: chosenCourse,
-      layout: chosenLayout,
-      par,
-      playerArray: playerScores,
-      date: new Date().toISOString()
-    }
-    setOpen(true)
-    setVariant('info')
-    setAlertMessage('Adding scorecard, do not click submit again')
-    const cardRes = addScorecard(scorecard)
-    setVariant(cardRes.code)
-    setAlertMessage(cardRes.message)
-    
-    setChosenCourse('')
-    setChosenLayout('')
-    setPar('')
-    playerScores = {
-      Alex: '',
-      Benton: '',
-      Greg: '',
-      Jimmy: '',
-      Lane: '',
-      Peter: '',
-      Rob: '',
-      Samir: ''
-    }
-  }
 
   const handleUdisc = () => {
     setOpen(true)
@@ -79,10 +28,6 @@ export default function Add() {
       setVariant(res.code)
       setAlertMessage(res.message)
     })
-  }
-
-  const handleManualAdd = (value, player) => {
-    playerScores[player] = value
   }
 
   return (
@@ -99,8 +44,8 @@ export default function Add() {
           <Box sx={{ width: '100%', flexGrow: 1 }}>
             <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
               <Grid item md={6} xs={12}>
-                <h2>Automatic UDisc Import</h2>
-                <p>To do this go to your card in UDisc, click the Hamburger Menu, click "Export to CSV", then copy the data and paste it into the field below. This is the preferred way to import data.</p>
+                <h2>Add Card from UDisc</h2>
+                <p>To do this go to your card in UDisc on the mobile app, click the Hamburger Menu, click "Export to CSV", then copy the data and paste it into the field below. This is the preferred way to import data.</p>
                 <FormControl>
                   <TextField
                     required
@@ -113,6 +58,9 @@ export default function Add() {
                   <Button className="submitButton" variant="contained" onClick={() => handleUdisc()}>Parse UDisc CSV</Button>
                   <Button className="submitButton" variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
                 </FormControl>
+              </Grid>
+              <Grid item md={6} xs={12}>
+                <LeagueAdd />
               </Grid>
               <Grid item md={6} xs={12}>
                 <h2>Manual Add</h2>
