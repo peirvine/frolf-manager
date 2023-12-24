@@ -114,8 +114,14 @@ export async function uDiscLeagueAdd (data) {
     playerArray,
     rawUDiscCard: data.playerData
   }
-  writeScorecardToDatabase(formattedCard)
-  calculateElo(formattedCard)
+  try {
+    writeScorecardToDatabase(formattedCard)
+    calculateElo(formattedCard)
+    return {code: "success", message: "Card added successfully."}
+  } catch (err) {
+    return {code: "error", message: "Error, card not added."}
+  }
+  
 }
 
 function getPar (parRow) {

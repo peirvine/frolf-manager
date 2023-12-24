@@ -65,7 +65,12 @@ export default function LeagueAdd() {
       parRow,
       playerData
     }
-    uDiscLeagueAdd(roundData)
+    const res = uDiscLeagueAdd(roundData)
+    res.then(res => {
+      setOpen(true)
+      setVariant(res.code)
+      setAlertMessage(res.message)
+    })
   }
 
   const handleReset = () => {

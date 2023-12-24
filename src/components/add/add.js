@@ -12,64 +12,11 @@ import LeagueAdd from './leagueAdd';
 import './add.scss'
 
 export default function Add() {
-  const [layouts, setLayouts] = useState([])
   const [user] = useAuthState(auth);
-
-  const [chosenCourse, setChosenCourse] = useState('')
-  const [chosenLayout, setChosenLayout] = useState('')
-  const [par, setPar] = useState('')
   const [udisc, setUdisc] = useState("")
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
-  
-  let playerScores = {
-    Alex: '',
-    Benton: '',
-    Greg: '',
-    Jimmy: '',
-    Lane: '',
-    Peter: '',
-    Rob: '',
-    Samir: ''
-  }
-
-  const players = ['Alex', 'Benton', 'Greg', 'Jimmy', 'Lane', 'Peter', 'Rob', 'Samir']
-
-  const frolfCourses = [
-    { label: 'Riverfront 13', layouts: ['Red', 'Blue', 'Other'] },
-    { label: 'Moir Park', layouts: ['Once Around', 'Twice Around'] },
-  ];
-
-  const handleSubmit = () => {
-    const scorecard = {
-      course: chosenCourse,
-      layout: chosenLayout,
-      par,
-      playerArray: playerScores,
-      date: new Date().toISOString()
-    }
-    setOpen(true)
-    setVariant('info')
-    setAlertMessage('Adding scorecard, do not click submit again')
-    const cardRes = addScorecard(scorecard)
-    setVariant(cardRes.code)
-    setAlertMessage(cardRes.message)
-    
-    setChosenCourse('')
-    setChosenLayout('')
-    setPar('')
-    playerScores = {
-      Alex: '',
-      Benton: '',
-      Greg: '',
-      Jimmy: '',
-      Lane: '',
-      Peter: '',
-      Rob: '',
-      Samir: ''
-    }
-  }
 
   const handleUdisc = () => {
     setOpen(true)
@@ -81,24 +28,6 @@ export default function Add() {
       setVariant(res.code)
       setAlertMessage(res.message)
     })
-  }
-
-  const handleManualAdd = (value, player) => {
-    playerScores[player] = value
-  }
-
-  const handleCSVUpload = (event) => {
-    console.log(event.target.files[0])
-    Papa.parse(event.target.files[0], {
-      header: true,
-      skipEmptyLines: true,
-      complete: function (results) {
-        console.log(results.data)
-      },
-    });
-    setOpen(true)
-    setVariant('info')
-    setAlertMessage('File uploaded')
   }
 
   return (
