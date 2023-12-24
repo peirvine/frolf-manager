@@ -7,6 +7,7 @@ import { NavLink } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, signInWithGoogle } from "../../firebase"
 import { addScorecard, uDiscDump } from '../../services/scorecardService';
+import LeagueAdd from './leagueAdd';
 
 import './add.scss'
 
@@ -130,21 +131,7 @@ export default function Add() {
                 </FormControl>
               </Grid>
               <Grid item md={6} xs={12}>
-                <h2>League CSV Add</h2>
-                <p>If you are adding a league match, click Export to CSV on the Scoring tab and then upload the CSV file into the box below.</p>
-                <Button
-                  variant="contained"
-                  component="label"
-                >
-                  Upload Round
-                  <input
-                    type="file"
-                    accept=".csv"
-                    hidden
-                    onChange={handleCSVUpload}
-                  />
-                </Button>
-                
+                <LeagueAdd />
               </Grid>
               <Grid item md={6} xs={12}>
                 <h2>Manual Add</h2>
