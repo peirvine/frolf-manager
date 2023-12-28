@@ -1,12 +1,11 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
-import { auth, getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2 } from "../../firebase"
+import { auth, getUserDataV2, getLeagueName, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2 } from "../../firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
-import FunStats from './funStats';
 
-export default function UserDashboard () {
+export default function LeagueInfo () {
   const [user] = useAuthState(auth);
   const [userData, setUserData] = useState([])
   const [leagues, setLeauges] = useState({})
@@ -38,41 +37,27 @@ export default function UserDashboard () {
 
   useEffect(() => { 
     getUserDataV2(user).then(res => {
-        setUserData(res)
+      setUserData(res)
     })
   }, [user])
 
   useEffect(() => {
-    if (userData.leagues) {
-      handleLeagueName(userData.leagues)
-    } else {
-      handleLeagueName({})
-    }    
+    handleLeagueName(userData.league)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData])
 
-  const handleLeagueName = (leagueObj) => {
-    const res = getLeagueNames()
+  const handleLeagueName = (league) => {
+    const res = getLeagueName(league)
     res.then(x => {
       setLeauges(x)
     })
     let compArray = []
 
-    console.log(leagues)
-
-    if (leagueObj.length > 0) {
-      for (const [key, value] of Object.entries(leagues)) {
-        if (leagueObj.filter(l => l.id === key).length === 0 ) {
-          compArray.push(key)
-        }
-      }
-    } else {
-      for (const [key, value] of Object.entries(leagues)) {
+    for (const [key, value] of Object.entries(leagues)) {
+      if (userData.leagues.filter(l => l.id === key).length === 0 ) {
         compArray.push(key)
       }
     }
-    
-    console.warn('ca', compArray)
     setLeaguesToJoin(compArray)
   }
 
@@ -201,9 +186,7 @@ export default function UserDashboard () {
   };
   
   return (
-    <div className="userDashboard">
-      <h1>Hi, {user.displayName}</h1>
-      <FunStats />
+    <div className="leagueInfo">
       <Box sx={{ width: '100%' }}>
         <Snackbar open={alertOpen}>
           <Alert
