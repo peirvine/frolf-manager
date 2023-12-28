@@ -67,12 +67,12 @@ export const signInWithGoogle = async () => {
 
     if (!isUser) {
       const db = getDatabase();
-      set(ref(db, 'users/' + res.user.displayName + " " + res.user.uid), {
+      update(ref(db, 'users/' + res.user.displayName + " " + res.user.uid), {
         uid: user.uid,
         name: user.displayName,
         authProvider: "google",
         email: user.email,
-        leagues: [],
+        leagues: [{}],
         siteAdmin: false,
       })
       .then(() => {
@@ -360,7 +360,7 @@ export const getUserDataV2 = (user) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
+      console.log("No data available");
       logEvent(analytics, 'No userdata available');
     }
   }).catch((error) => {
@@ -369,7 +369,7 @@ export const getUserDataV2 = (user) => {
   return userData
 }
 
-export const getLeagueName = (league) => {
+export const getLeagueNames = () => {
   const dbRef = ref(getDatabase());
   let eloGraph = get(child(dbRef, `leagueIndex/`)).then((snapshot) => {
     if (snapshot.exists()) {
