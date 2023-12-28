@@ -4,6 +4,9 @@ import { auth, getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMemb
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
+import {
+  Link
+} from "react-router-dom";
 import FunStats from './funStats';
 
 export default function UserDashboard () {
@@ -245,7 +248,7 @@ export default function UserDashboard () {
                     <TableCell sx={{ width: 25 }}>{leagues[x.id]}</TableCell>
                     <TableCell sx={{ width: 25 }}>{x.membershipStatus}</TableCell>
                     <TableCell sx={{ width: 100 }}>
-                      {x.isAdmin ? <Button variant="contained" color="success" sx={{ marginRight: "15px" }}>Manage</Button> : null}
+                      {x.isAdmin ? <Link to={`dashboard/manage/${x.id}`}><Button variant="contained" color="success" sx={{ marginRight: "15px" }}>Manage</Button></Link> : null}
                       <Button variant="contained" sx={{ marginRight: "15px" }}>My Profile</Button>
                       <Button variant="contained" color="error" onClick={() => handleLeaveLeague(x.id)}>Leave</Button>
                     </TableCell>
