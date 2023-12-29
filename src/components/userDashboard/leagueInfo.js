@@ -1,12 +1,12 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
-import { auth, getUserDataV2, getLeagueName, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2 } from "../../firebase"
-import { useAuthState } from "react-firebase-hooks/auth";
+import { getUserDataV2, getLeagueName, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2 } from "../../firebase"
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
+import { useOutletContext } from 'react-router-dom'
 
 export default function LeagueInfo () {
-  const [user] = useAuthState(auth);
+  const [user] = useOutletContext();
   const [userData, setUserData] = useState([])
   const [leagues, setLeauges] = useState({})
   const [leagueMembers, setLeagueMembers] = useState([])
