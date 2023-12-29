@@ -15,3 +15,4 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUCH_FROLF_FB20A }}'
           projectId: such-frolf-fb20a
+          channelId: dev
