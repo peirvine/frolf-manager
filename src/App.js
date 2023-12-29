@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
-// import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { auth } from "./firebase"
@@ -8,19 +7,8 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import Paper from '@mui/material/Paper';
 import Nav from './components/nav/nav'
 import Home from './components/home/home'
-import Add from './components/add/add'
-import CurrentRankings from './components/rankings/currentRankings'
-import ViewScorecards from './components/scorecards/scorecards'
-import About from './components/about/about'
-import Footer from './components/footer/footer'
-import Admin from './components/admin/admin'
-import Doink from './components/doink/doink'
-import UserDashboard from './components/userDashboard/userDashboard'
-import ManageLeague from './components/userDashboard/manageLeague';import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import ErrorPage from './errorPage';
+import Footer from './components/footer/footer';
+import { useLocation, Outlet } from "react-router-dom";
 
 import './App.scss';
 
@@ -39,22 +27,10 @@ const theme = createTheme({
   },
 });
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Home />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: "/about",
-    element: <About />,
-    errorElement: <ErrorPage />,
-  },
-]);
-
-
 function App() {
   const [user] = useAuthState(auth);
+  const location = useLocation()
+  const { pathname } = location
 
   return (
     <ThemeProvider theme={theme}>
@@ -63,8 +39,15 @@ function App() {
         <header className="frolfHeader">
             <Nav />
         </header>
+        {pathname === "/" ? <Home /> :(
+          <div className="content">
+            <Paper className="paperContent">
+              <Outlet context={[user]} />
+            </Paper>
+          </div>
+        )}
+        <Footer />
       </div>
-      <RouterProvider router={router} />
       {/* <Router>
         <div className="frolfLeague">
           <header className="frolfHeader">

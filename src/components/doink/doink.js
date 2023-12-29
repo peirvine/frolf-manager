@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell } from '@mui/material'
 import DoinkUser from './doinkUser'
 import { registerDonkPlayer, getDoinks } from '../../firebase'
-import { auth } from "../../firebase"
-import { useAuthState } from "react-firebase-hooks/auth";
+import { useOutletContext } from 'react-router-dom'
 
 import './doink.scss'
 
@@ -16,7 +15,7 @@ export default function Doink() {
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
   const [sumDoink, setSumDoink] = useState(0)
-  const [user] = useAuthState(auth);
+  const [user] = useOutletContext()
   let doinks = []
 
   // const createDoink = (name) => {
@@ -71,52 +70,57 @@ export default function Doink() {
         </Alert>
       </Collapse>
       {!userRegistered && (<h3 onClick={() => registerDoinker(user)}>Register Me</h3>)}
-      <TableContainer size="medium" className="doinkTable">
-        <Table aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell align="center">Player</TableCell>
-              <TableCell align="center">Doinks</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data && (
-              data.forEach(player => {
-                doinks.push(<DoinkUser player={player.data()} user={user.uid} />)
-              })
-            )}
-            {doinks}
-          </TableBody>    
-        </Table>    
-      </TableContainer>
-      <TableContainer size="medium" className="doinkTable">
-        <Table aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell align="center">Total Doinks: {sumDoink}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell align="center">Doink Debits</TableCell>
-            </TableRow>
-          </TableHead>
-        </Table>
-        {/* <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell align="center">Greg's Ace Disc</TableCell>
-              <TableCell align="center">$10 - Paid by Jimmy</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table> */}
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell align="center">Remaining Doink Balance: ${sumDoink - 0}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
-      
+      {user ? (
+        <>
+          <TableContainer size="medium" className="doinkTable">
+            <Table aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center">Player</TableCell>
+                  <TableCell align="center">Doinks</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data && (
+                  data.forEach(player => {
+                    doinks.push(<DoinkUser player={player.data()} user={user.uid} />)
+                  })
+                )}
+                {doinks}
+              </TableBody>    
+            </Table>    
+          </TableContainer>
+          <TableContainer size="medium" className="doinkTable">
+            <Table aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center">Total Doinks: {sumDoink}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell align="center">Doink Debits</TableCell>
+                </TableRow>
+              </TableHead>
+            </Table>
+            {/* <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell align="center">Greg's Ace Disc</TableCell>
+                  <TableCell align="center">$10 - Paid by Jimmy</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table> */}
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell align="center">Remaining Doink Balance: ${sumDoink - 0}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      ) : (
+        <p>Please Log in</p>
+      )}
       <div className="aboutDoinks">
         <h2>Doink Fund Rules</h2>
         <p>In a disc golf game, if a player's throw hits a tree and goes backwards, landing behind the middle of the tree parallel to the tee box, it is considered a "doink". The throw must originate from a tee box or fairway, and the disc must hit the trunk or major limb of the tree, which is predominantly vertical in nature. It's important to note that if the disc hits the ground first and then hits a tree, it does not count as a doink. The sound of the disc hitting the tree is a crucial factor in determining whether it's a doink or not.</p>

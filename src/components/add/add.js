@@ -4,15 +4,15 @@ import Papa from "papaparse"
 import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, signInWithGoogle } from "../../firebase"
+import { signInWithGoogle } from "../../firebase"
+import { useOutletContext } from 'react-router-dom'
 import { addScorecard, uDiscDump } from '../../services/scorecardService';
 import LeagueAdd from './leagueAdd';
 
 import './add.scss'
 
 export default function Add() {
-  const [user] = useAuthState(auth);
+  const [user] = useOutletContext()
   const [udisc, setUdisc] = useState("")
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
