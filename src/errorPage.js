@@ -29,7 +29,7 @@ const handleSignIn = () => {
 
 export default function ErrorPage() {
   const error = useRouteError();
-  console.error(error);
+  console.warn(error);
   let errorComp
   switch (error.message) {
     case "user is null": 

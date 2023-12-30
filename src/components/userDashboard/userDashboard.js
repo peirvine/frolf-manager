@@ -58,8 +58,6 @@ export default function UserDashboard () {
     })
     let compArray = []
 
-    console.log(leagues)
-
     if (leagueObj.length > 0) {
       for (const [key, value] of Object.entries(leagues)) {
         if (leagueObj.filter(l => l.id === key).length === 0 ) {
@@ -72,7 +70,6 @@ export default function UserDashboard () {
       }
     }
     
-    console.warn('ca', compArray)
     setLeaguesToJoin(compArray)
   }
 
@@ -162,12 +159,18 @@ export default function UserDashboard () {
       leagueName: leagueName,
       leagueAcronym: leagueAc,
       doinkFund: doink,
+      acceptingPlayers: true,
+      blurb: ''
     }
 
-    let doinkObj = []
+    let doinkObj = {
+      players: [],
+      expenses: [],
+      maxDoink: 50,
+    }
 
     if (doink) {
-      doinkObj.push({
+      doinkObj.players.push({
         doinks: 0,
         name: user.displayName,
         uid: user.uid
@@ -254,7 +257,7 @@ export default function UserDashboard () {
                             Manage
                           </Button>
                         </Link> : null}
-                      <Button variant="contained" sx={{ marginRight: "15px" }}>My Profile</Button>
+                      <Button disabled variant="contained" sx={{ marginRight: "15px" }}>My Profile</Button>
                       <Button variant="contained" color="error" onClick={() => handleLeaveLeague(x.id)}>Leave</Button>
                     </TableCell>
                   </TableRow>

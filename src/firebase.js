@@ -454,6 +454,14 @@ export function createNewLeague(leagueInfo) {
       logEvent(analytics, `The system failed to update the league index`, {error: error} );
       return {code: "error", message: "League Not Created"}
     });
+  set(ref(db, leagueInfo.formData.leagueAcronym + '/info'), leagueInfo.formData)
+  .then(() => {
+    return {code: "success", message: "New league crated!"}
+  })
+  .catch((error) => {
+    logEvent(analytics, `The system failed to update the league index`, {error: error} );
+    return {code: "error", message: "League Not Created"}
+  });
   let doinkFundInit
   if (leagueInfo.formData.doinkFund) {
     doinkFundInit = set(ref(db, leagueInfo.formData.leagueAcronym + '/doinkfund/'), leagueInfo.doinkObj)
@@ -468,4 +476,78 @@ export function createNewLeague(leagueInfo) {
   }
 
   return leagueIndex
+}
+
+
+/**************** league Settings Page ****************/
+export function getLeagueSettings (league) {
+  const dbRef = ref(getDatabase());
+  let elo = get(child(dbRef, league + `/info/`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      // console.log("No data available");
+      logEvent(analytics, 'No league member data available')
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not league members', {error: error} );
+  });
+  return elo
+}
+
+export function updateLeagueSettings (league, info) {
+  const db = getDatabase()
+  let res = update(ref(db, league + '/info'), info)
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "League setting updated successfully!"}
+  })
+  .catch((error) => {
+    logEvent(analytics, "Error updating your league settings", {error: error} );
+    return {code: "error", message: "League Not Updated"}
+  });
+  return res
+}
+
+export function updateDoinkSettings (league, doinkLimit) {
+  const db = getDatabase()
+  let res = update(ref(db, league + '/doinkfund'), {maxDoink: doinkLimit})
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "Doinkfund settings updated successfully!"}
+  })
+  .catch((error) => {
+    logEvent(analytics, "Error updating your Doinkfund settings", {error: error} );
+    return {code: "error", message: "Doinkfund Not Updated"}
+  });
+  return res
+}
+
+export function addDoinkExpense (league, expense) {
+  const db = getDatabase();
+  let res = push(ref(db, league + '/doinkfund/expenses'), expense)
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "Doinkfund expense added"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELO graph', {error: error} );
+    return {code: "error", message: "Doinkfund expense was not added"}
+  });
+  return res
+}
+
+export function getDoinkExpenses (league) {
+  const dbRef = ref(getDatabase());
+  let doinks = get(child(dbRef, league + `/doinkfund/expenses`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      // console.log("No data available");
+      logEvent(analytics, 'No league member data available')
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not league members', {error: error} );
+  });
+  return doinks
 }
