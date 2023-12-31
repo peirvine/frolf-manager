@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
-import { getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2 } from "../../firebase"
+import { getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2, getLeagueSettings } from "../../firebase"
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
 import { Link, useOutletContext } from "react-router-dom";
@@ -50,7 +50,7 @@ export default function UserDashboard () {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData])
 
-  const handleLeagueName = (leagueObj) => {
+  const handleLeagueName = async (leagueObj) => {
     const res = getLeagueNames()
     res.then(x => {
       setLeauges(x)
@@ -60,15 +60,25 @@ export default function UserDashboard () {
     if (leagueObj.length > 0) {
       for (const [key, value] of Object.entries(leagues)) {
         if (leagueObj.filter(l => l.id === key).length === 0 ) {
-          compArray.push(key)
+          let a
+          await getLeagueSettings(key).then(res => {
+            if (res.acceptingPlayers) {
+              compArray.push(key)
+            }
+          })
         }
       }
     } else {
       for (const [key, value] of Object.entries(leagues)) {
-        compArray.push(key)
+        await getLeagueSettings(key).then(res => {
+          if (res.acceptingPlayers) {
+            compArray.push(key)
+          }
+        })
       }
     }
     
+    console.log(compArray)
     setLeaguesToJoin(compArray)
   }
 
