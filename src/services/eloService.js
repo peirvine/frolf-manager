@@ -19,7 +19,7 @@ export const calculateElo = async (card) => {
   await updateEloHistory(cardElo)
 
   const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, cardElo)
-  await writeEloTracking(prettyElo)
+  await writeEloTracking("maftb", prettyElo)
 
 // updates current elo of player
   const currentElo = await updateCurrentElos(cardElo)
@@ -109,14 +109,14 @@ const updateEloHistory = async (cards) => {
         player: person,
         elo: [cards[person], 1000]
       }
-      addEloToPlayer(apiObj)
+      addEloToPlayer("maftb", apiObj)
     } else {
       res.unshift(cards[person])
       const apiObj = {
         player: person,
         elo: res
       }
-      addEloToPlayer(apiObj)
+      addEloToPlayer("maftb", apiObj)
     }
   }
 }

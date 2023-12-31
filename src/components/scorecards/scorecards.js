@@ -15,7 +15,7 @@ export default function ViewScorecards () {
   const [yearExpanded, setYearExpanded] = useState(year.toString())
 
   useEffect(() => { 
-    const a = getScorecards()
+    const a = getScorecards("maftb")
     a.then(res => {
       sortData(res)
     })

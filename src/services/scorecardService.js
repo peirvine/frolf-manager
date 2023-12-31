@@ -61,7 +61,7 @@ export async function uDiscDump (card) {
   if (validateCard(returnValue)) {
     // const googleRes = await addScorecardToGoogle(returnValue)
     let response = {code: "success", message: "Card added successfully."}
-    writeScorecardToDatabase(returnValue)
+    writeScorecardToDatabase("maftb", returnValue)
     calculateElo(returnValue)
     // response = scorecardRes.then(res => {
     //   if (!res) {
@@ -115,7 +115,7 @@ export async function uDiscLeagueAdd (data) {
     rawUDiscCard: data.playerData
   }
   try {
-    writeScorecardToDatabase(formattedCard)
+    writeScorecardToDatabase("maftb", formattedCard)
     calculateElo(formattedCard)
     return {code: "success", message: "Card added successfully."}
   } catch (err) {

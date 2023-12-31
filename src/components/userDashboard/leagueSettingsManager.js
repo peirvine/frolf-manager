@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
 import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress } from '@mui/material'
@@ -52,6 +53,7 @@ export default function LeagueSettingsManager(props) {
   const reallyDeleteLeague = () => {
     setLoading(true)
     getLeagueMembers(props.league.leagueId).then(res => {
+      // eslint-disable-next-line array-callback-return
       res.map(player => {
         const newUser = {
           displayName: player.name,

@@ -2,7 +2,7 @@
 import {useState, useEffect} from 'react'
 import { TextField, Button, FormControl, Paper, Grid, Snackbar, Alert, IconButton, InputLabel, OutlinedInput, InputAdornment} from '@mui/material'
 import { Close } from '@mui/icons-material'
-import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses } from '../../firebase'
+import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund } from '../../firebase'
 
 export default function DoinkManager(props) {
   const [doinkEnabled, setDoinkEnabled] = useState(false)
@@ -10,6 +10,7 @@ export default function DoinkManager(props) {
   const [alertOpen, setAlertOpen] = useState(false)
   const [desc, setDesc] = useState('')
   const [amount, setAmount] = useState(0)
+  // eslint-disable-next-line no-unused-vars
   const [expenses, setExpenses] = useState()
   const [alertMessage, setAlertMessage] = useState("")
   const [alertLevel, setAlertLevel] = useState("info")
@@ -34,15 +35,37 @@ export default function DoinkManager(props) {
     getDoinkExpenses(props.league).then(
       res => {
         if (res) {
-          console.log(res)
           setExpenses(res)
         }
       }
     )
-  }, [props.league])
+  }, [props.league, doinkEnabled])
 
-  const enableDoinkFund = league => {
-    
+  const enableDoinkFund = () => {
+    const payload = {
+      id: props.league,
+      doinkObj: {
+        players: [],
+        expenses: [],
+        maxDoink: 50,
+      }
+    }
+
+    initDoinkFund(payload).then(res => {
+      setAlertOpen(true)
+      setAlertLevel(res.code)
+      setAlertMessage(res.message)
+      if (res.code === "success") {
+        setDoinkEnabled(true)
+        getLeagueSettings(props.league).then(res => {
+          const settings = {
+            ...res,
+            doinkFund: true,
+          }
+          updateLeagueSettings(props.league, settings)
+        })
+      }
+    })
   }
 
   const handleLeagueExpense = () => {
@@ -60,7 +83,20 @@ export default function DoinkManager(props) {
   }
 
   const handleLeagueDoinkReset = () => {
-
+    //todo update this to not nuke users, but reset values to 0
+    const payload = {
+      id: props.league,
+      doinkObj: {
+        players: [],
+        expenses: [],
+        maxDoink,
+      }
+    }
+    resetDoinkFund(payload).then(res => {
+      setAlertOpen(true)
+      setAlertLevel(res.code)
+      setAlertMessage(res.message)
+    })
   }
 
   return (

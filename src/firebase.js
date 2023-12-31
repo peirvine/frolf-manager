@@ -143,11 +143,11 @@ export const updateDoinkBalance = async (name, user, balance) => {
 
 
 /****************** Scorecards ******************/
-export function writeScorecardToDatabase(card) {
+export function writeScorecardToDatabase(league, card) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   const newId = card.course + " " + card.date + " " + Math.floor(Math.random() * 100000000)
-  set(ref(db, 'maftb/scorecards/' + newId), {
+  set(ref(db, league + '/scorecards/' + newId), {
     Course: card.course,
     Layout: card.layout,
     Players: card.playerArray,
@@ -165,9 +165,9 @@ export function writeScorecardToDatabase(card) {
   });
 }
 
-export const getScorecards = () => {
+export const getScorecards = league => {
   const dbRef = ref(getDatabase());
-  let sorted = get(child(dbRef, `maftb/scorecards`)).then((snapshot) => {
+  let sorted = get(child(dbRef, league + `/scorecards`)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
@@ -182,11 +182,11 @@ export const getScorecards = () => {
 
 
 /****************** ELO ******************/
-export function writeEloTracking(elo) {
+export function writeEloTracking(league, elo) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   const year = new Date().getFullYear();
-  set(ref(db, 'maftb/eloTracking/' + year + '/' + id), {
+  set(ref(db, league + '/eloTracking/' + year + '/' + id), {
     Course: elo.course,
     Layout: elo.layout,
     Players: elo.players,
@@ -205,10 +205,10 @@ export function writeEloTracking(elo) {
   });
 }
 
-export function addEloToPlayer(elo) {
+export function addEloToPlayer(league, elo) {
   const db = getDatabase();
   const year = new Date().getFullYear();
-  set(ref(db, 'maftb/playerEloHistory/' + year + '/' + elo.player), elo.elo)
+  set(ref(db, league + '/playerEloHistory/' + year + '/' + elo.player), elo.elo)
   .then(() => {
     // console.warn('success')
   })
@@ -490,6 +490,48 @@ export function createNewLeague(leagueInfo) {
   return leagueIndex
 }
 
+export function initDoinkFund (league) {
+  const db = getDatabase()
+  const res = set(ref(db, league.id + '/doinkfund/'), league.doinkObj)
+    .then(() => {
+      // console.warn('success')
+      return {code: "success", message: "Doink Fund Initialized"}
+    })
+    .catch((error) => {
+      logEvent(analytics, `The system failed to add a doink fund`, {error: error} );
+      return {code: "error", message: "Doinkfund Not Created"}
+    });
+  return res
+}
+
+export function resetDoinkFund (league) {
+  const db = getDatabase()
+  const res = set(ref(db, league.id + '/doinkfund/'), league.doinkObj)
+    .then(() => {
+      // console.warn('success')
+      return {code: "success", message: "Doink Fund Reset to 0"}
+    })
+    .catch((error) => {
+      logEvent(analytics, `The system failed to add a doink fund`, {error: error} );
+      return {code: "error", message: "Doinkfund Not Reset"}
+    });
+  return res
+}
+
+export function joinDoinkFund (league, users) {
+  const db = getDatabase()
+  const res = set(ref(db, league + '/doinkfund/players'), users)
+    .then(() => {
+      // console.warn('success')
+      return {code: "success", message: "Doink Fund Reset to 0"}
+    })
+    .catch((error) => {
+      logEvent(analytics, `The system failed to add a doink fund`, {error: error} );
+      return {code: "error", message: "Doinkfund Not Reset"}
+    });
+  return res
+}
+
 
 /**************** league Settings Page ****************/
 export function getLeagueSettings (league) {
@@ -567,6 +609,21 @@ export function addDoinkExpense (league, expense) {
 export function getDoinkExpenses (league) {
   const dbRef = ref(getDatabase());
   let doinks = get(child(dbRef, league + `/doinkfund/expenses`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      // console.log("No data available");
+      logEvent(analytics, 'No league member data available')
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not league members', {error: error} );
+  });
+  return doinks
+}
+
+export function getDoinkFundPlayers (league) {
+  const dbRef = ref(getDatabase());
+  let doinks = get(child(dbRef, league + `/doinkfund/players`)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
