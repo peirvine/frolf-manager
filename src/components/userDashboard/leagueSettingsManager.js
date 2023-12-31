@@ -1,17 +1,22 @@
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch } from '@mui/material'
+import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress } from '@mui/material'
 import { Close } from '@mui/icons-material'
-import { getLeagueSettings, updateLeagueSettings } from '../../firebase'
+import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
+import { Link, Navigate } from 'react-router-dom'
 
 export default function LeagueSettingsManager(props) {
   const [name, setName] = useState(props.league.leagueName)
+  const [id, setId] = useState(props.league.leagueId)
   const [blurb, setBlurb] = useState()
   const [checked, setChecked] = useState(true)
   const [leagueData, setLeagueData] = useState({})
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
   const [alertLevel, setAlertLevel] = useState("info")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [finalDialogOpen, setFinalDialogOpen] = useState(false)
 
   useEffect(() => {
     getLeagueSettings(props.league.leagueId).then(
@@ -37,6 +42,47 @@ export default function LeagueSettingsManager(props) {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
+    })
+  }
+
+  const handleDeleteLeague = () => {
+    setDialogOpen(true)
+  }
+
+  const reallyDeleteLeague = () => {
+    setLoading(true)
+    getLeagueMembers(props.league.leagueId).then(res => {
+      res.map(player => {
+        const newUser = {
+          displayName: player.name,
+          uid: player.id
+        }
+        getUserDataV2(newUser).then(res => {
+          console.warn('nested res', res)
+          const newLeagues = res.leagues.filter( l => { return l.id !== props.league.leagueId})
+          updateUsersLeaguesV2(newUser, newLeagues)
+        })
+        removeLeagueMember(props.league.leagueId, player)
+      })
+
+      deleteLeague(props.league.leagueId).then(res => {
+        if (res.code === "success") {
+          setDialogOpen(false)
+          setLoading(false)
+          setFinalDialogOpen(true)
+        } else {
+          setDialogOpen(false)
+          setLoading(false)
+          setAlertOpen(true)
+          setAlertMessage(res.message)
+          setAlertLevel(res.code)
+        }
+        
+        getLeagueNames().then(res => {
+          delete res[id]
+          updateLeagueNames(res)
+        })
+      })
     })
   }
 
@@ -97,6 +143,61 @@ export default function LeagueSettingsManager(props) {
           </Grid>
         </Grid>
       </Paper>
+      <Paper sx={{marginTop: 1}}>
+        <div className="resetDoinks" style={{ width: 600, margin: "auto", textAlign: "center", padding: 15}}>
+          <FormControl>
+            <p>Danger Zone</p>
+            <Button variant="contained" size="small" color="error" onClick={() => handleDeleteLeague()}>Delete League</Button>
+          </FormControl>
+        </div>
+      </Paper>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Delete {props.league.leagueName}?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            <p>Are you sure you want to delete your league? This will <i>permanently</i> delete everything associated with your league. This could be, but not limited to: rounds, rankings, ELOs of players, doinkfund balances, and league histories.</p>
+
+            <p>This cannot be undone.</p>
+          </DialogContentText>
+        </DialogContent>
+        { !loading ? (
+          <DialogActions>
+            <Button variant="outlined" color="info" onClick={() => setDialogOpen(false)}>Cancel, keep league</Button>
+            <Button variant="contained" color="error" onClick={() => reallyDeleteLeague()} autoFocus>
+              Delete {props.league.leagueName}
+            </Button>
+          </DialogActions>
+        ) : (
+          <DialogActions>
+            <CircularProgress />
+          </DialogActions>
+        )}
+      </Dialog>
+      <Dialog
+        open={finalDialogOpen}
+        onClose={() => <Navigate to={"/dashboard"} />}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {props.league.leagueName} has been deleted
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            <p>We're sorry to see your league go.</p>
+          </DialogContentText>
+        </DialogContent>
+         <DialogActions>
+            <Link to={"/dashboard"}><Button variant="contained" color="info">Thanks</Button></Link>
+          </DialogActions>
+      </Dialog>
     </div>
   )
 }

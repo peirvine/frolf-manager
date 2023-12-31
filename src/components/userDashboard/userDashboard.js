@@ -18,7 +18,6 @@ export default function UserDashboard () {
   const [alertLevel, setAlertLevel] = useState("info")
   const [doink, setDoink] = useState(false)
   const [leagueName, setLeagueName] = useState("")
-  const [leagueAc, setLeagueAc] = useState("")
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
@@ -148,6 +147,10 @@ export default function UserDashboard () {
 
   //todo check to make sure acronym doesn't already exist
   const handleCreateNewLeague = user => {
+    const matches = leagueName.match(/\b(\w)/g)
+    let leagueAc = matches.join('').concat(Math.floor(Math.random() * 99)).toLowerCase()
+
+    console.log(leagueAc)
     const userObject = {
       id: user.uid,
       name: user.displayName,
@@ -178,7 +181,7 @@ export default function UserDashboard () {
     }
     const newLeagues = leagues
 
-    newLeagues[leagueAc.toLowerCase()] = leagueName
+    newLeagues[leagueAc] = leagueName
 
     const combinedData = {
       userObject,
@@ -191,7 +194,6 @@ export default function UserDashboard () {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
-      setLeagueAc("")
       setLeagueName("")
       setDoink(false)
       setOpen(false)
@@ -327,14 +329,6 @@ export default function UserDashboard () {
                 label="League Name"
                 onChange={(e) => setLeagueName(e.target.value)}
                 style={{ marginBottom: 15}}
-              />
-              <TextField
-                required
-                id="outlined-required"
-                label="League Acronym"
-                onChange={(e) => setLeagueAc(e.target.value)}
-                error={leagueAc.length < 4}
-                helperText={leagueAc.length < 4 ? "League Acronym must be 4 characters long" : null}
               />
               <h4 style={{marginBottom: 0}}>League Extras</h4>
               <Table style={{ width: "33%" }}>

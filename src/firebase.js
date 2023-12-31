@@ -384,6 +384,18 @@ export const getLeagueNames = () => {
   return eloGraph
 }
 
+export function updateLeagueNames (newIndex) {
+  const db = getDatabase()
+  set(ref(db, 'leagueIndex'), newIndex)
+    .then(() => {
+      return {code: "success", message: "league updated!"}
+    })
+    .catch((error) => {
+      logEvent(analytics, `The system failed to remove the league index`, {error: error} );
+      return {code: "error", message: "League Not Created"}
+    });
+}
+
 export const updateUsersLeaguesV2 = async (user, leagues) => {
   const db = getDatabase()
   let res = update(ref(db, '/users/' + user.displayName + " " + user.uid), {
@@ -434,7 +446,7 @@ export function removeLeagueMember(league, member) {
   let res = remove(ref(db, league + '/players/'), member)
   .then(() => {
     // console.warn('success')
-    return {code: "success", message: "You joined the league!"}
+    return {code: "success", message: "You left the league!"}
   })
   .catch((error) => {
     logEvent(analytics, `The system failed to update the league members of ` + league, {error: error} );
@@ -506,6 +518,21 @@ export function updateLeagueSettings (league, info) {
     logEvent(analytics, "Error updating your league settings", {error: error} );
     return {code: "error", message: "League Not Updated"}
   });
+  return res
+}
+
+export function deleteLeague (league, newIndex) {
+  const db = getDatabase()
+  let res = remove(ref(db, league))
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "You deleted the league!"}
+  })
+  .catch((error) => {
+    logEvent(analytics, `The system failed to update the league members of ` + league, {error: error} );
+    return {code: "error", message: "League Not Updated"}
+  });
+  // remove from index
   return res
 }
 
