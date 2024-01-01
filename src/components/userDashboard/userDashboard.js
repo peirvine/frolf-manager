@@ -78,11 +78,11 @@ export default function UserDashboard () {
       }
     }
     
-    console.log(compArray)
     setLeaguesToJoin(compArray)
   }
 
-  const handleLeaveLeague = league => {
+  const handleLeaveLeague = async league => {
+    const members = await getLeagueMembers(league)
     const newLeagueList = userData.leagues.filter( l => { return l.id !== league})
     updateUsersLeaguesV2(user, newLeagueList).then(res => {
       setAlertOpen(true)
@@ -93,8 +93,9 @@ export default function UserDashboard () {
         leagues: newLeagueList
       })
     })
+    const newMembers = members.filter( l => { return l.id !== userData.uid})
 
-    removeLeagueMember(league, user).then(res => {
+    removeLeagueMember(league, newMembers).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
@@ -104,12 +105,21 @@ export default function UserDashboard () {
   }
 
   const handleJoinLeague = (league, user, isAdmin = false) => {
-    const updatedLeagueList = userData.leagues.concat({
-      id: league,
-      isAdmin: isAdmin,
-      membershipStatus: isAdmin ? "Member" : "Pending"
-    })
-  
+    let updatedLeagueList
+    if (userData.leagues && userData.leagues.length > 0) {
+      updatedLeagueList = userData.leagues.concat({
+        id: league,
+        isAdmin: isAdmin,
+        membershipStatus: isAdmin ? "Member" : "Pending"
+      })
+    } else {
+      updatedLeagueList = [{
+        id: league,
+        isAdmin: isAdmin,
+        membershipStatus: isAdmin ? "Member" : "Pending"
+      }]
+    }
+    
     updateUsersLeaguesV2(user, updatedLeagueList).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
@@ -135,11 +145,11 @@ export default function UserDashboard () {
     }
   }
 
-  const handleUpdateLeagueMembers = (league, user, isAdmin = false) => {
-    getLeagueMembers(league).then(res => {
-      res ? setLeagueMembers(res) : setLeagueMembers([])
-    })
 
+  //todo move logic into the then or make async
+  const handleUpdateLeagueMembers = async (league, user, isAdmin = false) => {
+    const members = await getLeagueMembers(league)
+    
     const userObject = {
       id: user.uid,
       name: user.displayName,
@@ -147,7 +157,7 @@ export default function UserDashboard () {
       membershipStatus: isAdmin ? "Member" : "Pending"
     }
 
-    const newMembers = leagueMembers.length > 0 ? leagueMembers.concat(userObject) : [userObject]
+    const newMembers = members.length > 0 ? members.concat(userObject) : [userObject]
     updateLeagueMembers(league, newMembers).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
@@ -160,7 +170,6 @@ export default function UserDashboard () {
     const matches = leagueName.match(/\b(\w)/g)
     let leagueAc = matches.join('').concat(Math.floor(Math.random() * 99)).toLowerCase()
 
-    console.log(leagueAc)
     const userObject = {
       id: user.uid,
       name: user.displayName,

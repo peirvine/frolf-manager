@@ -420,6 +420,7 @@ export function getLeagueMembers ( league ) {
     } else {
       // console.log("No data available");
       logEvent(analytics, 'No league member data available')
+      return []
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not league members', {error: error} );
@@ -441,9 +442,10 @@ export function updateLeagueMembers(league, members) {
   return res
 }
 
+//todo can't do this, we need to update the member array :salute:
 export function removeLeagueMember(league, member) {
   const db = getDatabase()
-  let res = remove(ref(db, league + '/players/'), member)
+  let res = set(ref(db, league + '/players/'), member)
   .then(() => {
     // console.warn('success')
     return {code: "success", message: "You left the league!"}
@@ -561,6 +563,10 @@ export function updateLeagueSettings (league, info) {
     return {code: "error", message: "League Not Updated"}
   });
   return res
+}
+
+export function updateLeaguePlayers (league, players) {
+
 }
 
 export function deleteLeague (league, newIndex) {

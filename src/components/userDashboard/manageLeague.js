@@ -50,7 +50,7 @@ export default function ManageLeague() {
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
             <Tab label="league info" {...a11yProps(0)} />
-            <Tab label="players" {...a11yProps(1)} disabled />
+            <Tab label="players" {...a11yProps(1)} />
             <Tab label="doinks" {...a11yProps(2)} />
             <Tab label="rounds" {...a11yProps(3)} disabled />
           </Tabs>
