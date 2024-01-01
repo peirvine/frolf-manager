@@ -110,13 +110,13 @@ export default function UserDashboard () {
       updatedLeagueList = userData.leagues.concat({
         id: league,
         isAdmin: isAdmin,
-        membershipStatus: isAdmin ? "Member" : "Pending"
+        membershipStatus: isAdmin ? "Admin" : "Pending"
       })
     } else {
       updatedLeagueList = [{
         id: league,
         isAdmin: isAdmin,
-        membershipStatus: isAdmin ? "Member" : "Pending"
+        membershipStatus: isAdmin ? "Admin" : "Pending"
       }]
     }
     
@@ -154,7 +154,7 @@ export default function UserDashboard () {
       id: user.uid,
       name: user.displayName,
       isAdmin: isAdmin,
-      membershipStatus: isAdmin ? "Member" : "Pending"
+      membershipStatus: isAdmin ? "Admin" : "Pending"
     }
 
     const newMembers = members.length > 0 ? members.concat(userObject) : [userObject]
@@ -165,7 +165,6 @@ export default function UserDashboard () {
     })
   }
 
-  //todo check to make sure acronym doesn't already exist
   const handleCreateNewLeague = user => {
     const matches = leagueName.match(/\b(\w)/g)
     let leagueAc = matches.join('').concat(Math.floor(Math.random() * 99)).toLowerCase()
@@ -174,7 +173,7 @@ export default function UserDashboard () {
       id: user.uid,
       name: user.displayName,
       isAdmin: true,
-      membershipStatus: "Member"
+      membershipStatus: "Admin"
     }
 
     const formData = {

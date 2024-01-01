@@ -1,64 +1,109 @@
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { getLeagueMembers, updateLeagueMembers } from '../../firebase'
-import { Table, TableRow, TableBody, TableHead, TableContainer, TableCell, Skeleton, Button } from '@mui/material'
+import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2 } from '../../firebase'
+import { Table, TableRow, TableBody, TableHead, TableContainer, TableCell, Skeleton, Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
+import { setDoc } from 'firebase/firestore'
 
 export default function LeaguePlayersManager(props) {
   const { league } = props
   const [ members, setMembers ] = useState([])
+  const [ dialogOpen, setDialogOpen ] = useState(false)
+  const [ kickedMember, setKickedMember ] = useState('')
+  const [ rerender, setReRender] = useState('')
 
   useEffect(() => {
+    console.log('rerender')
     getLeagueMembers(league).then(res => {
       setMembers(res)
     })
   }, [league])
   
-  const handleApprovePlayer = player => {
-    console.log(members)
-    console.log('player', player)
-    console.log(members[player])
-  }
+  const handlePlayer = async (player, action) => {
+    let status =""
+    switch (action) {
+      case "approve":
+        status = "Member"
+        break
+      case "promote":
+        status = "Admin"
+        break
+      case "demote":
+        status = "Member"
+        break
+      case "deny": 
+        status = "Memership Denied"
+        break
+      case "ban":
+        status= ""
+        break
+      default:
+        status = "Pending"
+        break
+    }
+    const playerIndex = members.findIndex((obj => obj.id === player.id))
+    members[playerIndex].membershipStatus = status
+    if (action === "promote" || action === "demote") {
+      members[playerIndex].isAdmin = !members[playerIndex].isAdmin
+    }
+    updateLeagueMembers(league, members)
 
-  const handleDenyPlayer = player => {
+    const playerObj = {
+      displayName: player.name,
+      uid: player.id
+    }
 
-  }
-
-  const handlePromotePlayer = player => {
-
-  }
-
-  const handleDemotePlayer = player => {
-
+    const userData = await getUserDataV2(playerObj)
+    const leagueIndex = userData.leagues.findIndex(obj => obj.id === league)
+    userData.leagues[leagueIndex].membershipStatus = status
+    updateUsersLeaguesV2(playerObj, userData.leagues)
+    setReRender(rerender.concat(' '))
   }
 
   const handleKickPlayer = player => {
-    let isPerma = false
-  //todo pop dialog to ask about kicking with prejiduce
-  //todo "Kick Player" "Kick Player and Prevent Rejoin"
-
-    kickPlayer(player, isPerma)
+    setKickedMember(player)
+    setDialogOpen(true)
   }
 
-  const kickPlayer = (player, isPerma) => {
+  const kickPlayer = async (player, isPerma) => {
+    const status = isPerma ? "Banned from the League" : "Removed, you may reapply"
+    const playerIndex = members.findIndex((obj => obj.id === player.id))
+    members[playerIndex].membershipStatus = isPerma ? "Banned from the League" : "Removed, you may reapply"
+    updateLeagueMembers(league, members)
 
+    const playerObj = {
+      displayName: player.name,
+      uid: player.id
+    }
+
+    const userData = await getUserDataV2(playerObj)
+    const leagueIndex = userData.leagues.findIndex(obj => obj.id === league)
+    userData.leagues[leagueIndex].membershipStatus = status
+    updateUsersLeaguesV2(playerObj, userData.leagues)
+    setDialogOpen(false)
+
+    //todo also delete elo data
   }
 
   const handleMakeActions = player => {
     let availableActions = []
     if (player.membershipStatus === "Pending") {
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="success" onClick={() => handleApprovePlayer(player)}>Approve Membership</Button>)
-      availableActions.push(<Button variant="contained" color="error">Deny Membership</Button>)
+      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="success" onClick={() => handlePlayer(player, "approve")}>Approve Membership</Button>)
+      availableActions.push(<Button variant="contained" color="error" onClick={() => handlePlayer(player, "deny")}>Deny Membership</Button>)
     }
 
     if (player.membershipStatus === "Member") {
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="info">Edit User</Button>)
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="success">Promote to Admin</Button>)
-      availableActions.push(<Button variant="contained" color="error">Kick from League</Button>)
+      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="info" disabled>Edit User</Button>)
+      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="success" onClick={() => handlePlayer(player, "promote")}>Promote to Admin</Button>)
+      availableActions.push(<Button variant="contained" color="error" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
     }
 
     if (player.membershipStatus === "Admin") {
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="error">Remove as Admin</Button>)
-      availableActions.push(<Button variant="contained" color="error">Kick from League</Button>)
+      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="error" onClick={() => handlePlayer(player, "demote")}>Remove as Admin</Button>)
+      availableActions.push(<Button variant="contained" color="error" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
+    }
+
+    if (player.membershipStatus === "Banned from the League") {
+      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="success" onClick={() => handlePlayer(player, "unban")}>Lift Ban</Button>)
     }
 
     return availableActions
@@ -89,15 +134,49 @@ export default function LeaguePlayersManager(props) {
                 )
               })
             ) : (
-              <div className="skeletor">
-                <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
-                <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
-                <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
-              </div>
-      )}
+              <>
+                <TableRow>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                </TableRow>
+              </>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+      {rerender}
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Remove {kickedMember.name} from the league
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            <p>When removing a user you have two options: you can permanently kick them and prevent them from rejoining your league or you can remove them and keep their rejoin options open.</p>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" color="info" onClick={() => kickPlayer(kickedMember, false)}>Remove {kickedMember.name}</Button>
+          <Button variant="contained" color="error" onClick={() => kickPlayer(kickedMember, true)} autoFocus>
+            Ban {kickedMember.name}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   )
 }
