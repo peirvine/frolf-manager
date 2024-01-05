@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
 import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2 } from '../../firebase'
-import { Table, TableRow, TableBody, TableHead, TableContainer, TableCell, Skeleton, Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
+import { Table, TableRow, TableBody, TableHead, TableContainer, TableCell, Skeleton, Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, Paper } from '@mui/material'
 
 export default function LeaguePlayersManager(props) {
   const { league } = props
@@ -110,49 +110,51 @@ export default function LeaguePlayersManager(props) {
   return (
     <div className="playerManager">
       <h3>Manage League Players</h3>
-      <TableContainer size="small" className="rankingsTable">
-        <Table aria-label="player table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Player</TableCell>
-              <TableCell>Member Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {members.length !== 0 ? (
-              members.map(player => {
-                let actions = handleMakeActions(player)
-                return (
+      <Paper sx={{padding: 3}}>
+        <TableContainer size="small" className="rankingsTable">
+          <Table aria-label="player table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Player</TableCell>
+                <TableCell>Member Status</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {members.length !== 0 ? (
+                members.map(player => {
+                  let actions = handleMakeActions(player)
+                  return (
+                    <TableRow>
+                      <TableCell>{player.name}</TableCell>
+                      <TableCell>{player.membershipStatus}</TableCell>
+                      <TableCell>{actions}</TableCell>
+                    </TableRow>
+                  )
+                })
+              ) : (
+                <>
                   <TableRow>
-                    <TableCell>{player.name}</TableCell>
-                    <TableCell>{player.membershipStatus}</TableCell>
-                    <TableCell>{actions}</TableCell>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
                   </TableRow>
-                )
-              })
-            ) : (
-              <>
-                <TableRow>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                </TableRow>
-              </>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                  <TableRow>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
+                  </TableRow>
+                </>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
       {rerender}
       <Dialog
         open={dialogOpen}

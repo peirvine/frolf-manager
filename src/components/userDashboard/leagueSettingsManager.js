@@ -141,7 +141,9 @@ export default function LeagueSettingsManager(props) {
             </FormControl>
           </Grid>
           <Grid xs={6}>
-            {/* something */}
+            <FormControl fullWidth sx={{ padding: 3}}>
+              {/* <Button variant='contained' disabled>Start a new Season</Button> */}
+            </FormControl>
           </Grid>
         </Grid>
       </Paper>
