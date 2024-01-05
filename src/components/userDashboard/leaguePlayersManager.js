@@ -2,7 +2,6 @@
 import {useState, useEffect} from 'react'
 import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2 } from '../../firebase'
 import { Table, TableRow, TableBody, TableHead, TableContainer, TableCell, Skeleton, Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
-import { setDoc } from 'firebase/firestore'
 
 export default function LeaguePlayersManager(props) {
   const { league } = props
@@ -12,7 +11,6 @@ export default function LeaguePlayersManager(props) {
   const [ rerender, setReRender] = useState('')
 
   useEffect(() => {
-    console.log('rerender')
     getLeagueMembers(league).then(res => {
       setMembers(res)
     })

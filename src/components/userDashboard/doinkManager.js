@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { TextField, Button, FormControl, Paper, Grid, Snackbar, Alert, IconButton, InputLabel, OutlinedInput, InputAdornment} from '@mui/material'
+import { TextField, Button, FormControl, Paper, Grid, Snackbar, Alert, IconButton, InputLabel, OutlinedInput, InputAdornment, Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
 import { Close } from '@mui/icons-material'
-import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund } from '../../firebase'
+import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund, deleteDoinkExpense, editDoinkExpense } from '../../firebase'
 
 export default function DoinkManager(props) {
   const [doinkEnabled, setDoinkEnabled] = useState(false)
@@ -11,9 +12,14 @@ export default function DoinkManager(props) {
   const [desc, setDesc] = useState('')
   const [amount, setAmount] = useState(0)
   // eslint-disable-next-line no-unused-vars
-  const [expenses, setExpenses] = useState()
   const [alertMessage, setAlertMessage] = useState("")
   const [alertLevel, setAlertLevel] = useState("info")
+  const [expenseItems, setExpenseItems] = useState([])
+  const [newExpense, setNewExpense] = useState('')
+  const [newAmount, setNewAmount] = useState(0)
+  const [ dialogOpen, setDialogOpen ] = useState(false)
+  const [key, setKey] = useState('')
+  const [render, setRender] = useState('')
 
   const handleDoinkUpdate = () => {
     updateDoinkSettings(props.league, maxDoink).then(res => {
@@ -35,11 +41,24 @@ export default function DoinkManager(props) {
     getDoinkExpenses(props.league).then(
       res => {
         if (res) {
-          setExpenses(res)
+          let returnObj = []
+          for (const [key, value] of Object.entries(res)) {
+            returnObj.push(
+              <TableRow key={key}>
+                <TableCell>{value.expense}</TableCell>
+                <TableCell>${value.amount}</TableCell>
+                <TableCell>
+                  <Button variant="contained" onClick={() => handleExpenseEdit(key, value)} style={{ marginRight: 15}}>Edit</Button>
+                  <Button variant="contained" color="error" onClick={() => handleDeleteExpense(key)}>Delete</Button>
+                </TableCell>
+              </TableRow>
+            )
+          }
+          setExpenseItems(returnObj)
         }
       }
     )
-  }, [props.league, doinkEnabled])
+  }, [props.league, render])
 
   const enableDoinkFund = () => {
     const payload = {
@@ -79,7 +98,10 @@ export default function DoinkManager(props) {
       setAlertOpen(true)
       setAlertLevel(res.code)
       setAlertMessage(res.message)
+      setDesc('')
+      setAmount(0)
     })
+    setRender(render.concat(' '))
   }
 
   const handleLeagueDoinkReset = () => {
@@ -97,14 +119,46 @@ export default function DoinkManager(props) {
       setAlertLevel(res.code)
       setAlertMessage(res.message)
     })
+    setRender(render.concat(' '))
+  }
+
+  const handleExpenseEdit = (key, value) => {
+    setNewAmount(value.amount)
+    setNewExpense(value.expense)
+    setDialogOpen(true)
+    setKey(key)
+  }
+
+  const submitEdit = () => {
+    const newValue = {
+      expense: newExpense,
+      amount: newAmount,
+    }
+    editDoinkExpense(props.league, key, newValue).then(res => {
+      setDialogOpen(false)
+      setAlertOpen(true)
+      setAlertLevel(res.code)
+      setAlertMessage(res.message)
+    })
+    setRender(render.concat(' '))
+  }
+
+  const handleDeleteExpense = key => {
+    deleteDoinkExpense(props.league, key).then(res => {
+      setAlertOpen(true)
+      setAlertLevel(res.code)
+      setAlertMessage(res.message)
+    })
+    setRender(render.concat(' '))
   }
 
   return (
     <div className="doinkManager">
-      <h3>Doinks</h3>
+      <h3>Doinks</h3>{render}
       {doinkEnabled ? (
         <>
           <Paper className="paperContent">
+          <h3>General Settings</h3>
             <Grid container spacing={2}>
               <Snackbar open={alertOpen}>
                 <Alert
@@ -166,7 +220,24 @@ export default function DoinkManager(props) {
               </Grid>
             </Grid>
           </Paper>
-          <Paper sx={{marginTop: 1}}>
+          <Paper className="paperContent" sx={{marginTop: 1}}>
+            <h3>Current Expenses</h3>
+            <TableContainer>
+              <Table sx={{width: 500, marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Expense</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {expenseItems}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+          <Paper className="paperContent" sx={{marginTop: 1}}>
             <div className="resetDoinks" style={{ width: 600, margin: "auto", textAlign: "center", padding: 15}}>
               Is the season over? Reset your doinkfund here. This action cannot be undone.
               <Button style={{marginTop: 10}} variant="contained" size="large" color="error" onClick={() => handleLeagueDoinkReset()}>Reset Doink Balance</Button>
@@ -187,6 +258,45 @@ export default function DoinkManager(props) {
           <Button variant="contained" size="large" onClick={() => enableDoinkFund(props.league)}>Enable Doink Fund</Button>
         </>
       )}
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Update Expense
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            <FormControl fullWidth>
+              <TextField
+                required
+                margin="normal"
+                id="outlined-required"
+                label="League Expense Description"
+                onChange={(e) => setNewExpense(e.target.value)}
+                style={{ marginBottom: 15}}
+                defaultValue={newExpense}
+              />
+              <FormControl fullWidth>
+                <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+                <OutlinedInput
+                  id="outlined-adornment-amount"
+                  startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                  label="Amount"
+                  defaultValue={newAmount}
+                  onChange={(e) => setNewAmount(e.target.value)}
+                />
+              </FormControl>
+            </FormControl>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" color="error" onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="info" onClick={() => submitEdit()}>Update</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   )
 }

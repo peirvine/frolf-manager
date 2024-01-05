@@ -627,6 +627,34 @@ export function getDoinkExpenses (league) {
   return doinks
 }
 
+export function deleteDoinkExpense (league, expense) {
+  const db = getDatabase();
+  let res = remove(ref(db, league + '/doinkfund/expenses/' + expense))
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "Doinkfund expense removed"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to remove the expense', {error: error} );
+    return {code: "error", message: "Doinkfund expense was not removed"}
+  });
+  return res
+}
+
+export function editDoinkExpense (league, expense, expenseObj) {
+  const db = getDatabase();
+  let res = update(ref(db, league + '/doinkfund/expenses/' + expense), expenseObj)
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "Doinkfund expense edited"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the expense', {error: error} );
+    return {code: "error", message: "Doinkfund expense was not removed"}
+  });
+  return res
+}
+
 export function getDoinkFundPlayers (league) {
   const dbRef = ref(getDatabase());
   let doinks = get(child(dbRef, league + `/doinkfund/players`)).then((snapshot) => {
