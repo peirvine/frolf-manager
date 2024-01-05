@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell } from '@mui/material'
 import DoinkUser from './doinkUser'
-import { registerDonkPlayer, getDoinks } from '../../firebase'
+import { registerDonkPlayer, getDoinks, joinDoinkFund, getDoinkFundPlayers } from '../../firebase'
 import { useOutletContext } from 'react-router-dom'
 
 import './doink.scss'
@@ -18,33 +18,31 @@ export default function Doink() {
   const [user] = useOutletContext()
   let doinks = []
 
-  // const createDoink = (name) => {
-  //   if (data.filter(e => e.Name === name).length > 0) {
-  //     setUserRegistered(true)
-  //     setVariant('error')
-  //     setAlertMessage(name + ' is already registered for the Doink Fund')
-  //     setOpen(true)
-  //   } else {
-  //     addNewDoinkUser(name)
-  //     setUserRegistered(true)
-  //     setVariant('success')
-  //     setAlertMessage(name + ' is now registered for the Doink Fund')
-  //     setOpen(true)
-  //   }
-  // }
+  //todo make get and update doinks use realtime database
+  //todo make check use realtime database
 
-  const registerDoinker = (user) => {
-    registerDonkPlayer(user).then(res => {
+  const registerDoinkerV2 = (user) => {
+    getDoinkFundPlayers("maftb").then(res => {
+      console.log(res)
+      let resHolder
       if (res) {
-        setOpen(true)
-        setVariant('success')
-        setAlertMessage(user.displayName + " registered for the Doinkfund")
+        resHolder = res
+        resHolder.push({
+          doinks: 0,
+          name: user.displayName,
+          uid: user.uid
+        })
       } else {
-        setOpen(true)
-        setVariant('error')
-        setAlertMessage(user.displayName + " could not be registered for the Doinkfund, try again")
+        resHolder = [{
+          doinks: 0,
+          name: user.displayName,
+          uid: user.uid
+        }]
       }
+      
+      joinDoinkFund("maftb", resHolder)
     })
+   
   }
 
   useEffect(() => {
@@ -69,7 +67,7 @@ export default function Doink() {
           {alertMessage}
         </Alert>
       </Collapse>
-      {!userRegistered && (<h3 onClick={() => registerDoinker(user)}>Register Me</h3>)}
+      {userRegistered && (<h3 onClick={() => registerDoinkerV2(user)}>Register Me</h3>)}
       {user ? (
         <>
           <TableContainer size="medium" className="doinkTable">

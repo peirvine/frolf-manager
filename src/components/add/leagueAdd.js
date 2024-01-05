@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Papa from "papaparse"
 import { Button, TextField, Alert, Collapse } from '@mui/material'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { uDiscLeagueAdd } from '../../services/scorecardService';
 
 import './add.scss'
@@ -127,6 +129,7 @@ export default function LeagueAdd() {
             variant="contained"
             component="label"
             style={{marginTop: 15}}
+            startIcon={<CloudUploadIcon />}
           >
             Upload CSV File
             <input
@@ -142,6 +145,7 @@ export default function LeagueAdd() {
             component="label"
             color="success"
             style={{marginTop: 15}}
+            startIcon={<CheckCircleIcon />}
           >
             File Uploaded
             <input

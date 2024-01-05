@@ -39,7 +39,7 @@ function App() {
         <header className="frolfHeader">
             <Nav />
         </header>
-        {pathname === "/" ? <Home /> :(
+        {pathname === "/" ? <Home /> : (
           <div className="content">
             <Paper className="paperContent">
               <Outlet context={[user]} />
@@ -48,33 +48,6 @@ function App() {
         )}
         <Footer />
       </div>
-      {/* <Router>
-        <div className="frolfLeague">
-          <header className="frolfHeader">
-              <Nav />
-          </header>
-          <Routes>
-            <Route path="/" exact element={Home}>
-              <div className="content">
-                <Paper className="paperContent">
-                  <Route path="/about" element={About} />
-                  <Route path="/add" element={Add} />
-                  <Route path="/scorecards" element={ViewScorecards} />
-                  <Route path="/rankings" element={CurrentRankings} />
-                  {user && (<Route path="/admin" element={Admin} />)}
-                  {user && (<Route path="/doink" element={Doink} />)}
-                  {user && (
-                    <Route path="/dashboard" element={UserDashboard}>
-                      <Route path="/manage/:league" element={ManageLeague} />
-                    </Route>
-                  )}
-                </Paper>
-              </div>
-            </Route>
-          </Routes>
-          <Footer />
-        </div>
-        </Router> */}
     </ThemeProvider>
   );
 }

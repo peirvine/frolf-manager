@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
-import { getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2 } from "../../firebase"
+import { getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2, getLeagueSettings } from "../../firebase"
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
 import { Link, useOutletContext } from "react-router-dom";
@@ -18,7 +18,6 @@ export default function UserDashboard () {
   const [alertLevel, setAlertLevel] = useState("info")
   const [doink, setDoink] = useState(false)
   const [leagueName, setLeagueName] = useState("")
-  const [leagueAc, setLeagueAc] = useState("")
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
@@ -51,32 +50,39 @@ export default function UserDashboard () {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData])
 
-  const handleLeagueName = (leagueObj) => {
+  const handleLeagueName = async (leagueObj) => {
     const res = getLeagueNames()
     res.then(x => {
       setLeauges(x)
     })
     let compArray = []
 
-    console.log(leagues)
-
     if (leagueObj.length > 0) {
       for (const [key, value] of Object.entries(leagues)) {
         if (leagueObj.filter(l => l.id === key).length === 0 ) {
-          compArray.push(key)
+          let a
+          await getLeagueSettings(key).then(res => {
+            if (res.acceptingPlayers) {
+              compArray.push(key)
+            }
+          })
         }
       }
     } else {
       for (const [key, value] of Object.entries(leagues)) {
-        compArray.push(key)
+        await getLeagueSettings(key).then(res => {
+          if (res.acceptingPlayers) {
+            compArray.push(key)
+          }
+        })
       }
     }
     
-    console.warn('ca', compArray)
     setLeaguesToJoin(compArray)
   }
 
-  const handleLeaveLeague = league => {
+  const handleLeaveLeague = async league => {
+    const members = await getLeagueMembers(league)
     const newLeagueList = userData.leagues.filter( l => { return l.id !== league})
     updateUsersLeaguesV2(user, newLeagueList).then(res => {
       setAlertOpen(true)
@@ -87,8 +93,9 @@ export default function UserDashboard () {
         leagues: newLeagueList
       })
     })
+    const newMembers = members.filter( l => { return l.id !== userData.uid})
 
-    removeLeagueMember(league, user).then(res => {
+    removeLeagueMember(league, newMembers).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
@@ -98,12 +105,21 @@ export default function UserDashboard () {
   }
 
   const handleJoinLeague = (league, user, isAdmin = false) => {
-    const updatedLeagueList = userData.leagues.concat({
-      id: league,
-      isAdmin: isAdmin,
-      membershipStatus: isAdmin ? "Member" : "Pending"
-    })
-  
+    let updatedLeagueList
+    if (userData.leagues && userData.leagues.length > 0) {
+      updatedLeagueList = userData.leagues.concat({
+        id: league,
+        isAdmin: isAdmin,
+        membershipStatus: isAdmin ? "Admin" : "Pending"
+      })
+    } else {
+      updatedLeagueList = [{
+        id: league,
+        isAdmin: isAdmin,
+        membershipStatus: isAdmin ? "Admin" : "Pending"
+      }]
+    }
+    
     updateUsersLeaguesV2(user, updatedLeagueList).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
@@ -129,19 +145,19 @@ export default function UserDashboard () {
     }
   }
 
-  const handleUpdateLeagueMembers = (league, user, isAdmin = false) => {
-    getLeagueMembers(league).then(res => {
-      res ? setLeagueMembers(res) : setLeagueMembers([])
-    })
 
+  //todo move logic into the then or make async
+  const handleUpdateLeagueMembers = async (league, user, isAdmin = false) => {
+    const members = await getLeagueMembers(league)
+    
     const userObject = {
       id: user.uid,
       name: user.displayName,
       isAdmin: isAdmin,
-      membershipStatus: isAdmin ? "Member" : "Pending"
+      membershipStatus: isAdmin ? "Admin" : "Pending"
     }
 
-    const newMembers = leagueMembers.length > 0 ? leagueMembers.concat(userObject) : [userObject]
+    const newMembers = members.length > 0 ? members.concat(userObject) : [userObject]
     updateLeagueMembers(league, newMembers).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
@@ -149,25 +165,33 @@ export default function UserDashboard () {
     })
   }
 
-  //todo check to make sure acronym doesn't already exist
   const handleCreateNewLeague = user => {
+    const matches = leagueName.match(/\b(\w)/g)
+    let leagueAc = matches.join('').concat(Math.floor(Math.random() * 99)).toLowerCase()
+
     const userObject = {
       id: user.uid,
       name: user.displayName,
       isAdmin: true,
-      membershipStatus: "Member"
+      membershipStatus: "Admin"
     }
 
     const formData = {
       leagueName: leagueName,
       leagueAcronym: leagueAc,
       doinkFund: doink,
+      acceptingPlayers: true,
+      blurb: ''
     }
 
-    let doinkObj = []
+    let doinkObj = {
+      players: [],
+      expenses: [],
+      maxDoink: 50,
+    }
 
     if (doink) {
-      doinkObj.push({
+      doinkObj.players.push({
         doinks: 0,
         name: user.displayName,
         uid: user.uid
@@ -175,7 +199,7 @@ export default function UserDashboard () {
     }
     const newLeagues = leagues
 
-    newLeagues[leagueAc.toLowerCase()] = leagueName
+    newLeagues[leagueAc] = leagueName
 
     const combinedData = {
       userObject,
@@ -188,7 +212,6 @@ export default function UserDashboard () {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
-      setLeagueAc("")
       setLeagueName("")
       setDoink(false)
       setOpen(false)
@@ -254,7 +277,7 @@ export default function UserDashboard () {
                             Manage
                           </Button>
                         </Link> : null}
-                      <Button variant="contained" sx={{ marginRight: "15px" }}>My Profile</Button>
+                      <Button disabled variant="contained" sx={{ marginRight: "15px" }}>My Profile</Button>
                       <Button variant="contained" color="error" onClick={() => handleLeaveLeague(x.id)}>Leave</Button>
                     </TableCell>
                   </TableRow>
@@ -324,14 +347,6 @@ export default function UserDashboard () {
                 label="League Name"
                 onChange={(e) => setLeagueName(e.target.value)}
                 style={{ marginBottom: 15}}
-              />
-              <TextField
-                required
-                id="outlined-required"
-                label="League Acronym"
-                onChange={(e) => setLeagueAc(e.target.value)}
-                error={leagueAc.length < 4}
-                helperText={leagueAc.length < 4 ? "League Acronym must be 4 characters long" : null}
               />
               <h4 style={{marginBottom: 0}}>League Extras</h4>
               <Table style={{ width: "33%" }}>
