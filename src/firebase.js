@@ -94,55 +94,6 @@ export const logout = () => {
   signOut(auth);
 };
 
-/****************** Doinks ******************/
-//todo update to use realtime database instead of firestore
-export const registerDonkPlayer = async (user) => {
-  try {
-    const q = query(collection(db, "maftb", "doinkfund", "player"), where("uid", "==", user.uid))
-    const docs = await getDocs(q)
-    if (docs.docs.length === 0) {
-      await addDoc(collection(db, "maftb", "doinkfund", "player"), {
-        uid: user.uid,
-        name: user.displayName,
-        doinks: 0
-      })
-    }
-    return true 
-  } catch (err) {
-    logEvent(analytics, 'A user was unable to register for the doink fund', {error: err} );
-    return false
-  }
-}
-
-export const getDoinks = async () => {
-  const q = query(collection(db, "maftb", "doinkfund", "player"))
-  const res = await getDocs(q)
-  return res
-}
-
-export const updateDoinkBalance = async (name, user, balance) => {
-  const q = query(collection(db, "maftb", "doinkfund", "player"), where("uid", "==", user))
-  const docs = await getDocs(q)
-  let id
-  docs.forEach(x => {
-    id = x.id
-  })
-  let res
-  try {
-    await setDoc(doc(db, "maftb", "doinkfund", "player", id), {
-      name: name,
-      uid: user,
-      doinks: balance
-    });
-    res = true
-  } catch (err) {
-    res = false
-    logEvent(analytics, 'A user was unable to update their doinks', {error: err} );
-  }
-  return res
-}
-
-
 /****************** Scorecards ******************/
 export function writeScorecardToDatabase(league, card, season) {
   const db = getDatabase();
@@ -608,7 +559,7 @@ export function joinDoinkFund (league, users) {
   const res = set(ref(db, league + '/doinkfund/players'), users)
     .then(() => {
       // console.warn('success')
-      return {code: "success", message: "Doink Fund Reset to 0"}
+      return {code: "success", message: "Doink Fund updated"}
     })
     .catch((error) => {
       logEvent(analytics, `The system failed to add a doink fund`, {error: error} );
@@ -752,4 +703,18 @@ export function getDoinkFundPlayers (league) {
     logEvent(analytics, 'Could not league members', {error: error} );
   });
   return doinks
+}
+
+export function updateDoinkBalanceV2 (league, player) {
+  const db = getDatabase();
+  let res = set(ref(db, league + '/doinkfund/players/'), player)
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "Doink added"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the expense', {error: error} );
+    return {code: "error", message: "Doinkfund expense was not removed"}
+  });
+  return res
 }

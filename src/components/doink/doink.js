@@ -1,12 +1,13 @@
 /* eslint-disable array-callback-return */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react'
-import { Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell } from '@mui/material'
+import { Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell, Autocomplete, TextField, Button } from '@mui/material'
 import DoinkUser from './doinkUser'
-import { registerDonkPlayer, getDoinks, joinDoinkFund, getDoinkFundPlayers } from '../../firebase'
+import { joinDoinkFund, getDoinkFundPlayers, getLeagueNames, getUserDataV2, getLeagueSettings, getDoinkExpenses } from '../../firebase'
 import { useOutletContext } from 'react-router-dom'
 
 import './doink.scss'
+import { set } from 'firebase/database'
 
 export default function Doink() {
   const [data, setData] = useState()
@@ -15,14 +16,123 @@ export default function Doink() {
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
   const [sumDoink, setSumDoink] = useState(0)
+  const [optionArray, setOptionArray] = useState([])
+  const [league, setLeague] = useState()
+  const [expenses, setExpenses] = useState({})
+  const [expenseTotal, setExpenseTotal] = useState(0)
+  const [disabled, setDisabled] = useState(false)
+  const [render, setRender] = useState('')
   const [user] = useOutletContext()
   let doinks = []
 
-  //todo make get and update doinks use realtime database
-  //todo make check use realtime database
+  useEffect(() => {
+    buildOptions().then(res => {
+      if (res.length > 1) {
+        getLeagueSettings(res[0].id).then(settings => {
+          if (settings.doinkFund) {
+            getDoinkFundPlayers(res[0].id).then(res2 => {
+              let holder = 0
+              let users = []
+              if (res2) {
+                setData(res2)
+                res2.forEach(x => {
+                  holder += x.doinks
+                  users.push(x.name)
+                })
+              } else {
+                setData([])
+              }
+              setUserRegistered(users.indexOf(user.displayName) > -1)
+              setSumDoink(holder)
+            })
+            getDoinkExpenses(res[0].id).then(expensesRes => {
+              if (expensesRes !== undefined) {
+                setExpenses(expensesRes)
+                let sum = 0
+                Object.entries(expenses).map(([key, value], i) => {
+                  sum += value.amount
+                })
+                setExpenseTotal(sum)
+              } else {
+                setExpenses([])
+                setExpenseTotal(0)
+              }
+            })
+          }
+        })
+      } else {
+        getLeagueSettings(res.id).then(settings => {
+          if (settings.doinkFund) {
+            getDoinkFundPlayers(res.id).then(res2 => {
+              let holder = 0
+              let users = []
+              if (res2) {
+                setData(res2)
+                res2.forEach(x => {
+                  holder += x.doinks
+                  users.push(x.name)
+                })
+              } else {
+                setData([])
+              }
+              
+              setUserRegistered(users.indexOf(user.displayName) > -1)
+              setSumDoink(holder)
+              getDoinkExpenses(res.id).then(expensesRes => {
+                if (expensesRes !== undefined) {
+                  setExpenses(expensesRes)
+                  let sum = 0
+                  Object.entries(expenses).map(([key, value], i) => {
+                    sum += value.amount
+                  })
+                  setExpenseTotal(sum)
+                } else {
+                  setExpenses([])
+                  setExpenseTotal(0)
+                }
+              })
+            })
+          }
+        })
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const buildOptions = async () => {
+    const userData = await getUserDataV2(user)
+    const leagues = await getLeagueNames()
+    if (userData.leagues.length > 1) {
+      let optionsArray = []
+      userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+      setOptionArray(optionsArray)
+      setLeague(userData.leagues[0].id)
+      return optionsArray
+    } else {
+      setLeague(userData.leagues[0].id)
+      return userData.leagues[0]
+    }
+  }
+
+  const handleChangeLeague = async league => {
+    setLeague(league.id)
+    getDoinkFundPlayers(league.id).then(res2 => {
+      if (res2) {
+        setData(res2);
+        const holder = res2.reduce((sum, x) => sum + x.doinks, 0);
+        const users = res2.map(x => x.name);
+        setUserRegistered(users.includes(user.displayName));
+        setSumDoink(holder);
+      } else {
+        setData([]);
+        setUserRegistered(false);
+        setSumDoink(0);
+      }
+    })
+  }
 
   const registerDoinkerV2 = (user) => {
-    getDoinkFundPlayers("maftb").then(res => {
+    getDoinkFundPlayers(league).then(res => {
       let resHolder
       if (res) {
         resHolder = res
@@ -39,24 +149,11 @@ export default function Doink() {
         }]
       }
       
-      joinDoinkFund("maftb", resHolder)
-    })
-   
-  }
-
-  useEffect(() => {
-    getDoinks().then(res => {
-      let holder = 0
-      let users = []
-      setData(res)
-      res.forEach(x => {
-        holder += x.data().doinks
-        users.push(x.data().name)
+      joinDoinkFund(league, resHolder).then(() => {
+        setDisabled(true)
       })
-      setUserRegistered(users.indexOf(user.displayName) > -1)
-      setSumDoink(holder)
     })
-  }, [setData, setUserRegistered, user.displayName, setSumDoink])
+  }
 
   return (
     <div className="doink">
@@ -66,7 +163,23 @@ export default function Doink() {
           {alertMessage}
         </Alert>
       </Collapse>
-      {userRegistered && (<h3 onClick={() => registerDoinkerV2(user)}>Register Me</h3>)}
+      {optionArray.length > 1 ? 
+        (
+          <Autocomplete
+            disablePortal
+            disableClearable
+            id="combo-box-demo"
+            options={optionArray}
+            sx={{ marginTop: 1, width: "25%" }}
+            renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
+            onChange={(event, newValue) => {
+              handleChangeLeague(newValue);
+            }}
+          />
+        ) : null
+      }
+      {render}
+      {!userRegistered && (<Button disabled={disabled} onClick={() => registerDoinkerV2(user)}>Register Me</Button>)}
       {user ? (
         <>
           <TableContainer size="medium" className="doinkTable">
@@ -80,7 +193,7 @@ export default function Doink() {
               <TableBody>
                 {data && (
                   data.forEach(player => {
-                    doinks.push(<DoinkUser player={player.data()} user={user.uid} />)
+                    doinks.push(<DoinkUser player={player} user={user.uid} league={league} />)
                   })
                 )}
                 {doinks}
@@ -98,18 +211,22 @@ export default function Doink() {
                 </TableRow>
               </TableHead>
             </Table>
-            {/* <Table>
+            <Table>
               <TableBody>
-                <TableRow>
-                  <TableCell align="center">Greg's Ace Disc</TableCell>
-                  <TableCell align="center">$10 - Paid by Jimmy</TableCell>
-                </TableRow>
+                {Object.entries(expenses).map(([key, value], i) => {
+                  return (
+                    <TableRow key={key}>
+                      <TableCell align="right">{value.expense}</TableCell>
+                      <TableCell align="left">${value.amount}</TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
-            </Table> */}
+            </Table>
             <Table>
               <TableBody>
                 <TableRow>
-                  <TableCell align="center">Remaining Doink Balance: ${sumDoink - 0}</TableCell>
+                  <TableCell align="center">Remaining Doink Balance: ${sumDoink - expenseTotal}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
