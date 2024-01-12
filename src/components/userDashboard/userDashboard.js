@@ -181,7 +181,8 @@ export default function UserDashboard () {
       leagueAcronym: leagueAc,
       doinkFund: doink,
       acceptingPlayers: true,
-      blurb: ''
+      blurb: '',
+      currentSeason: 1
     }
 
     let doinkObj = {

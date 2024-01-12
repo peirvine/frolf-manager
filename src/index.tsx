@@ -10,6 +10,7 @@ import Admin from './components/admin/admin'
 import Doink from './components/doink/doink'
 import UserDashboard from './components/userDashboard/userDashboard'
 import ManageLeague from './components/userDashboard/manageLeague';
+import EditRound from './components/userDashboard/editRound'
 import ErrorPage from './errorPage';
 import RequireAuth from './protectedRoute'
 import reportWebVitals from './reportWebVitals';
@@ -59,6 +60,10 @@ const router = createBrowserRouter([
       {
         path: "/dashboard/manageLeague",
         element: <ManageLeague />,
+      },
+      {
+        path: "/dashboard/manageLeague/editRound",
+        element: <EditRound />,
       },
     ]
   },

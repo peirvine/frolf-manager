@@ -4,6 +4,7 @@ import {useState, useEffect} from 'react'
 import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress } from '@mui/material'
 import { Close } from '@mui/icons-material'
 import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
+import { startNewSeason } from '../../services/leagueService'
 import { Link, Navigate } from 'react-router-dom'
 
 export default function LeagueSettingsManager(props) {
@@ -60,7 +61,6 @@ export default function LeagueSettingsManager(props) {
           uid: player.id
         }
         getUserDataV2(newUser).then(res => {
-          console.warn('nested res', res)
           const newLeagues = res.leagues.filter( l => { return l.id !== props.league.leagueId})
           updateUsersLeaguesV2(newUser, newLeagues)
         })
@@ -85,6 +85,14 @@ export default function LeagueSettingsManager(props) {
           updateLeagueNames(res)
         })
       })
+    })
+  }
+
+  const handleNewSeason = (id) => {
+    startNewSeason(id).then(res => {
+      setAlertOpen(true)
+      setAlertMessage(res.message)
+      setAlertLevel(res.code)
     })
   }
 
@@ -142,7 +150,7 @@ export default function LeagueSettingsManager(props) {
           </Grid>
           <Grid xs={6}>
             <FormControl fullWidth sx={{ padding: 3}}>
-              {/* <Button variant='contained' disabled>Start a new Season</Button> */}
+              <Button variant='contained' onClick={() => handleNewSeason(id)}>Start a new Season</Button>
             </FormControl>
           </Grid>
         </Grid>

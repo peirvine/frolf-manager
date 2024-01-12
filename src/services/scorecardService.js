@@ -1,18 +1,10 @@
 // import { addScorecardToGoogle } from './googleSheetsService'
-import { writeScorecardToDatabase } from '../firebase'
+import { getLeagueSettings, writeScorecardToDatabase } from '../firebase'
 import { calculateElo } from './eloService'
 
-export function addScorecard (card) {
-  // if (validateCard(card)) {
-  //   saveToAmazon(card)
-  //   return {code: "success", message: "Card Added Successfully"}
-  // } else {
-  //   return {code: "error", message: "Error, card not valid. Validations failed."}
-  // }
-}
-
-
-export async function uDiscDump (card) {
+export async function uDiscDump (card, league) {
+  const settings = await getLeagueSettings(league)
+  const season = settings.currentSeason
   let returnValue = {}
   let playerArray = []
 
@@ -61,8 +53,8 @@ export async function uDiscDump (card) {
   if (validateCard(returnValue)) {
     // const googleRes = await addScorecardToGoogle(returnValue)
     let response = {code: "success", message: "Card added successfully."}
-    writeScorecardToDatabase("maftb", returnValue)
-    calculateElo(returnValue)
+    writeScorecardToDatabase(league, returnValue, season)
+    calculateElo(returnValue, season, league)
     // response = scorecardRes.then(res => {
     //   if (!res) {
     //     return {code: "error", message: "Failed to save to the database. Try refreshing and submitting again. The card is valid."}

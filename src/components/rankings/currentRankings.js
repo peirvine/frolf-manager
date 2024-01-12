@@ -20,29 +20,125 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import Chip from '@mui/material/Chip';
 import Modal from '@mui/material/Modal';
 import CloseIcon from '@mui/icons-material/Close';
+import { Autocomplete, TextField } from '@mui/material';
 
 import { toBlob } from 'html-to-image';
+
+import { useOutletContext } from 'react-router-dom'
 
 import HistoricalRankings from './historicalRankings'
 
 // import { getRankingsFromGoogle } from '../../services/googleSheetsService';
-import { getCurrentElo, getDelta, getEloGraphData } from '../../firebase'
+import { getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers } from '../../firebase'
 
 import './rankings.scss'
 // import { calculateElo, resetCurrentElo } from '../../services/eloService';
 // import { mockCard } from '../../services/mockData';
 
 export default function CurrentRankings () {
+  const [user] = useOutletContext()
   const [rankings, setRankings] = useState()
   const [deltas, setDeltas] = useState()
   const [eloGraph, setEloGraph] = useState()
   const imageRef = useRef(null);
   const [open, setOpen] = useState(false)
+  const [optionArray, setOptionArray] = useState([])
+  const [league, setLeague] = useState()
+  const [userData, setUserData] = useState('')
+  const [members, setMembers] = useState([])
+  const [graphData, setGraphData] = useState({})
   // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const [user, setUser] = useState('')
+  useEffect(() => {
+    buildOptions().then(res => {
+      const leagueId = res.length > 1 ? res[0].id : res.id;
+      getLeagueSettings(leagueId).then(settings => {
+        Promise.all([
+          getCurrentElo(leagueId, settings.currentSeason),
+          getDelta(leagueId, settings.currentSeason),
+          getEloGraphData(leagueId, settings.currentSeason),
+          getLeagueMembers(leagueId).then(value => {
+            const hold = value.map(async player => {
+              if (player) {
+                const dataObj = {
+                  displayName: player.name,
+                  uid: player.id,
+                };
+                const res = await getUserDataV2(dataObj);
+                return res.uDiscDisplayName;
+              }
+            });
+            return Promise.all(hold);
+          })
+        ]).then(([rankings, deltas, graphData, members]) => {
+          setRankings(rankings);
+          setDeltas(deltas);
+          setEloGraph(graphData);
+          setMembers(members);
+          const graphObj = {
+            eloGraph: graphData,
+            playersInLeague: members
+          };
+        
+          setGraphData(graphObj);
+        });
+      });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  const buildOptions = async () => {
+    const userData = await getUserDataV2(user)
+    const leagues = await getLeagueNames()
+    if (userData.leagues.length > 1) {
+      let optionsArray = []
+      userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+      setOptionArray(optionsArray)
+      setLeague(userData.leagues[0].id)
+      return optionsArray
+    } else {
+      setLeague(userData.leagues[0].id)
+      return userData.leagues[0]
+    }
+  }
+
+  const handleChangeLeague = async league => {
+    setLeague(league.id);
+    const settings = await getLeagueSettings(league.id);
+    const season = settings.currentSeason;
+  
+    const [rankings, deltas, graphData, members] = await Promise.all([
+      getCurrentElo(league.id, season),
+      getDelta(league.id, season),
+      getEloGraphData(league.id, season),
+      getLeagueMembers(league.id).then(async (value) => {
+        const hold = await Promise.all(value.map(async player => {
+          if (player) {
+            const dataObj = {
+              displayName: player.name,
+              uid: player.id,
+            };
+            const res = await getUserDataV2(dataObj);
+            return res.uDiscDisplayName;
+          }
+        }));
+        setMembers(hold);
+        return hold;
+      })
+    ]);
+  
+    setRankings(rankings);
+    setDeltas(deltas);
+  
+    const graphObj = {
+      eloGraph: graphData,
+      playersInLeague: members
+    };
+  
+    setGraphData(graphObj);
+  };
+  
   const getImage = async () => {
     const newFile = await toBlob(imageRef.current, { cacheBust: true });
     const data = {
@@ -54,33 +150,21 @@ export default function CurrentRankings () {
       title: "Frolf",
       text: "Frolf"
     };
-
     try {
       if (!navigator.canShare(data)) {
         alert("Can't share, this is an error with the site sorry.");
       }
       await navigator.share(data);
     } catch (err) {
-      console.log(err);
+      // console.log(err);
     }
   }
+   
 
-  const handleShowStats = (user) => {
-    setUser(user)
+  const handleShowStats = (userData) => {
+    setUserData(userData)
     setOpen(true)
   }
-
-  useEffect(() => {
-    getCurrentElo().then((value) => {
-      setRankings(value);
-    })
-    getDelta().then((value) => {
-      setDeltas(value)
-    })
-    getEloGraphData().then((value) => {
-      setEloGraph(value)
-    })
-  }, []);
 
   const getIcon = value => {
     const roundedValue = Math.round(value * 10) / 10
@@ -140,6 +224,18 @@ export default function CurrentRankings () {
         </div>
       </Modal>
       <h1>Current Rankings</h1>
+      {optionArray.length > 1 ? (
+        <Autocomplete
+          disablePortal
+          disableClearable
+          id="combo-box-demo"
+          options={optionArray}
+          sx={{ marginTop: 1, width: "25%" }}
+          renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
+          onChange={(event, newValue) => {
+            handleChangeLeague(newValue);
+          }}
+        />) : null}
       <div ref={imageRef}>
         <TableContainer component={Paper} size="medium" className="rankingsTable">
           <Table aria-label="simple table">
@@ -159,7 +255,8 @@ export default function CurrentRankings () {
       <div className="getImg">
         <Button variant="contained" onClick={() => getImage()}>Share Rankings</Button>
       </div>
-      <HistoricalRankings eloGraph={eloGraph} />
+      {/* todo fix the rendering issue when switching leagues */}
+      <HistoricalRankings {...graphData} />
       <h3>About our ELO Ranking System</h3>
       <p>The ELO ranking system is a widely used method for ranking players or teams in games and sports. It was originally developed by Hungarian-American physicist Arpad Elo in the 1960s to rank chess players, but has since been adapted for use in a variety of other competitive activities, including soccer, basketball, and video games.</p>
       <p>The basic idea behind the ELO ranking system is to assign each player or team a numerical rating based on their performance in previous matches. When two players or teams compete against each other, their ratings are used to calculate the expected outcome of the match, and the actual outcome is compared to the expected outcome to determine how much each player's rating should change.</p>

@@ -74,17 +74,18 @@ export const signInWithGoogle = async () => {
         email: user.email,
         leagues: [{}],
         siteAdmin: false,
+        uDiscDisplayName: ''
       })
       .then(() => {
         logEvent(analytics, 'Sign up of user successful');
       })
       .catch((error) => {
-        console.warn('error 1')
+        // console.warn('error 1')
         logEvent(analytics, 'A user was unable sign up for a league', {error: error} );
       });
     }
   } catch (err) {
-    console.warn('err', err)
+    // console.warn('err', err)
     logEvent(analytics, 'A user had an error signing in', {error: err} );
   }
 }
@@ -143,11 +144,11 @@ export const updateDoinkBalance = async (name, user, balance) => {
 
 
 /****************** Scorecards ******************/
-export function writeScorecardToDatabase(league, card) {
+export function writeScorecardToDatabase(league, card, season) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   const newId = card.course + " " + card.date + " " + Math.floor(Math.random() * 100000000)
-  set(ref(db, league + '/scorecards/' + newId), {
+  set(ref(db, league + '/scorecards/' + season + "/" + newId), {
     Course: card.course,
     Layout: card.layout,
     Players: card.playerArray,
@@ -165,9 +166,24 @@ export function writeScorecardToDatabase(league, card) {
   });
 }
 
-export const getScorecards = league => {
+export const getScorecards = (league, season) => {
   const dbRef = ref(getDatabase());
-  let sorted = get(child(dbRef, league + `/scorecards`)).then((snapshot) => {
+  let sorted = get(child(dbRef, league + `/scorecards/` + season)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      // console.log("No data available");
+      logEvent(analytics, 'No data available')
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch scorecards', {error: error} );
+  });
+  return sorted
+}
+
+export const getAllScorecards = (league) => {
+  const dbRef = ref(getDatabase());
+  let sorted = get(child(dbRef, league + `/scorecards/`)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
@@ -181,12 +197,35 @@ export const getScorecards = league => {
 }
 
 
+
 /****************** ELO ******************/
-export function writeEloTracking(league, elo) {
+export function writeEloTracking(league, elo, season) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
-  const year = new Date().getFullYear();
-  set(ref(db, league + '/eloTracking/' + year + '/' + id), {
+  const date = Date(Date.now()).toString();
+  set(ref(db, league + '/eloTracking/' + season + '/' + elo.course + ' ' + elo.layout + ' ' + date), {
+    Course: elo.course,
+    Layout: elo.layout,
+    Players: elo.players,
+    cardAverage: elo.average,
+    strokesPerHole: elo.strokesPerHole,
+    pointsPerThrow: elo.pointsPerThrow,
+    averageEloOfPlayers: elo.averageEloOfPlayers,
+    id: id,
+    dateAdded: date
+  })
+  .then(() => {
+    // console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
+  });
+}
+
+export function writeEloTrackingV2(league, elo, season) {
+  const db = getDatabase();
+  const id = Math.floor(Math.random() * 100000000)
+  set(ref(db, league + '/eloTracking/' + season + '/' + elo.course + " " + elo.layout + " " + Date(Date.now()).toString() + " " + elo.id), {
     Course: elo.course,
     Layout: elo.layout,
     Players: elo.players,
@@ -217,10 +256,20 @@ export function addEloToPlayer(league, elo) {
   });
 }
 
-export function getElosOfPlayer(player) {
+export function addEloToPlayerV2(league, elo, season) {
+  const db = getDatabase();
+  set(ref(db, league + '/playerEloHistory/' + season + '/' + elo.player), elo.elo)
+  .then(() => {
+    // console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
+  });
+}
+
+export function getElosOfPlayer(player, season, league) {
   const dbRef = ref(getDatabase());
-  const year = new Date().getFullYear();
-  const elos = get(child(dbRef, `maftb/playerEloHistory/` + year + '/' + player)).then((snapshot) => {
+  const elos = get(child(dbRef, league + `/playerEloHistory/` + season + '/' + player)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
@@ -233,10 +282,26 @@ export function getElosOfPlayer(player) {
   return elos
 }
 
-export function getElosOfAllPlayers() {
+export function getElosOfPlayerV2(player, league, season) {
   const dbRef = ref(getDatabase());
   const year = new Date().getFullYear();
-  const elos = get(child(dbRef, `maftb/playerEloHistory/` + year)).then((snapshot) => {
+  const elos = get(child(dbRef, league + `/playerEloHistory/` + season + '/' + player)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      logEvent(analytics, 'No elo of signle player found, though there is not an error', {player: player});
+      return 'null'
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch elo', {error: error} );
+  });
+  return elos
+}
+
+export function getElosOfAllPlayers(season, league) {
+  const dbRef = ref(getDatabase());
+  const year = new Date().getFullYear();
+  const elos = get(child(dbRef, league + `/playerEloHistory/` + season)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
@@ -267,15 +332,15 @@ export function getELOHistory () {
   return elo
 }
 
-export function getCurrentElo () {
-  const year = new Date().getFullYear();
+export function getCurrentElo (league, season) {
   const dbRef = ref(getDatabase());
-  let elo = get(child(dbRef, `maftb/currentElo/` + year)).then((snapshot) => {
+  let elo = get(child(dbRef, league + `/currentElo/` + season)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
       // console.log("No data available");
       logEvent(analytics, 'no current elo data available')
+      return ([])
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not fetch elo', {error: error} );
@@ -283,24 +348,22 @@ export function getCurrentElo () {
   return elo
 }
 
-export function updateCurrentElo(eloArray) {
-  const year = new Date().getFullYear();
+export function updateCurrentEloV2(league, season, eloArray) {
   const db = getDatabase()
-  const updates = {}
-  updates['maftb/currentElo/' + year] = eloArray;
-  
-  return update(ref(db), updates).then(() => {
+  return set(ref(db, league + '/currentElo/' + season), eloArray).then(() => {
     // Data saved successfully!
+    return {code: "success", message: ""}
   })
   .catch((error) => {
     logEvent(analytics, 'Could write to current ELO', {error: error} );
-  });;
+    return {code: "error", message: "Could not create a new season in Current Elo"}
+  });
 }
 
-export function getDelta () {
+export function getDelta (league, season) {
   const year = new Date().getFullYear();
   const dbRef = ref(getDatabase());
-  let elo = get(child(dbRef, `maftb/eloDelta/` + year)).then((snapshot) => {
+  let elo = get(child(dbRef, league + `/eloDelta/` + season)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
@@ -313,34 +376,38 @@ export function getDelta () {
   return elo
 }
 
-export function setDelta(deltaObject) {
+export function setDeltaV2(league, season, deltaObject) {
   const db = getDatabase();
   const year = new Date().getFullYear();
-  set(ref(db, 'maftb/eloDelta/' + year ), deltaObject)
+  return set(ref(db, league + '/eloDelta/' + season ), deltaObject)
   .then(() => {
     // console.warn('success')
+    return {code: "success", message: ""}
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the ELO delta', {error: error} );
+    return {code: "error", message: "Could not create a new season in Elo Delta"}
   });
 }
 
-export function setEloGraphData(graphObj) {
+export function setEloGraphDataV2(league, season, graphObj) {
   const db = getDatabase();
-  const year = new Date().getFullYear();
-  set(push(ref(db, 'maftb/eloGraphData/' + year ), graphObj))
+  const now = Date(Date.now()).toString()
+  return set(ref(db, league + '/eloGraphData/' + season + '/' + graphObj.course + ' ' + now), graphObj)
   .then(() => {
+    return {code: "success", message: ""}
     // console.warn('success')
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the ELO graph', {error: error} );
+    return {code: "error", message: "Could not create a new season in Elo Graph Delta"}
   });
 }
 
-export function getEloGraphData() {
+export function getEloGraphData(league, season) {
   const year = new Date().getFullYear();
   const dbRef = ref(getDatabase());
-  let eloGraph = get(child(dbRef, `maftb/eloGraphData/` + year)).then((snapshot) => {
+  let eloGraph = get(child(dbRef, league + `/eloGraphData/` + season)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
@@ -360,7 +427,7 @@ export const getUserDataV2 = (user) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      console.log("No data available");
+      // console.log("No data available");
       logEvent(analytics, 'No userdata available');
     }
   }).catch((error) => {
@@ -400,6 +467,22 @@ export const updateUsersLeaguesV2 = async (user, leagues) => {
   const db = getDatabase()
   let res = update(ref(db, '/users/' + user.displayName + " " + user.uid), {
     leagues: leagues
+  })
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "League membership updated successfully!"}
+  })
+  .catch((error) => {
+    logEvent(analytics, "Error updating your league membership", {error: error} );
+    return {code: "error", message: "League Not Updated"}
+  });
+  return res
+}
+
+export const updateUsersUDiscName = async (user, name) => {
+  const db = getDatabase()
+  let res = update(ref(db, '/users/' + user.displayName + " " + user.uid), {
+    uDiscDisplayName: name
   })
   .then(() => {
     // console.warn('success')
@@ -544,6 +627,7 @@ export function getLeagueSettings (league) {
     } else {
       // console.log("No data available");
       logEvent(analytics, 'No league member data available')
+      return "error"
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not league members', {error: error} );

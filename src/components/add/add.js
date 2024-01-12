@@ -1,10 +1,10 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Papa from "papaparse"
 import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
-import { signInWithGoogle } from "../../firebase"
+import { signInWithGoogle, getUserDataV2, getLeagueNames } from "../../firebase"
 import { useOutletContext } from 'react-router-dom'
 import { addScorecard, uDiscDump } from '../../services/scorecardService';
 import LeagueAdd from './leagueAdd';
@@ -17,17 +17,37 @@ export default function Add() {
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
+  const [optionArray, setOptionArray] = useState([])
+  const [league, setLeague] = useState()
+
+  useEffect(() => { 
+    buildOptions()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleUdisc = () => {
     setOpen(true)
     setVariant('info')
     setAlertMessage('Adding scorecard, do not click submit again')
-    const dumpResult = uDiscDump(udisc)
+    const dumpResult = uDiscDump(udisc, league)
     dumpResult.then(res => {
       setUdisc('')
       setVariant(res.code)
       setAlertMessage(res.message)
     })
+  }
+
+  const buildOptions = async () => {
+    const userData = await getUserDataV2(user)
+    const leagues = await getLeagueNames()
+    if (userData.leagues.length > 1) {
+      let optionsArray = []
+      userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+      setOptionArray(optionsArray)
+      setLeague(userData.leagues[0].id)
+    } else {
+      setLeague(userData.leagues[0].id)
+    }
   }
 
   return (
@@ -40,7 +60,6 @@ export default function Add() {
               {alertMessage}
             </Alert>
           </Collapse>
-
           <Box sx={{ width: '100%', flexGrow: 1 }}>
             <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
               <Grid item md={6} xs={12}>
@@ -55,6 +74,16 @@ export default function Add() {
                     value={udisc}
                     onInput={e => setUdisc(e.target.value)}
                   />
+                  {optionArray.length > 1 ? (<Autocomplete
+                    disablePortal
+                    id="combo-box-demo"
+                    options={optionArray}
+                    sx={{ marginTop: 1 }}
+                    renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
+                    onChange={(event, newValue) => {
+                      setLeague(newValue.id);
+                    }}
+                  />) : null}
                   <Button className="submitButton" variant="contained" onClick={() => handleUdisc()}>Parse UDisc CSV</Button>
                   <Button className="submitButton" variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
                 </FormControl>

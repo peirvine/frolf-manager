@@ -23,7 +23,6 @@ export default function Doink() {
 
   const registerDoinkerV2 = (user) => {
     getDoinkFundPlayers("maftb").then(res => {
-      console.log(res)
       let resHolder
       if (res) {
         resHolder = res
