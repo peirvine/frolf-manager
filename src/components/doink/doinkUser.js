@@ -1,10 +1,10 @@
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 
 import { IconButton, TableCell, TableRow, Alert, Snackbar } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-import { updateDoinkBalance } from '../../firebase'
+import { getDoinkFundPlayers, updateDoinkBalanceV2 } from '../../firebase'
 
 
 export default function DoinkUser(props) {
@@ -14,6 +14,14 @@ export default function DoinkUser(props) {
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
+  const [doinkList, setDoinkList] = useState([])
+
+  useEffect(() => {
+    setDoinkHolder(props.player.doinks)
+    getDoinkFundPlayers(props.league).then(res => {
+      setDoinkList(res)
+    })
+  }, [props.league, props.player.doinks])
 
   const reportDoink = (action) => {
     let newBalance
@@ -22,7 +30,15 @@ export default function DoinkUser(props) {
     } else {
       newBalance = doinkHolder - 1
     }
-    updateDoinkBalance(player.name, player.uid, newBalance)
+
+    // eslint-disable-next-line array-callback-return
+    doinkList.map(x => {
+      if (player.uid === x.uid) {
+        x.doinks = newBalance
+      }
+    })
+
+    updateDoinkBalanceV2(props.league, doinkList)
       .then(res => {
         if (res) {
           setOpen(true)

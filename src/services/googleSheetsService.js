@@ -33,7 +33,7 @@ function getOAuthToken(jwt) {
     })
     .catch(function (error) {
       // handle error
-      console.log('OAuth error', error);
+      // console.log('OAuth error', error);
     })
   return res
 }

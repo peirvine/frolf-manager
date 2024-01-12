@@ -1,83 +1,58 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getCurrentElo, addEloToPlayer, getElosOfPlayer, updateCurrentElo, getElosOfAllPlayers, setDelta, setEloGraphData } from "../firebase";
+import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2 } from "../firebase";
 import { weighting, pointPerThrowRef } from "./eloConstants";
 
 
-export const calculateElo = async (card) => {
-  const previousElo = await getCurrentElo()
+export const calculateElo = async (card, season, league) => {
+  const previousElo = await getCurrentElo(league, season)
   const parLocation = card.playerArray.map((e) => { return e.player; }).indexOf("Par")
   const playerArray = card.playerArray
   parLocation === 0 ? playerArray.shift() : playerArray.splice(0, parLocation)
-  const cardAverage = getCardAverage(playerArray)
+  const playersInLeague = await getPlayers(league)
+  const cardAverage = getCardAverage(playerArray, playersInLeague)
   const strokesPerHole = getStrokesPerHole(playerArray, cardAverage)
-  let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray)
+  let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray, season, playersInLeague, league)
 
   const pointsPerThrow = calculatePointsPerThrow(strokesPerHole)
-  const cardElo = await calculateCardElo(playerArray, pointsPerThrow, cardAverage, averageEloOfPlayers)
+  const cardElo = await calculateCardElo(playerArray, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers)
 
   // Adds the most recent ELO to the players history
-  await updateEloHistory(cardElo)
+  await updateEloHistory(cardElo, season, league)
 
   const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, cardElo)
-  await writeEloTracking("maftb", prettyElo)
+  await writeEloTracking(league, prettyElo, season)
 
 // updates current elo of player
-  const currentElo = await updateCurrentElos(cardElo)
+  const currentElo = await updateCurrentElos(league, season)
 
-  await calculateDelta(previousElo, currentElo)
+  await calculateDelta(league, season, previousElo, currentElo)
 
-  await graphData(card.course, card.date, previousElo, currentElo)
+  await graphData(league, season, card.course, card.date, previousElo, currentElo)
   return true
 }
 
-export const resetCurrentElo = () => {
-  updateCurrentElo({
-    alex: 1000,
-    benton: 1000,
-    greg: 1000,
-    jimmy: 1000,
-    lane: 1000,
-    peter: 1000,
-    rob: 1000,
-    samir: 1000,
-  })
+async function getPlayers (league) {
+  const leaguePlayers = await getLeagueMembers(league)
+  let players = []
+
+  for (let i = 0; i < leaguePlayers.length; i++) {
+    let userPayload = {
+      displayName: leaguePlayers[i].name,
+      uid: leaguePlayers[i].id
+    }
+
+    const res = await getUserDataV2(userPayload)
+    players.push(res.uDiscDisplayName)
+  }
+
+  return players
 }
 
-// TODO: Remove the need for this. This method will be impossible for multiple leagues, but MAFTB it's fine
-const translateUsers = player => {
-  if ("alex oelke".match(player.toLowerCase())) {
-    return "alex"
-  }
-  if ("benton campbell".match(player.toLowerCase())) {
-    return "benton"
-  }
-  if ("greg ledray".match(player.toLowerCase())) {
-    return "greg"
-  }
-  if ("jimmy donadio".match(player.toLowerCase())) {
-    return "jimmy"
-  }
-  if ("lane scherber".match(player.toLowerCase())) {
-    return "lane"
-  }
-  if ("peter irvine".match(player.toLowerCase())) {
-    return "peter"
-  }
-  if ("robert renkor".match(player.toLowerCase()) || "rob renkor".match(player.toLowerCase())) {
-    return "rob"
-  }
-  if ("samir ramakrishnan".match(player.toLowerCase())) {
-    return "samir"
-  }
-
-  return null
-}
-
-const getCardAverage = (card) => {
+const getCardAverage = (card, playersInLeague) => {
   let scores = 0
   let numPlayers = card.length
   card.map(player => {
-    if (translateUsers(player.player) !== null) {
+    if (playersInLeague.includes(player.player)) {
       scores += parseInt(player.total)
     } else {
       numPlayers--
@@ -92,48 +67,52 @@ const getStrokesPerHole = (card, average) => {
   return average / card[0].holes.length
 }
 
-const currentEloAsync = () => {
-  const elos = getCurrentElo()
+const currentEloAsync = (season, league) => {
+  const elos = getCurrentElo(league, season)
   return elos.then(val => { return val })
 }
 
-const getPlayerEloHistory = async (player) => {
-  return getElosOfPlayer(player).then(res => { return res })
+const getPlayerEloHistory = async (player, season, league) => {
+  return getElosOfPlayer(player, season, league).then(res => { return res })
 }
 
-const updateEloHistory = async (cards) => {
+const updateEloHistory = async (cards, season, league) => {
   for (const person in cards) {
-    const res = await getPlayerEloHistory(person)
+    const res = await getPlayerEloHistory(person, season, league)
     if (res === 'null') {
       const apiObj = {
         player: person,
         elo: [cards[person], 1000]
       }
-      addEloToPlayer("maftb", apiObj)
+      addEloToPlayerV2(league, apiObj, season)
     } else {
       res.unshift(cards[person])
       const apiObj = {
         player: person,
         elo: res
       }
-      addEloToPlayer("maftb", apiObj)
+      addEloToPlayerV2(league, apiObj, season)
     }
   }
 }
 
-const getAverageEloOFPlayers = async (players) => {
-  const elos = await currentEloAsync()
-  let presentPlayers = []
-  players.map(player => {
-    if (translateUsers(player.player) !== null) {
-      presentPlayers.push(translateUsers(player.player))
-    }
-  })
-  let sumElo = 0
-  presentPlayers.map(player => {
-    sumElo += elos[player.toLowerCase()]
-  })
-  return sumElo / presentPlayers.length
+const getAverageEloOFPlayers = async (players, season, playersInLeague, league) => {
+  const elos = await getCurrentElo(league, season)
+  if (elos.length === 0) {
+    return 1000
+  } else {
+    let presentPlayers = []
+    players.map(player => {
+      if (playersInLeague.includes(player.player)) {
+        presentPlayers.push(player.player)
+      }
+    })
+    let sumElo = 0
+    presentPlayers.map(player => {
+      sumElo += elos[player]
+    })
+    return sumElo / presentPlayers.length
+  }
 }
 
 const calculatePointsPerThrow = (strokesPerHole) => {
@@ -145,11 +124,11 @@ const calculatePlayerElo = (groupAverage, playerScore, pointsPerThrow, averageEl
   return ((groupAverage - playerScore) * pointsPerThrow) + averageEloOfPlayers
 }
 
-const calculateCardElo = (players, pointsPerThrow, cardAverage, averageEloOfPlayers) => {
+const calculateCardElo = (players, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers) => {
   let eloArray = []
   players.map(player => {
-    if (translateUsers(player.player) !== null) {
-      const prettyPlayer = translateUsers(player.player)
+    if (player.player !== null && playersInLeague.includes(player.player)) {
+      const prettyPlayer = player.player
       eloArray[prettyPlayer] = calculatePlayerElo(cardAverage, player.total, pointsPerThrow, averageEloOfPlayers)
     }
   })
@@ -168,13 +147,20 @@ const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerThr
   }
 }
 
-const updateCurrentElos = async () => {
-  let elos = await currentEloAsync()
-  const res = await getElosOfAllPlayers()
-  for (const person in res) {
-    elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
+const updateCurrentElos = async (league, season) => {
+  let elos = await currentEloAsync(season, league)
+  const res = await getElosOfAllPlayers(season, league)
+  if (res === "null") {
+    elos = {}
+    for (const person in res) {
+      elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
+    }
+  } else {
+    for (const person in res) {
+      elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
+    }
   }
-  updateCurrentElo(elos)
+  updateCurrentEloV2(league, season, elos)
   return elos
 }
 
@@ -190,7 +176,7 @@ const weightedAverage = (nums, weights) => {
   return sum / weightSum;
 };
 
-const calculateDelta = (previous, updated) => {
+const calculateDelta = (league, season, previous, updated) => {
   let deltaObject = {}
   for (const player in previous) {
     if (updated[player] === undefined) {
@@ -199,13 +185,14 @@ const calculateDelta = (previous, updated) => {
       deltaObject[player] = updated[player] - previous[player]
     }
   }
-  setDelta(deltaObject)
+  setDeltaV2(league, season, deltaObject)
 }
 
-const graphData = (course, date, previous, elos) => {
+const graphData = (league, season, course, date, previous, elos) => {
   let holderElo = previous
   for (let player in elos) {
     holderElo[player] = elos[player]
   }
-  setEloGraphData({course, date, holderElo})
+
+  setEloGraphDataV2(league, season, {course, date, holderElo})
 }
