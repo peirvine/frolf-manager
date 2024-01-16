@@ -11,7 +11,13 @@ import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import ParkIcon from '@mui/icons-material/Park';
 import Avatar from '@mui/material/Avatar';
-import { auth, signInWithGoogle, logout } from "../../firebase"
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import { auth, signInWithGoogle, logout, updateUsersUDiscName} from "../../firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { NavLink } from "react-router-dom";
@@ -42,6 +48,7 @@ const pages = [
 
 export default function Nav() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
   const [user] = useAuthState(auth);
   
   const handleOpenNavMenu = (event) => {
@@ -61,13 +68,25 @@ export default function Nav() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
   const handleLogout = () => {
     setAnchorEl(null)
+    //redirect people to the home page
+    
     logout()
+  }
+
+  const handleLogin = () => {
+    signInWithGoogle().then(res => {
+      if (res.message === "needUdisc") {
+        setDialogOpen(true)
+      }
+    })
   }
 
   return (
     <AppBar position="static">
+
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <ParkIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -147,7 +166,7 @@ export default function Nav() {
                 </>
                 ) : (
                 <MenuItem>
-                  <Button onClick={() => signInWithGoogle()}>Log In</Button>
+                  <Button onClick={() => handleLogin()}>Log In</Button>
                 </MenuItem>
               )}
             </Menu>
@@ -230,7 +249,7 @@ export default function Nav() {
               ) : (
                 <Button 
                   sx={{ my: 2, color: 'white', display: 'block' }}
-                  onClick={() => signInWithGoogle()}
+                  onClick={() => handleLogin()}
                 >
                   Log In
                 </Button>
@@ -239,6 +258,43 @@ export default function Nav() {
           </Box>
         </Toolbar>
       </Container>
+      <Dialog
+        open={dialogOpen}
+        onClose={handleClose}
+        PaperProps={{
+          component: 'form',
+          onSubmit: (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            updateUsersUDiscName(user, formData.get('name')).then(res => {
+              if (res.code === "success") {
+                setDialogOpen(false);
+              }
+            })
+          },
+        }}
+      >
+        <DialogTitle>Add Udisc Display Name</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            To have your rounds fully counted, you will need to enter your UDisc display name exactly as it appears in the card.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="name"
+            name="name"
+            label="UDisc Display Name"
+            type="name"
+            fullWidth
+            variant="standard"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button type="submit">Add Name</Button>
+        </DialogActions>
+      </Dialog>
     </AppBar>
   );
 }

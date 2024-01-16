@@ -50,9 +50,11 @@ const appCheck = initializeAppCheck(app, {
 const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async () => {
+  let res2 = {message: "noActionNeeded", user: null}
   try {
     const dbRef = ref(getDatabase());
     const res = await signInWithPopup(auth, googleProvider)
+    res2 = {message: "noActionNeeded", user: res.user}
     const user = res.user;
     const isUser = await get(child(dbRef, `users/` + res.user.displayName + " " + res.user.uid)).then((snapshot) => {
       if (snapshot.exists()) {
@@ -67,7 +69,7 @@ export const signInWithGoogle = async () => {
 
     if (!isUser) {
       const db = getDatabase();
-      update(ref(db, 'users/' + res.user.displayName + " " + res.user.uid), {
+      res2 = update(ref(db, 'users/' + res.user.displayName + " " + res.user.uid), {
         uid: user.uid,
         name: user.displayName,
         authProvider: "google",
@@ -78,6 +80,7 @@ export const signInWithGoogle = async () => {
       })
       .then(() => {
         logEvent(analytics, 'Sign up of user successful');
+        return {message: "needUdisc", user: user}
       })
       .catch((error) => {
         // console.warn('error 1')
@@ -88,6 +91,7 @@ export const signInWithGoogle = async () => {
     // console.warn('err', err)
     logEvent(analytics, 'A user had an error signing in', {error: err} );
   }
+  return res2
 }
 
 export const logout = () => {
@@ -235,7 +239,6 @@ export function getElosOfPlayer(player, season, league) {
 
 export function getElosOfPlayerV2(player, league, season) {
   const dbRef = ref(getDatabase());
-  const year = new Date().getFullYear();
   const elos = get(child(dbRef, league + `/playerEloHistory/` + season + '/' + player)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
@@ -631,6 +634,21 @@ export function updateDoinkSettings (league, doinkLimit) {
     return {code: "error", message: "Doinkfund Not Updated"}
   });
   return res
+}
+
+export function getDoinkSettings (league) {
+  const dbRef = ref(getDatabase());
+  let doinks = get(child(dbRef, league + `/doinkfund/maxDoink`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      // console.log("No data available");
+      logEvent(analytics, 'No league member data available')
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not league members', {error: error} );
+  });
+  return doinks
 }
 
 export function addDoinkExpense (league, expense) {

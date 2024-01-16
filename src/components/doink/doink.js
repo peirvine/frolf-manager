@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell, Autocomplete, TextField, Button } from '@mui/material'
 import DoinkUser from './doinkUser'
-import { joinDoinkFund, getDoinkFundPlayers, getLeagueNames, getUserDataV2, getLeagueSettings, getDoinkExpenses } from '../../firebase'
-import { useOutletContext } from 'react-router-dom'
+import { auth, joinDoinkFund, getDoinkFundPlayers, getLeagueNames, getUserDataV2, getLeagueSettings, getDoinkExpenses, getDoinkSettings } from '../../firebase'
+import { useAuthState } from "react-firebase-hooks/auth";
 
 import './doink.scss'
-import { set } from 'firebase/database'
 
 export default function Doink() {
   const [data, setData] = useState()
@@ -22,63 +21,32 @@ export default function Doink() {
   const [expenseTotal, setExpenseTotal] = useState(0)
   const [disabled, setDisabled] = useState(false)
   const [render, setRender] = useState('')
-  const [user] = useOutletContext()
+  const [maxDoink, setMaxDoink] = useState(50)
+  const [user] = useAuthState(auth);
   let doinks = []
 
   useEffect(() => {
     buildOptions().then(res => {
-      if (res.length > 1) {
-        getLeagueSettings(res[0].id).then(settings => {
-          if (settings.doinkFund) {
-            getDoinkFundPlayers(res[0].id).then(res2 => {
-              let holder = 0
-              let users = []
-              if (res2) {
-                setData(res2)
-                res2.forEach(x => {
-                  holder += x.doinks
-                  users.push(x.name)
-                })
-              } else {
-                setData([])
-              }
-              setUserRegistered(users.indexOf(user.displayName) > -1)
-              setSumDoink(holder)
-            })
-            getDoinkExpenses(res[0].id).then(expensesRes => {
-              if (expensesRes !== undefined) {
-                setExpenses(expensesRes)
-                let sum = 0
-                Object.entries(expenses).map(([key, value], i) => {
-                  sum += value.amount
-                })
-                setExpenseTotal(sum)
-              } else {
-                setExpenses([])
-                setExpenseTotal(0)
-              }
-            })
-          }
-        })
-      } else {
-        getLeagueSettings(res.id).then(settings => {
-          if (settings.doinkFund) {
-            getDoinkFundPlayers(res.id).then(res2 => {
-              let holder = 0
-              let users = []
-              if (res2) {
-                setData(res2)
-                res2.forEach(x => {
-                  holder += x.doinks
-                  users.push(x.name)
-                })
-              } else {
-                setData([])
-              }
-              
-              setUserRegistered(users.indexOf(user.displayName) > -1)
-              setSumDoink(holder)
-              getDoinkExpenses(res.id).then(expensesRes => {
+      if (res) {
+        if (res.length > 1) {
+          getLeagueSettings(res[0].id).then(settings => {
+            if (settings.doinkFund) {
+              getDoinkFundPlayers(res[0].id).then(res2 => {
+                let holder = 0
+                let users = []
+                if (res2) {
+                  setData(res2)
+                  res2.forEach(x => {
+                    holder += x.doinks
+                    users.push(x.name)
+                  })
+                } else {
+                  setData([])
+                }
+                setUserRegistered(users.indexOf(user.displayName) > -1)
+                setSumDoink(holder)
+              })
+              getDoinkExpenses(res[0].id).then(expensesRes => {
                 if (expensesRes !== undefined) {
                   setExpenses(expensesRes)
                   let sum = 0
@@ -91,26 +59,71 @@ export default function Doink() {
                   setExpenseTotal(0)
                 }
               })
-            })
-          }
-        })
+            }
+          })
+          getDoinkSettings(res[0].id).then(
+            res => {
+              setMaxDoink(res)
+            }
+          )
+        } else {
+          getLeagueSettings(res.id).then(settings => {
+            if (settings.doinkFund) {
+              getDoinkFundPlayers(res.id).then(res2 => {
+                let holder = 0
+                let users = []
+                if (res2) {
+                  setData(res2)
+                  res2.forEach(x => {
+                    holder += x.doinks
+                    users.push(x.name)
+                  })
+                } else {
+                  setData([])
+                }
+                setUserRegistered(users.indexOf(user.displayName) > -1)
+                setSumDoink(holder)
+                getDoinkExpenses(res.id).then(expensesRes => {
+                  if (expensesRes !== undefined) {
+                    setExpenses(expensesRes)
+                    let sum = 0
+                    Object.entries(expenses).map(([key, value], i) => {
+                      sum += value.amount
+                    })
+                    setExpenseTotal(sum)
+                  } else {
+                    setExpenses([])
+                    setExpenseTotal(0)
+                  }
+                })
+              })
+              getDoinkSettings(res.id).then(
+                res => {
+                  setMaxDoink(res)
+                }
+              )
+            }
+          })
+        }
       }
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [user])
 
   const buildOptions = async () => {
-    const userData = await getUserDataV2(user)
-    const leagues = await getLeagueNames()
-    if (userData.leagues.length > 1) {
-      let optionsArray = []
-      userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
-      setOptionArray(optionsArray)
-      setLeague(userData.leagues[0].id)
-      return optionsArray
-    } else {
-      setLeague(userData.leagues[0].id)
-      return userData.leagues[0]
+    if (user !== null) {
+      const userData = await getUserDataV2(user)
+      const leagues = await getLeagueNames()
+      if (userData.leagues.length > 1) {
+        let optionsArray = []
+        userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+        setOptionArray(optionsArray)
+        setLeague(userData.leagues[0].id)
+        return optionsArray
+      } else {
+        setLeague(userData.leagues[0].id)
+        return userData.leagues[0]
+      }
     }
   }
 
@@ -193,7 +206,7 @@ export default function Doink() {
               <TableBody>
                 {data && (
                   data.forEach(player => {
-                    doinks.push(<DoinkUser player={player} user={user.uid} league={league} />)
+                    doinks.push(<DoinkUser player={player} user={user.uid} league={league} maxDoink={maxDoink} />)
                   })
                 )}
                 {doinks}

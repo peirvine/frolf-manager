@@ -3,7 +3,7 @@
 import {useState, useEffect} from 'react'
 import { TextField, Button, FormControl, Paper, Grid, Snackbar, Alert, IconButton, InputLabel, OutlinedInput, InputAdornment, Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
 import { Close } from '@mui/icons-material'
-import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund, deleteDoinkExpense, editDoinkExpense } from '../../firebase'
+import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund, deleteDoinkExpense, editDoinkExpense, getDoinkSettings } from '../../firebase'
 
 export default function DoinkManager(props) {
   const [doinkEnabled, setDoinkEnabled] = useState(false)
@@ -35,6 +35,13 @@ export default function DoinkManager(props) {
         if (res) {
           setDoinkEnabled(res.doinkFund)
         }
+      }
+    )
+
+    getDoinkSettings(props.league).then(
+      res => {
+        console.warn(res)
+        setMaxDoink(res)
       }
     )
 

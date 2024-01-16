@@ -10,6 +10,7 @@ import { getDoinkFundPlayers, updateDoinkBalanceV2 } from '../../firebase'
 export default function DoinkUser(props) {
   const player = props.player
   const isUser = player.uid === props.user
+  const maxDoink = props.maxDoink
   const [doinkHolder, setDoinkHolder] = useState(player.doinks)
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
@@ -68,7 +69,7 @@ export default function DoinkUser(props) {
           <RemoveIcon fontSize="inherit" />
         </IconButton>
         {doinkHolder}
-        <IconButton aria-label="delete" size="medium"  onClick={() => reportDoink("up")} variant="filled" disabled={!isUser || doinkHolder === 50}>
+        <IconButton aria-label="delete" size="medium"  onClick={() => reportDoink("up")} variant="filled" disabled={!isUser || doinkHolder >= maxDoink}>
           <AddIcon fontSize="inherit" />
         </IconButton>
       </TableCell>
