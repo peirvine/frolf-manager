@@ -29,7 +29,7 @@ import { useOutletContext } from 'react-router-dom'
 import HistoricalRankings from './historicalRankings'
 
 // import { getRankingsFromGoogle } from '../../services/googleSheetsService';
-import { getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers } from '../../firebase'
+import { getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers, getElosOfAllPlayers } from '../../firebase'
 
 import './rankings.scss'
 // import { calculateElo, resetCurrentElo } from '../../services/eloService';
@@ -39,7 +39,6 @@ export default function CurrentRankings () {
   const [user] = useOutletContext()
   const [rankings, setRankings] = useState()
   const [deltas, setDeltas] = useState()
-  const [eloGraph, setEloGraph] = useState()
   const imageRef = useRef(null);
   const [open, setOpen] = useState(false)
   const [optionArray, setOptionArray] = useState([])
@@ -47,6 +46,7 @@ export default function CurrentRankings () {
   const [userData, setUserData] = useState('')
   const [members, setMembers] = useState([])
   const [graphData, setGraphData] = useState({})
+  const [playerEloHistoryRes, setPlayerEloHistoryRes] = useState([])
   // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -70,18 +70,18 @@ export default function CurrentRankings () {
               }
             });
             return Promise.all(hold);
-          })
-        ]).then(([rankings, deltas, graphData, members]) => {
+          }),
+          getElosOfAllPlayers( settings.currentSeason, leagueId)
+        ]).then(([rankings, deltas, graphData, members, playerEloHistory]) => {
           setRankings(rankings);
           setDeltas(deltas);
-          setEloGraph(graphData);
           setMembers(members);
           const graphObj = {
             eloGraph: graphData,
             playersInLeague: members
           };
-        
           setGraphData(graphObj);
+          setPlayerEloHistoryRes(playerEloHistory);
         });
       });
     });
@@ -192,7 +192,15 @@ export default function CurrentRankings () {
   const formatRankings = (passedRankings) => {
     let sorted = Object.entries(passedRankings).sort((a,b) => b[1]-a[1]).map(el=>el[0])
     let playerRankings = []
+    let qualified = true
     sorted.map(x => {
+      let numRounds = 0
+      if (playerEloHistoryRes[x] !== undefined) {
+        numRounds = playerEloHistoryRes[x].length
+      }
+      if (numRounds < 8) {
+        qualified = false
+      }
       playerRankings.push(
         <TableRow
           key={x}
@@ -200,7 +208,7 @@ export default function CurrentRankings () {
           // onClick={() => handleShowStats(player[0])}
         >
           <TableCell align="center">
-            {capitalizeFirstLetter(x)}
+            {capitalizeFirstLetter(x)} {qualified ? null : " - Not Qualified"}
           </TableCell>
           <TableCell align="center">{Math.round(passedRankings[x] * 10) /10}</TableCell>
           {deltas && (<TableCell align="center">{getIcon(deltas[x])}</TableCell>)}

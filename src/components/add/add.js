@@ -4,15 +4,15 @@ import Papa from "papaparse"
 import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
-import { signInWithGoogle, getUserDataV2, getLeagueNames } from "../../firebase"
-import { useOutletContext } from 'react-router-dom'
+import { auth, signInWithGoogle, getUserDataV2, getLeagueNames } from "../../firebase"
+import { useAuthState } from "react-firebase-hooks/auth";
 import { addScorecard, uDiscDump } from '../../services/scorecardService';
 import LeagueAdd from './leagueAdd';
 
 import './add.scss'
 
 export default function Add() {
-  const [user] = useOutletContext()
+  const [user] = useAuthState(auth);
   const [udisc, setUdisc] = useState("")
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
@@ -23,7 +23,7 @@ export default function Add() {
   useEffect(() => { 
     buildOptions()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [user])
 
   const handleUdisc = () => {
     setOpen(true)
@@ -38,15 +38,17 @@ export default function Add() {
   }
 
   const buildOptions = async () => {
-    const userData = await getUserDataV2(user)
-    const leagues = await getLeagueNames()
-    if (userData.leagues.length > 1) {
-      let optionsArray = []
-      userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
-      setOptionArray(optionsArray)
-      setLeague(userData.leagues[0].id)
-    } else {
-      setLeague(userData.leagues[0].id)
+    if (user !== null) {
+      const userData = await getUserDataV2(user)
+      const leagues = await getLeagueNames()
+      if (userData.leagues.length > 1) {
+        let optionsArray = []
+        userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+        setOptionArray(optionsArray)
+        setLeague(userData.leagues[0].id)
+      } else {
+        setLeague(userData.leagues[0].id)
+      }
     }
   }
 
