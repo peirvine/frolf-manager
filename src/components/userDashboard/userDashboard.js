@@ -37,9 +37,11 @@ export default function UserDashboard () {
   };
 
   useEffect(() => { 
-    getUserDataV2(user).then(res => {
+    if (user) {
+      getUserDataV2(user).then(res => {
         setUserData(res)
-    })
+      })
+    }
   }, [user])
 
   useEffect(() => {
@@ -227,7 +229,7 @@ export default function UserDashboard () {
   
   return (
     <div className="userDashboard">
-      <h1>Hi, {user.displayName}</h1>
+      <h1>Hi, {user?.displayName}</h1>
       <FunStats />
       <Box sx={{ width: '100%' }}>
         <Snackbar open={alertOpen}>
