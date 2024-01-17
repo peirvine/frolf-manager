@@ -76,7 +76,7 @@ export const signInWithGoogle = async () => {
         email: user.email,
         leagues: [{}],
         siteAdmin: false,
-        uDiscDisplayName: ''
+        uDiscDisplayName: '',
       })
       .then(() => {
         logEvent(analytics, 'Sign up of user successful');

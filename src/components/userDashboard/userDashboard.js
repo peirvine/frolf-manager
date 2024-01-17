@@ -54,6 +54,8 @@ export default function UserDashboard () {
   }, [userData])
 
   const handleLeagueName = async (leagueObj) => {
+    console.warn('user', user)
+    console.warn('leagueObj', leagueObj)
     const res = getLeagueNames()
     res.then(x => {
       setLeauges(x)
@@ -152,7 +154,7 @@ export default function UserDashboard () {
   //todo move logic into the then or make async
   const handleUpdateLeagueMembers = async (league, user, isAdmin = false) => {
     const members = await getLeagueMembers(league)
-    
+
     const userObject = {
       id: user.uid,
       name: user.displayName,
