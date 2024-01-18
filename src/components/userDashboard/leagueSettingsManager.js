@@ -152,7 +152,6 @@ export default function LeagueSettingsManager(props) {
           <Grid md={6}>
             <FormControl fullWidth sx={{ padding: 0}}>
               <LeagueStats league={id} />
-              <Button variant='contained' onClick={() => handleNewSeason(id)} style={{ marginTop: 15 }}>Start a new Season</Button>
             </FormControl>
           </Grid>
         </Grid>
@@ -161,6 +160,7 @@ export default function LeagueSettingsManager(props) {
         <div className="resetDoinks" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
           <FormControl>
             <h4>Danger Zone</h4>
+            <Button variant='contained' onClick={() => handleNewSeason(id)} style={{ marginBottom: 15 }}>Start a new Season</Button>
             <Button variant="contained" size="small" color="error" onClick={() => handleDeleteLeague()}>Delete League</Button>
           </FormControl>
         </div>
