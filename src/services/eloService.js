@@ -11,7 +11,7 @@ export const calculateElo = async (card, season, league) => {
   const playersInLeague = await getPlayers(league)
   const cardAverage = getCardAverage(playerArray, playersInLeague)
   const strokesPerHole = getStrokesPerHole(playerArray, cardAverage)
-  let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray, season, playersInLeague, league)
+  let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray, season, playersInLeague, league, previousElo)
 
   const pointsPerThrow = calculatePointsPerThrow(strokesPerHole)
   const cardElo = await calculateCardElo(playerArray, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers)
@@ -96,8 +96,8 @@ const updateEloHistory = async (cards, season, league) => {
   }
 }
 
-const getAverageEloOFPlayers = async (players, season, playersInLeague, league) => {
-  const elos = await getCurrentElo(league, season)
+const getAverageEloOFPlayers = async (players, season, playersInLeague, league, currentElo) => {
+  const elos = currentElo
   if (elos.length === 0) {
     return 1000
   } else {
@@ -109,7 +109,11 @@ const getAverageEloOFPlayers = async (players, season, playersInLeague, league) 
     })
     let sumElo = 0
     presentPlayers.map(player => {
-      sumElo += elos[player]
+      if (elos[player] === undefined) {
+        sumElo += 1000
+      } else {
+        sumElo += elos[player]
+      }
     })
     return sumElo / presentPlayers.length
   }

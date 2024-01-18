@@ -85,23 +85,23 @@ export default function LeaguePlayersManager(props) {
   const handleMakeActions = player => {
     let availableActions = []
     if (player.membershipStatus === "Pending") {
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="success" onClick={() => handlePlayer(player, "approve")}>Approve Membership</Button>)
-      availableActions.push(<Button variant="contained" color="error" onClick={() => handlePlayer(player, "deny")}>Deny Membership</Button>)
+      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "approve")}>Approve Membership</Button>)
+      availableActions.push(<Button variant="contained" size="small" color="error" onClick={() => handlePlayer(player, "deny")}>Deny Membership</Button>)
     }
 
     if (player.membershipStatus === "Member") {
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="info" disabled>Edit User</Button>)
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="success" onClick={() => handlePlayer(player, "promote")}>Promote to Admin</Button>)
+      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="info" disabled>Edit User</Button>)
+      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "promote")}>Promote to Admin</Button>)
       availableActions.push(<Button variant="contained" color="error" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
     }
 
     if (player.membershipStatus === "Admin") {
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="error" onClick={() => handlePlayer(player, "demote")}>Remove as Admin</Button>)
-      availableActions.push(<Button variant="contained" color="error" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
+      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="error" onClick={() => handlePlayer(player, "demote")}>Remove as Admin</Button>)
+      availableActions.push(<Button variant="contained" color="error" size="small" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
     }
 
     if (player.membershipStatus === "Banned from the League") {
-      availableActions.push(<Button style={{ marginRight: 15 }} variant="contained" color="success" onClick={() => handlePlayer(player, "unban")}>Lift Ban</Button>)
+      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "unban")}>Lift Ban</Button>)
     }
 
     return availableActions
@@ -110,7 +110,7 @@ export default function LeaguePlayersManager(props) {
   return (
     <div className="playerManager">
       <h3>Manage League Players</h3>
-      <Paper sx={{padding: 3}}>
+      <Paper sx={{padding: 1}}>
         <TableContainer size="small" className="rankingsTable">
           <Table aria-label="player table">
             <TableHead>

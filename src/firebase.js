@@ -268,14 +268,11 @@ export function getElosOfAllPlayers(season, league) {
   return elos
 }
 
-export function getELOHistory () {
+export function getELOHistory (league, season) {
   const dbRef = ref(getDatabase());
-  let elo = []
-  get(child(dbRef, `maftb/eloTracking`)).then((snapshot) => {
+  let elo = get(child(dbRef, league + `/eloTracking/`+ season)).then((snapshot) => {
     if (snapshot.exists()) {
-      for (const [key, value] of Object.entries(snapshot.val())) {
-        elo.push(value)
-      }
+      return snapshot.val()
     } else {
       // console.log("No data available");
       logEvent(analytics, 'No elo history data available')

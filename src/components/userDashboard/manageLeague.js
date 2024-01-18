@@ -6,6 +6,7 @@ import RoundManager from './roundManager';
 import LeaguePlayersManager from './leaguePlayersManager'
 import LeagueSettingsManager from './leagueSettingsManager'
 import { Tabs, Tab, Box, Typography } from '@mui/material'
+import { LeagueHistoryManager } from './leagueHistoryManager';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -48,23 +49,27 @@ export default function ManageLeague() {
       <h2>Manage {state.leagueName}</h2>
       <Box sx={{ width: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="scrollable" allowScrollButtonsMobile>
             <Tab label="league info" {...a11yProps(0)} />
-            <Tab label="players" {...a11yProps(1)} />
-            <Tab label="doinks" {...a11yProps(2)} />
-            <Tab label="rounds" {...a11yProps(3)} disabled />
+            <Tab label="history" {...a11yProps(1)} disabled />
+            <Tab label="players" {...a11yProps(2)} />
+            <Tab label="doinks" {...a11yProps(3)} />
+            <Tab label="rounds" {...a11yProps(4)} disabled />
           </Tabs>
         </Box>
         <CustomTabPanel value={value} index={0}>
           <LeagueSettingsManager league={state} />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={1}>
-          <LeaguePlayersManager league={state.leagueId} />
+          <LeagueHistoryManager league={state.leagueId} />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={2}>
+          <LeaguePlayersManager league={state.leagueId} />
+        </CustomTabPanel>
+        <CustomTabPanel value={value} index={3}>
           <DoinkManager league={state.leagueId} />
         </CustomTabPanel>
-        <CustomTabPanel value={value} index={3} >
+        <CustomTabPanel value={value} index={4} >
           <RoundManager league={state.leagueId} />
         </CustomTabPanel>
       </Box>

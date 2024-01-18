@@ -51,11 +51,9 @@ export default function UserDashboard () {
       handleLeagueName({})
     }    
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userData])
+  }, [user, userData])
 
   const handleLeagueName = async (leagueObj) => {
-    console.warn('user', user)
-    console.warn('leagueObj', leagueObj)
     const res = getLeagueNames()
     res.then(x => {
       setLeauges(x)
@@ -279,11 +277,11 @@ export default function UserDashboard () {
                             leagueId: x.id,
                             leagueName: leagues[x.id]
                           }}>
-                          <Button variant="contained" color="success" sx={{ marginRight: "15px" }}>
+                          <Button variant="contained" color="success" sx={{ marginRight: "15px", marginBottom: "5px" }}>
                             Manage
                           </Button>
                         </Link> : null}
-                      <Button disabled variant="contained" sx={{ marginRight: "15px" }}>My Profile</Button>
+                      <Button disabled variant="contained" sx={{ marginRight: "15px", marginBottom: "5px" }}>My Profile</Button>
                       <Button variant="contained" color="error" onClick={() => handleLeaveLeague(x.id)}>Leave</Button>
                     </TableCell>
                   </TableRow>

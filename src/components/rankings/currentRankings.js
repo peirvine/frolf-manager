@@ -23,20 +23,19 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Autocomplete, TextField } from '@mui/material';
 
 import { toBlob } from 'html-to-image';
-
-import { useOutletContext } from 'react-router-dom'
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 import HistoricalRankings from './historicalRankings'
 
 // import { getRankingsFromGoogle } from '../../services/googleSheetsService';
-import { getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers, getElosOfAllPlayers } from '../../firebase'
+import { auth, getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers, getElosOfAllPlayers } from '../../firebase'
 
 import './rankings.scss'
 // import { calculateElo, resetCurrentElo } from '../../services/eloService';
 // import { mockCard } from '../../services/mockData';
 
 export default function CurrentRankings () {
-  const [user] = useOutletContext()
+  const [user] = useAuthState(auth)
   const [rankings, setRankings] = useState()
   const [deltas, setDeltas] = useState()
   const imageRef = useRef(null);
@@ -51,42 +50,46 @@ export default function CurrentRankings () {
   const handleClose = () => setOpen(false);
 
   useEffect(() => {
-    buildOptions().then(res => {
-      const leagueId = res.length > 1 ? res[0].id : res.id;
-      getLeagueSettings(leagueId).then(settings => {
-        Promise.all([
-          getCurrentElo(leagueId, settings.currentSeason),
-          getDelta(leagueId, settings.currentSeason),
-          getEloGraphData(leagueId, settings.currentSeason),
-          getLeagueMembers(leagueId).then(value => {
-            const hold = value.map(async player => {
-              if (player) {
-                const dataObj = {
-                  displayName: player.name,
-                  uid: player.id,
-                };
-                const res = await getUserDataV2(dataObj);
-                return res.uDiscDisplayName;
-              }
+    if (user) {
+      buildOptions().then(res => {
+        if (res) {
+          const leagueId = res.length > 1 ? res[0].id : res.id;
+          getLeagueSettings(leagueId).then(settings => {
+            Promise.all([
+              getCurrentElo(leagueId, settings.currentSeason),
+              getDelta(leagueId, settings.currentSeason),
+              getEloGraphData(leagueId, settings.currentSeason),
+              getLeagueMembers(leagueId).then(value => {
+                const hold = value.map(async player => {
+                  if (player) {
+                    const dataObj = {
+                      displayName: player.name,
+                      uid: player.id,
+                    };
+                    const res = await getUserDataV2(dataObj);
+                    return res.uDiscDisplayName;
+                  }
+                });
+                return Promise.all(hold);
+              }),
+              getElosOfAllPlayers( settings.currentSeason, leagueId)
+            ]).then(([rankings, deltas, graphData, members, playerEloHistory]) => {
+              setRankings(rankings);
+              setDeltas(deltas);
+              setMembers(members);
+              const graphObj = {
+                eloGraph: graphData,
+                playersInLeague: members
+              };
+              setGraphData(graphObj);
+              setPlayerEloHistoryRes(playerEloHistory);
             });
-            return Promise.all(hold);
-          }),
-          getElosOfAllPlayers( settings.currentSeason, leagueId)
-        ]).then(([rankings, deltas, graphData, members, playerEloHistory]) => {
-          setRankings(rankings);
-          setDeltas(deltas);
-          setMembers(members);
-          const graphObj = {
-            eloGraph: graphData,
-            playersInLeague: members
-          };
-          setGraphData(graphObj);
-          setPlayerEloHistoryRes(playerEloHistory);
-        });
+          });
+        }
       });
-    });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const buildOptions = async () => {
     const userData = await getUserDataV2(user)

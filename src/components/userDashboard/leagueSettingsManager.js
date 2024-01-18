@@ -6,6 +6,7 @@ import { Close } from '@mui/icons-material'
 import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
 import { startNewSeason } from '../../services/leagueService'
 import { Link, Navigate } from 'react-router-dom'
+import LeagueStats from './leagueStats'
 
 export default function LeagueSettingsManager(props) {
   const [name, setName] = useState(props.league.leagueName)
@@ -122,7 +123,7 @@ export default function LeagueSettingsManager(props) {
               {alertMessage}
             </Alert>
           </Snackbar>
-          <Grid xs={6}>    
+          <Grid md={6}>    
             <FormControl fullWidth sx={{ padding: 3}}>
               <TextField
                 required
@@ -148,17 +149,18 @@ export default function LeagueSettingsManager(props) {
               <Button variant="contained" onClick={() => updateLeagueData()}>Save</Button>
             </FormControl>
           </Grid>
-          <Grid xs={6}>
-            <FormControl fullWidth sx={{ padding: 3}}>
-              <Button variant='contained' onClick={() => handleNewSeason(id)}>Start a new Season</Button>
+          <Grid md={6}>
+            <FormControl fullWidth sx={{ padding: 0}}>
+              <LeagueStats league={id} />
+              <Button variant='contained' onClick={() => handleNewSeason(id)} style={{ marginTop: 15 }}>Start a new Season</Button>
             </FormControl>
           </Grid>
         </Grid>
       </Paper>
       <Paper sx={{marginTop: 1}}>
-        <div className="resetDoinks" style={{ width: 600, margin: "auto", textAlign: "center", padding: 15}}>
+        <div className="resetDoinks" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
           <FormControl>
-            <p>Danger Zone</p>
+            <h4>Danger Zone</h4>
             <Button variant="contained" size="small" color="error" onClick={() => handleDeleteLeague()}>Delete League</Button>
           </FormControl>
         </div>

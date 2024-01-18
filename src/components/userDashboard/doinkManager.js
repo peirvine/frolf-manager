@@ -40,7 +40,6 @@ export default function DoinkManager(props) {
 
     getDoinkSettings(props.league).then(
       res => {
-        console.warn(res)
         setMaxDoink(res)
       }
     )
@@ -188,7 +187,7 @@ export default function DoinkManager(props) {
                   {alertMessage}
                 </Alert>
               </Snackbar>
-              <Grid xs={6}>
+              <Grid xl={6}>
                 <FormControl fullWidth sx={{ padding: 3}}>
                   <TextField
                     required
@@ -202,7 +201,7 @@ export default function DoinkManager(props) {
                   <Button variant="contained" size="large" onClick={() => handleDoinkUpdate()} style={{marginBottom: 15}}>Update Doink Limit</Button>
                 </FormControl>
               </Grid>
-              <Grid xs={6}>
+              <Grid xl={6}>
                 <FormControl fullWidth sx={{ padding: 3}}>
                   <TextField
                     required
@@ -230,7 +229,7 @@ export default function DoinkManager(props) {
           <Paper className="paperContent" sx={{marginTop: 1}}>
             <h3>Current Expenses</h3>
             <TableContainer>
-              <Table sx={{width: 500, marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>
+              <Table sx={{width: "75%", marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Expense</TableCell>
@@ -245,7 +244,7 @@ export default function DoinkManager(props) {
             </TableContainer>
           </Paper>
           <Paper className="paperContent" sx={{marginTop: 1}}>
-            <div className="resetDoinks" style={{ width: 600, margin: "auto", textAlign: "center", padding: 15}}>
+            <div className="resetDoinks" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
               Is the season over? Reset your doinkfund here. This action cannot be undone.
               <Button style={{marginTop: 10}} variant="contained" size="large" color="error" onClick={() => handleLeagueDoinkReset()}>Reset Doink Balance</Button>
             </div>

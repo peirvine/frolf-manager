@@ -6,7 +6,7 @@ export default function HistoricalRankings (props) {
   if (props.playersInLeague === undefined) {
     players = []
   }
-  let numPlayers = players.length
+  let i = 0
   const graph = []
   for (const x in props.eloGraph) {
     let data = {}
@@ -15,7 +15,7 @@ export default function HistoricalRankings (props) {
     data['date'] = props.eloGraph[x].date
     graph.push(data)
   }
-  graph.sort((a,b) => {return new Date(a.date.substring(0,10)) - new Date(b.date.substring(0,10))})
+  graph.sort((a,b) => {return new Date(b.date.substring(0,10)) - new Date(a.date.substring(0,10))})
 
   return (
     <div className="graph">
@@ -39,8 +39,8 @@ export default function HistoricalRankings (props) {
           <Legend verticalAlign="top" height={36} />
           <ReferenceLine y={1000} stroke="red" label="1000" strokeDasharray="3 3" />
           {players.map(player => {
-            const color = colorArray[numPlayers]
-            numPlayers = numPlayers--
+            const color = colorArray[i]
+            i += 1
             return (
               <Line type="monotone" dataKey={"elo."+ player} name={player} stroke={color} />
             )
