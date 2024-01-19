@@ -733,3 +733,17 @@ export function updateDoinkBalanceV2 (league, player) {
   });
   return res
 }
+
+/****************** League Dashboard ******************/
+export function setLeagueHistory (league, season, historyObj) {
+  const db = getDatabase();
+  return set(ref(db, league + '/info/leagueHistory/' + season), historyObj)
+  .then(() => {
+    console.warn('success')
+    return {code: "success", message: "League history updated"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the league history', {error: error} );
+    return {code: "error", message: "League history was not updated"}
+  });
+}

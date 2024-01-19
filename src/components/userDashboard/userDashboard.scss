@@ -1,0 +1,11 @@
+@import "../../globalStyles.scss";
+
+.awardRow:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+.addButton {
+  @media (min-width: $lv) {
+    margin-right: 5px;
+  }
+}

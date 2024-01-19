@@ -164,7 +164,7 @@ export default function DoinkManager(props) {
       {doinkEnabled ? (
         <>
           <Paper className="paperContent">
-          <h3>General Settings</h3>
+          <h4>General Settings</h4>
             <Grid container spacing={2}>
               <Snackbar open={alertOpen}>
                 <Alert
@@ -227,7 +227,7 @@ export default function DoinkManager(props) {
             </Grid>
           </Paper>
           <Paper className="paperContent" sx={{marginTop: 1}}>
-            <h3>Current Expenses</h3>
+            <h4>Current Expenses</h4>
             <TableContainer>
               <Table sx={{width: "75%", marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>
                 <TableHead>
