@@ -3,6 +3,7 @@ import './leagueHistory.scss'
 export default function TournamentStandings(props) {
   let players = []
 
+  // eslint-disable-next-line array-callback-return
   Object.entries(props.round).map(([key, value], i) => {
     value.Players.forEach((player) => {
       if (player.player !== "Par") {
