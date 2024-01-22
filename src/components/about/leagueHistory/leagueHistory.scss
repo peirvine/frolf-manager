@@ -1,0 +1,51 @@
+.podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 225px;
+}
+
+.place {
+  position: relative; // Add this line
+  width: 150px;
+  text-align: center;
+  color: white;
+  padding: 10px;
+  margin: 0 10px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.place span {
+  position: absolute;
+  top: -25px;
+  left: 50%; // Add this line
+  transform: translateX(-50%); // Add this line
+  color: black;
+  width: 100%;
+}
+
+.place1 {
+  background-color: darken(gold, 8%);
+  height: 100%;
+}
+
+.place2 {
+  background-color: silver;
+  height: 80%;
+}
+
+.place3 {
+  background-color: #cd7f32;
+  height: 60%;
+}
+
+.player {
+  display: inline;
+  padding: 10px;
+}
+
+.standings {
+  text-align: center;
+  padding-top: 10px;
+}

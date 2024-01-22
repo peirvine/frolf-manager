@@ -157,7 +157,8 @@ export default function UserDashboard () {
       id: user.uid,
       name: user.displayName,
       isAdmin: isAdmin,
-      membershipStatus: isAdmin ? "Admin" : "Pending"
+      membershipStatus: isAdmin ? "Admin" : "Pending",
+      uDiscDisplayName: userData.uDiscDisplayName
     }
 
     const newMembers = members.length > 0 ? members.concat(userObject) : [userObject]
@@ -176,7 +177,8 @@ export default function UserDashboard () {
       id: user.uid,
       name: user.displayName,
       isAdmin: true,
-      membershipStatus: "Admin"
+      membershipStatus: "Admin",
+      uDiscDisplayName: userData.uDiscDisplayName
     }
 
     const formData = {
@@ -185,7 +187,8 @@ export default function UserDashboard () {
       doinkFund: doink,
       acceptingPlayers: true,
       blurb: '',
-      currentSeason: 1
+      currentSeason: 1,
+      isPreSeason: true,
     }
 
     let doinkObj = {

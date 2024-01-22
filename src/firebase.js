@@ -136,6 +136,24 @@ export const getScorecards = (league, season) => {
   return sorted
 }
 
+export const getSpecificScorecard = (league, season, scorecardId) => {
+  const dbRef = ref(getDatabase());
+  const scorecardRef = child(dbRef, `${league}/scorecards/${season}/${scorecardId}`);
+  return get(scorecardRef)
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        return snapshot.val();
+      } else {
+        logEvent(analytics, 'Scorecard not found');
+        return null;
+      }
+    })
+    .catch((error) => {
+      logEvent(analytics, 'Could not fetch scorecard', { error: error });
+      return null;
+    });
+};
+
 export const getAllScorecards = (league) => {
   const dbRef = ref(getDatabase());
   let sorted = get(child(dbRef, league + `/scorecards/`)).then((snapshot) => {
@@ -740,10 +758,48 @@ export function setLeagueHistory (league, season, historyObj) {
   return set(ref(db, league + '/info/leagueHistory/' + season), historyObj)
   .then(() => {
     console.warn('success')
-    return {code: "success", message: "League history updated"}
+    return {code: "success", message: "League history added"}
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the league history', {error: error} );
-    return {code: "error", message: "League history was not updated"}
+    return {code: "error", message: "League history was not added"}
   });
+}
+
+export function getLeagueHistory(league) {
+  const dbRef = ref(getDatabase());
+  let history = get(child(dbRef, league + '/info/leagueHistory')).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      logEvent(analytics, 'No league history available');
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get league history', { error: error });
+  });
+  return history;
+}
+
+export function updateLeagueHistory(league, season, historyObj) {
+  const db = getDatabase();
+  return update(ref(db, `${league}/info/leagueHistory/${season}`), historyObj)
+    .then(() => {
+      return { code: "success", message: "League history updated" };
+    })
+    .catch((error) => {
+      logEvent(analytics, 'The system failed to update the league history', { error: error });
+      return { code: "error", message: "League history was not updated" };
+    });
+}
+
+export function deleteLeagueHistory(league, season) {
+  const db = getDatabase();
+  return remove(ref(db, `${league}/info/leagueHistory/${season}`))
+    .then(() => {
+      return { code: "success", message: "League history deleted" };
+    })
+    .catch((error) => {
+      logEvent(analytics, 'The system failed to delete the league history', { error: error });
+      return { code: "error", message: "League history was not deleted" };
+    });
 }

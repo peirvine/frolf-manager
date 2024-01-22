@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress } from '@mui/material'
-import { Close } from '@mui/icons-material'
+import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress, Tooltip  } from '@mui/material'
+import { Close, HelpOutline } from '@mui/icons-material'
 import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
 import { startNewSeason } from '../../services/leagueService'
 import { Link, Navigate } from 'react-router-dom'
@@ -13,6 +13,7 @@ export default function LeagueSettingsManager(props) {
   const [id, setId] = useState(props.league.leagueId)
   const [blurb, setBlurb] = useState()
   const [checked, setChecked] = useState(true)
+  const [checked2, setChecked2] = useState(true)
   const [leagueData, setLeagueData] = useState({})
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
@@ -27,6 +28,7 @@ export default function LeagueSettingsManager(props) {
         if (res) {
           setLeagueData(res)
           setChecked(res.acceptingPlayers)
+          setChecked2(res.isPreseason)
           setBlurb(res.blurb)
         }
       }
@@ -40,6 +42,7 @@ export default function LeagueSettingsManager(props) {
       doinkFund: leagueData?.doinkFund ? leagueData.doinkFund : false,
       leagueAcronym: props.league.leagueId,
       leagueName: name,
+      isPreseason: checked2
     }
     updateLeagueSettings(props.league.leagueId, infoObject).then(res => {
       setAlertOpen(true)
@@ -146,6 +149,8 @@ export default function LeagueSettingsManager(props) {
                 style={{ marginBottom: 15}}
               />
               <FormControlLabel control={<Switch checked={checked} onChange={(event) => setChecked(event.target.checked)}/>} label="Accepting New Players" />
+              <FormControlLabel control={<Switch checked={checked2} onChange={(event) => setChecked2(event.target.checked)}/>} label="Pre-Season?" />
+              <i>This will add rounds and count them towards stats, but won't add them to elo</i>
               <Button variant="contained" onClick={() => updateLeagueData()}>Save</Button>
             </FormControl>
           </Grid>

@@ -54,7 +54,9 @@ export async function uDiscDump (card, league) {
     // const googleRes = await addScorecardToGoogle(returnValue)
     let response = {code: "success", message: "Card added successfully."}
     writeScorecardToDatabase(league, returnValue, season)
-    calculateElo(returnValue, season, league)
+    if (!settings.isPreseason) {
+      calculateElo(returnValue, season, league)
+    }
     // response = scorecardRes.then(res => {
     //   if (!res) {
     //     return {code: "error", message: "Failed to save to the database. Try refreshing and submitting again. The card is valid."}

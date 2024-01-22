@@ -53,6 +53,7 @@ export default function LeaguePlayersManager(props) {
     const userData = await getUserDataV2(playerObj)
     const leagueIndex = userData.leagues.findIndex(obj => obj.id === league)
     userData.leagues[leagueIndex].membershipStatus = status
+    userData.leagues[leagueIndex].isAdmin = members[playerIndex].isAdmin
     updateUsersLeaguesV2(playerObj, userData.leagues)
     setReRender(rerender.concat(' '))
   }

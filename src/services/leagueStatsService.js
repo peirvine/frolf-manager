@@ -3,16 +3,27 @@ import { getLeagueSettings, getScorecards, getELOHistory, getCurrentElo } from '
 export const getLeagueStats = async (league) => {
   const leagueSettings = await getLeagueSettings(league)
   const currentSeason = leagueSettings.currentSeason
+
+  let mostPlayedCourse = []
+  let numberOfRounds = 0
+
+  let hardestCourse = []
+  
+  let currentElo = []
+  let mostAveragePlayer = []
   
   const scorecards = await getScorecards(league, currentSeason)
-  const mostPlayedCourse = getMostPlayedCourse(scorecards)
-  const numberOfRounds = Object.keys(scorecards).length;
-
-  const courseStats = await getELOHistory(league, currentSeason)
-  const hardestCourse = getHardestCourse(courseStats)
+  if (scorecards !== undefined) {
+    mostPlayedCourse = getMostPlayedCourse(scorecards)
+    numberOfRounds = Object.keys(scorecards).length;
   
-  const currentElo = await getCurrentElo(league, currentSeason)
-  const mostAveragePlayer = getMostAverage(currentElo)
+    const courseStats = await getELOHistory(league, currentSeason)
+    hardestCourse = getHardestCourse(courseStats)
+    
+    currentElo = await getCurrentElo(league, currentSeason)
+    mostAveragePlayer = getMostAverage(currentElo)
+  }
+  
   
   
   const stats = { season: currentSeason, numberOfRounds, mostPlayedCourse, hardestCourse, mostAveragePlayer, currentElo }

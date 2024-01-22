@@ -32,7 +32,7 @@ export default function LeagueStats(props) {
                 <TableCell>Most Played Course</TableCell>
                 <TableCell>
                   {stats.mostPlayedCourse.map(course => {
-                    return course.course + " - " + course.count;
+                    return <div>{course.course + " - " + course.count}</div>;
                   })}
                 </TableCell>
               </TableRow>
@@ -40,7 +40,7 @@ export default function LeagueStats(props) {
                 <TableCell>Hardest Course</TableCell>
                 <TableCell>
                   {stats.hardestCourse.map(course => {
-                    return course.course + " - " + course.highestStrokesPerHole;
+                    return <div>{course.course + " - " + course.highestStrokesPerHole}</div>;
                   })}
                 </TableCell>
               </TableRow>
@@ -48,7 +48,7 @@ export default function LeagueStats(props) {
                 <TableCell>Most Average Player</TableCell>
                 <TableCell>
                   {stats.mostAveragePlayer.map(player => {
-                    return player.player + " - " + player.elo;
+                    return <div>{player.player + " - " + player.elo}</div>;
                   })}
                 </TableCell>
               </TableRow>

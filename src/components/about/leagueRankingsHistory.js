@@ -33,8 +33,8 @@ export default function LeagueRankingsHistory ( props ) {
           {props.year}
         </AccordionSummary>
         <AccordionDetails>
-          <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 5 }}>
-            <Grid item md={2} xs={12}>
+          <Grid container rowSpacing={2} columnSpacing={{ xs: 1, sm: 2, md: 5 }}>
+            <Grid item lg={4} xs={12}>
               <h3>Final Rankings</h3>
               <TableContainer size="small" className="rankingsTable">
                 <Table aria-label="simple table">
@@ -67,7 +67,7 @@ export default function LeagueRankingsHistory ( props ) {
                 <p>Most Average Player: {props.stats.avgPlayer}</p>
               </div>
             </Grid>
-            <Grid item md={10} xs={12}>
+            <Grid item lg={8} xs={12}>
               <h3>Tournament Results</h3>
               <p className="winner">Winner: {props.stats.winner}</p>
               <p className="rest">{props.stats.rest}</p>

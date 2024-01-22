@@ -2,6 +2,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { colorArray } from './colorArray'
 
 export default function HistoricalRankings (props) {
+  console.log(props)
   let players = props.playersInLeague
   if (props.playersInLeague === undefined) {
     players = []
@@ -15,7 +16,7 @@ export default function HistoricalRankings (props) {
     data['date'] = props.eloGraph[x].date
     graph.push(data)
   }
-  graph.sort((a,b) => {return new Date(b.date.substring(0,10)) - new Date(a.date.substring(0,10))})
+  graph.sort((a,b) => {return new Date(a.date.substring(0,10)) - new Date(b.date.substring(0,10))})
 
   return (
     <div className="graph">
