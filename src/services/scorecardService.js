@@ -37,10 +37,10 @@ export async function uDiscDump (card, league) {
         holes: y.slice(8),
       })
     })
-  
+
     returnValue = {
-      course: parData[0],
-      layout: parData[1],
+      course: parData[0].replace(/[.#$[\]]/g, ''),
+      layout: parData[1].replace(/[.#$[\]]/g, ''),
       par: parData[4],
       date: parData[2],
       playerArray,

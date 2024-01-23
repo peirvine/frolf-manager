@@ -1,20 +1,36 @@
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2 } from '../../firebase'
+import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2, getAllUsers } from '../../firebase'
 import { Table, TableRow, TableBody, TableHead, TableContainer, TableCell, Skeleton, Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, Paper } from '@mui/material'
 
 export default function LeaguePlayersManager(props) {
   const { league } = props
   const [ members, setMembers ] = useState([])
+  const [ usersNotInLeague, setUsersNotInLeague ] = useState([])
   const [ dialogOpen, setDialogOpen ] = useState(false)
   const [ kickedMember, setKickedMember ] = useState('')
   const [ rerender, setReRender] = useState('')
 
+
   useEffect(() => {
-    getLeagueMembers(league).then(res => {
-      setMembers(res)
-    })
-  }, [league])
+    Promise.all([getLeagueMembers(league), getAllUsers()])
+      .then(([leagueMembers, users]) => {
+        setMembers(leagueMembers);
+        let temp = [];
+        Object.entries(users).forEach(([key, value]) => {
+          const isMember = leagueMembers.some(member => member.id === value.uid);
+          if (!isMember) {
+            temp.push(value);
+          }
+        });
+
+        setUsersNotInLeague(temp);
+      })
+      .catch(error => {
+        setMembers([]);
+        setUsersNotInLeague([]);
+      });
+  }, [league]);
   
   const handlePlayer = async (player, action) => {
     let status =""
@@ -83,6 +99,13 @@ export default function LeaguePlayersManager(props) {
     //todo also delete elo data
   }
 
+  const handleAddPlayer = async (player) => {
+    let temp = members
+    temp.push({id: player.uid, name: player.name, membershipStatus: "Member", isAdmin: false, uDiscDisplayName: player.uDiscDisplayName})
+    updateLeagueMembers(league, temp)
+    setReRender(rerender.concat(' '))
+  }
+
   const handleMakeActions = player => {
     let availableActions = []
     if (player.membershipStatus === "Pending") {
@@ -103,6 +126,10 @@ export default function LeaguePlayersManager(props) {
 
     if (player.membershipStatus === "Banned from the League") {
       availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "unban")}>Lift Ban</Button>)
+    }
+
+    if (player.membershipStatus === undefined) {
+      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handleAddPlayer(player)}>Add Player</Button>)
     }
 
     return availableActions
@@ -151,6 +178,36 @@ export default function LeaguePlayersManager(props) {
                     <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
                   </TableRow>
                 </>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+      <Paper sx={{ padding: 1, marginTop: 2 }}>
+        <h3>Invite Players</h3>
+        <TableContainer size="small" className="rankingsTable">
+          <Table aria-label="player table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Player</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {usersNotInLeague.length !== 0 ? (
+                usersNotInLeague.map(player => {
+                  let actions = handleMakeActions(player)
+                  return (
+                    <TableRow>
+                      <TableCell>{player.name}</TableCell>
+                      <TableCell>{actions}</TableCell>
+                    </TableRow>
+                  )
+                })
+              ) : (
+                <TableRow>
+                  <i>No Members to Add</i>
+                </TableRow>
               )}
             </TableBody>
           </Table>

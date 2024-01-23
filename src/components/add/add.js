@@ -4,7 +4,7 @@ import Papa from "papaparse"
 import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
-import { auth, signInWithGoogle, getUserDataV2, getLeagueNames } from "../../firebase"
+import { auth, signInWithGoogle, getUserDataV2, getLeagueNames, getLeagueSettings } from "../../firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { addScorecard, uDiscDump } from '../../services/scorecardService';
 import LeagueAdd from './leagueAdd';
@@ -19,9 +19,13 @@ export default function Add() {
   const [alertMessage, setAlertMessage] = useState('')
   const [optionArray, setOptionArray] = useState([])
   const [league, setLeague] = useState()
+  const [settings, setSettings] = useState([])
 
   useEffect(() => { 
     buildOptions()
+    getLeagueSettings(league).then(res => {
+      setSettings(res)
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
@@ -86,7 +90,7 @@ export default function Add() {
                       setLeague(newValue.id);
                     }}
                   />) : null}
-                  <Button className="submitButton" variant="contained" onClick={() => handleUdisc()}>Parse UDisc CSV</Button>
+                  <Button className="submitButton" variant="contained" onClick={() => handleUdisc()}>Add {settings.isPreseason ? "Off-Season Round" : "Round"}</Button>
                   <Button className="submitButton" variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
                 </FormControl>
               </Grid>

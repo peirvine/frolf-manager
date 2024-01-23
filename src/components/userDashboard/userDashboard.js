@@ -233,7 +233,7 @@ export default function UserDashboard () {
   return (
     <div className="userDashboard">
       <h1>Hi, {user?.displayName}</h1>
-      <FunStats />
+      <FunStats user={userData} leagues={userData.leagues} leagueNames={leagues} />
       <Box sx={{ width: '100%' }}>
         <Snackbar open={alertOpen}>
           <Alert

@@ -187,7 +187,7 @@ export default function DoinkManager(props) {
                   {alertMessage}
                 </Alert>
               </Snackbar>
-              <Grid xl={6}>
+              <Grid xs={12} md={6}>
                 <FormControl fullWidth sx={{ padding: 3}}>
                   <TextField
                     required
@@ -201,7 +201,7 @@ export default function DoinkManager(props) {
                   <Button variant="contained" size="large" onClick={() => handleDoinkUpdate()} style={{marginBottom: 15}}>Update Doink Limit</Button>
                 </FormControl>
               </Grid>
-              <Grid xl={6}>
+              <Grid xs={12} md={6}>
                 <FormControl fullWidth sx={{ padding: 3}}>
                   <TextField
                     required
@@ -245,7 +245,7 @@ export default function DoinkManager(props) {
           </Paper>
           <Paper className="paperContent" sx={{marginTop: 1}}>
             <div className="resetDoinks" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
-              Is the season over? Reset your doinkfund here. This action cannot be undone.
+              <div>Is the season over? Reset your doinkfund here. This action cannot be undone.</div>
               <Button style={{marginTop: 10}} variant="contained" size="large" color="error" onClick={() => handleLeagueDoinkReset()}>Reset Doink Balance</Button>
             </div>
           </Paper>

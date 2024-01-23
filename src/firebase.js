@@ -803,3 +803,17 @@ export function deleteLeagueHistory(league, season) {
       return { code: "error", message: "League history was not deleted" };
     });
 }
+
+export function getAllUsers () {
+  const dbRef = ref(getDatabase());
+  return get(child(dbRef, `users/`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      logEvent(analytics, 'No users available');
+      return []
+    }
+  }).catch((error) => { 
+    logEvent(analytics, 'Could not get users', { error: error });
+  });
+}

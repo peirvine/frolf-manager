@@ -126,8 +126,8 @@ export default function LeagueSettingsManager(props) {
               {alertMessage}
             </Alert>
           </Snackbar>
-          <Grid md={6}>    
-            <FormControl fullWidth sx={{ padding: 3}}>
+          <Grid md={6}>
+            <FormControl fullWidth sx={{ padding: 2}}>
               <TextField
                 required
                 id="outlined-required"
@@ -149,19 +149,17 @@ export default function LeagueSettingsManager(props) {
                 style={{ marginBottom: 15}}
               />
               <FormControlLabel control={<Switch checked={checked} onChange={(event) => setChecked(event.target.checked)}/>} label="Accepting New Players" />
-              <FormControlLabel control={<Switch checked={checked2} onChange={(event) => setChecked2(event.target.checked)}/>} label="Pre-Season?" />
+              <FormControlLabel control={<Switch checked={checked2} onChange={(event) => setChecked2(event.target.checked)}/>} label="Off-Season?" />
               <i>This will add rounds and count them towards stats, but won't add them to elo</i>
               <Button variant="contained" onClick={() => updateLeagueData()}>Save</Button>
             </FormControl>
           </Grid>
-          <Grid md={6}>
-            <FormControl fullWidth sx={{ padding: 0}}>
-              <LeagueStats league={id} />
-            </FormControl>
+          <Grid md={6} sx={{ padding: 2}}>
+            <LeagueStats league={id} />
           </Grid>
         </Grid>
       </Paper>
-      <Paper sx={{marginTop: 1}}>
+      <Paper className="paperContent" sx={{marginTop: 1}}>
         <div className="resetDoinks" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
           <FormControl>
             <h4>Danger Zone</h4>
