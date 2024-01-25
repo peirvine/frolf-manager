@@ -1,9 +1,10 @@
+/* eslint-disable array-callback-return */
 /* eslint-disable react-hooks/exhaustive-deps */
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
 import { TextField, Button, FormControl, Paper, Grid, Snackbar, Alert, IconButton, InputLabel, OutlinedInput, InputAdornment, Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
 import { Close } from '@mui/icons-material'
-import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund, deleteDoinkExpense, editDoinkExpense, getDoinkSettings } from '../../firebase'
+import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund, deleteDoinkExpense, editDoinkExpense, getDoinkSettings, getDoinkFundPlayers, updateDoinkBalanceV2 } from '../../firebase'
 
 export default function DoinkManager(props) {
   const [doinkEnabled, setDoinkEnabled] = useState(false)
@@ -20,6 +21,8 @@ export default function DoinkManager(props) {
   const [ dialogOpen, setDialogOpen ] = useState(false)
   const [key, setKey] = useState('')
   const [render, setRender] = useState('')
+  const [doinkItems, setDoinkItems] = useState([])
+  const [doinkValues, setDoinkValues] = useState([])
 
   const handleDoinkUpdate = () => {
     updateDoinkSettings(props.league, maxDoink).then(res => {
@@ -64,7 +67,65 @@ export default function DoinkManager(props) {
         }
       }
     )
+
+    getDoinkFundPlayers(props.league).then(
+      res => {
+        if (res) {
+          setDoinkValues(res)
+          console.warn('res', res)
+          let returnObj = []
+          for (const [key, value] of Object.entries(res)) {
+            returnObj.push(
+              <TableRow key={key}>
+                <TableCell>{value.name}</TableCell>
+                <TableCell>
+                  <TextField
+                    required
+                    margin="normal"
+                    id="outlined-required"
+                    defaultValue={value.doinks}
+                    onChange={(e) => handleDoinkChange(value.name, e.target.value)}
+                    style={{ marginBottom: 15}}
+                    type={"number"}
+                  />
+                </TableCell>
+              </TableRow>
+            )
+          }
+          setDoinkItems(returnObj)
+        }
+      }
+    )
   }, [props.league, render])
+
+  const handleDoinkChange = (name, value) => {
+    console.log(name, value)
+    let tempDoink = [...doinkValues]
+    tempDoink.forEach((item) => {
+      if (item.name === name) {
+        item.doinks = parseInt(value);
+      }
+    });
+    console.log('tempDoink', tempDoink)
+    setDoinkValues(tempDoink);
+  }
+
+  const reportDoink = () => {
+    console.warn('doinsk', doinkValues)
+
+    updateDoinkBalanceV2(props.league, doinkValues)
+      .then(res => {
+        if (res) {
+          setAlertOpen(true)
+          setAlertLevel('success')
+          setAlertMessage('Doink Updated')
+        } else {
+          setAlertOpen(true)
+          setAlertLevel('error')
+          setAlertMessage('Doink not updated, please refresh and try again')
+        }
+      })
+    }
 
   const enableDoinkFund = () => {
     const payload = {
@@ -225,6 +286,28 @@ export default function DoinkManager(props) {
                 </FormControl>
               </Grid>
             </Grid>
+          </Paper>
+          <Paper className="paperContent" sx={{marginTop: 1}}>
+            <h4>Current Doinks</h4>
+            <TableContainer>
+              <Table sx={{width: "75%", marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Player</TableCell>
+                    <TableCell>Doinks</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {doinkItems}
+                  <TableRow>
+                    <TableCell />
+                    <TableCell>
+                      <Button variant="contained" onClick={() => reportDoink()}>Update Doinks</Button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Paper>
           <Paper className="paperContent" sx={{marginTop: 1}}>
             <h4>Current Expenses</h4>

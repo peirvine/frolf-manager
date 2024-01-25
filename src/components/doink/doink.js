@@ -192,9 +192,9 @@ export default function Doink() {
         ) : null
       }
       {render}
-      {!userRegistered && (<Button disabled={disabled} onClick={() => registerDoinkerV2(user)}>Register Me</Button>)}
       {user ? (
         <>
+          {!userRegistered && (<Button variant="contained" disabled={disabled} onClick={() => registerDoinkerV2(user)}>Register Me</Button>)}
           <TableContainer size="medium" className="doinkTable">
             <Table aria-label="simple table">
               <TableHead>

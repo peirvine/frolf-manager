@@ -156,11 +156,11 @@ export default function Nav() {
                       Doink Fund
                   </MenuItem>
                   <MenuItem
-                    key={'profile'}
+                    key={'dashboard'}
                     onClick={handleCloseNavMenu}
                     component={ NavLink }
                     to={"/dashboard"}>
-                      My Profile
+                      Dashboard
                   </MenuItem>
                   <Button onClick={() => logout()}>Log Out</Button>
                 </>
@@ -241,7 +241,7 @@ export default function Nav() {
                         component={ NavLink }
                         to={'/dashboard'}
                       >
-                        Profile
+                        Dashboard
                       </MenuItem>
                     <MenuItem onClick={handleLogout}>Logout</MenuItem>
                   </Menu>

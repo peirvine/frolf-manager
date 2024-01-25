@@ -103,7 +103,7 @@ export function writeScorecardToDatabase(league, card, season) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   const newId = card.course + " " + card.date + " " + Math.floor(Math.random() * 100000000)
-  set(ref(db, league + '/scorecards/' + season + "/" + newId), {
+  return set(ref(db, league + '/scorecards/' + season + "/" + newId), {
     Course: card.course,
     Layout: card.layout,
     Players: card.playerArray,
@@ -114,10 +114,11 @@ export function writeScorecardToDatabase(league, card, season) {
     rawUDiscCard: card.rawUDiscCard
   })
   .then(() => {
-    // console.warn('success')
+    return {code: "success", message: "Scorecard added successfully."}
   })
   .catch((error) => {
     logEvent(analytics, 'A user was unable to add a scorecard', {error: error} );
+    return {code: "error", message: "Error, card not added."}
   });
 }
 
