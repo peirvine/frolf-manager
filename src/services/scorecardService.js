@@ -2,8 +2,9 @@
 import { getLeagueSettings, writeScorecardToDatabase } from '../firebase'
 import { calculateElo } from './eloService'
 
-export async function uDiscDump (card, league) {
+export async function uDiscDump (card, league, simulation = false) {
   const settings = await getLeagueSettings(league)
+  if (settings === "error") return {code: "error", message: "Error, league not found."}
   const season = settings.currentSeason
   let returnValue = {}
   let playerArray = []
@@ -51,19 +52,21 @@ export async function uDiscDump (card, league) {
   }
 
   if (validateCard(returnValue)) {
-    // const googleRes = await addScorecardToGoogle(returnValue)
-    let response = {code: "success", message: "Card added successfully."}
-    writeScorecardToDatabase(league, returnValue, season)
-    if (!settings.isPreseason) {
-      calculateElo(returnValue, season, league)
+    let response = {code: "success", message: "Card Validated."}
+    if (!simulation) {
+      response = await writeScorecardToDatabase(league, returnValue, season)
+      if (!settings.isPreseason) {
+        const res = await calculateElo(returnValue, season, league)
+        if (res) {
+          response = {code: "success", message: "Card and Elo added successfully."}
+        } else {
+          response = {code: "error", message: "Error, card added, elo not added."}
+        }
+      }
+    } else {
+      const elo = await calculateElo(returnValue, season, league, true)
+      return elo
     }
-    // response = scorecardRes.then(res => {
-    //   if (!res) {
-    //     return {code: "error", message: "Failed to save to the database. Try refreshing and submitting again. The card is valid."}
-    //   } else {
-    //     return {code: "success", message: "Card added successfully."}
-    //   }
-    // })
     
     return response
   } else {

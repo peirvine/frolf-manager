@@ -233,7 +233,7 @@ export default function UserDashboard () {
   return (
     <div className="userDashboard">
       <h1>Hi, {user?.displayName}</h1>
-      <FunStats user={userData} leagues={userData.leagues} leagueNames={leagues} />
+      {/* <FunStats user={userData} leagues={userData.leagues} leagueNames={leagues} /> */}
       <Box sx={{ width: '100%' }}>
         <Snackbar open={alertOpen}>
           <Alert
@@ -280,12 +280,22 @@ export default function UserDashboard () {
                             leagueId: x.id,
                             leagueName: leagues[x.id]
                           }}>
-                          <Button variant="contained" color="success" sx={{ marginRight: "15px", marginBottom: "5px" }}>
+                          <Button variant="contained" color="success" style={{ margin: "5px" }}>
                             Manage
                           </Button>
                         </Link> : null}
-                      <Button disabled variant="contained" sx={{ marginRight: "15px", marginBottom: "5px" }}>My Profile</Button>
-                      <Button variant="contained" color="error" onClick={() => handleLeaveLeague(x.id)}>Leave</Button>
+                        <Link 
+                          to={`./simulateRound`} 
+                          state={{
+                            leagueId: x.id,
+                            leagueName: leagues[x.id]
+                          }}>
+                          <Button variant="contained" style={{ margin: "5px" }}>
+                            Simulate Round
+                          </Button>
+                        </Link>
+                      <Button disabled variant="contained" style={{ margin: "5px" }}>My Profile</Button>
+                      <Button variant="contained" color="error" onClick={() => handleLeaveLeague(x.id)} style={{ margin: "5px" }}>Leave</Button>
                     </TableCell>
                   </TableRow>
                 )

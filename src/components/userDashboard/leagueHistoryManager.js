@@ -258,7 +258,9 @@ export function LeagueHistoryManager(props) {
           <ul>
             {rounds && Object.entries(rounds).map(([round, value], index) => {
               return (
-                <Button style={{marginBottom: 5}} key={index} variant="contained" color={tournamentRounds.includes(round) ? "success" : "primary"} onClick={() => handleChooseRound(round)}>{value.Course} - {value.Date}</Button>
+                <div>
+                  <Button style={{marginBottom: 5}} key={index} variant="contained" color={tournamentRounds.includes(round) ? "success" : "primary"} onClick={() => handleChooseRound(round)}>{value.Course} - {value.Date}</Button>
+                </div>
               )
             })}
           </ul>

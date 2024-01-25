@@ -190,7 +190,7 @@ export default function CurrentRankings () {
 
   function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
-}
+  }
 
   const formatRankings = (passedRankings) => {
     let sorted = Object.entries(passedRankings).sort((a,b) => b[1]-a[1]).map(el=>el[0])

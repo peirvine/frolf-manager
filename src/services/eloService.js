@@ -3,7 +3,7 @@ import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, upd
 import { weighting, pointPerThrowRef } from "./eloConstants";
 
 
-export const calculateElo = async (card, season, league) => {
+export const calculateElo = async (card, season, league, simulation = false) => {
   const previousElo = await getCurrentElo(league, season)
   const parLocation = card.playerArray.map((e) => { return e.player; }).indexOf("Par")
   const playerArray = card.playerArray
@@ -17,18 +17,23 @@ export const calculateElo = async (card, season, league) => {
   const cardElo = await calculateCardElo(playerArray, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers)
 
   // Adds the most recent ELO to the players history
-  await updateEloHistory(cardElo, season, league)
+  if (!simulation) await updateEloHistory(cardElo, season, league)
 
   const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, cardElo)
-  await writeEloTracking(league, prettyElo, season)
+  if (!simulation) await writeEloTracking(league, prettyElo, season)
 
 // updates current elo of player
-  const currentElo = await updateCurrentElos(league, season)
+  const currentElo = await updateCurrentElos(league, season, simulation)
 
-  await calculateDelta(league, season, previousElo, currentElo)
+  const delta = await calculateDelta(league, season, previousElo, cardElo, simulation)
 
-  await graphData(league, season, card.course, card.date, previousElo, currentElo)
-  return true
+  await graphData(league, season, card.course, card.date, previousElo, currentElo, simulation)
+  
+  if (simulation) {
+    return {prettyElo, delta, currentElo}
+  } else {
+    return true
+  }
 }
 
 async function getPlayers (league) {
@@ -56,8 +61,7 @@ const getCardAverage = (card, playersInLeague) => {
       scores += parseInt(player.total)
     } else {
       numPlayers--
-    }
-    
+    } 
   })
   const average = scores / numPlayers
   return average
@@ -151,7 +155,7 @@ const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerThr
   }
 }
 
-const updateCurrentElos = async (league, season) => {
+const updateCurrentElos = async (league, season, simulation = false) => {
   let elos = await currentEloAsync(season, league)
   const res = await getElosOfAllPlayers(season, league)
   if (res === "null") {
@@ -164,7 +168,7 @@ const updateCurrentElos = async (league, season) => {
       elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
     }
   }
-  updateCurrentEloV2(league, season, elos)
+  if (!simulation) updateCurrentEloV2(league, season, elos)
   return elos
 }
 
@@ -180,7 +184,7 @@ const weightedAverage = (nums, weights) => {
   return sum / weightSum;
 };
 
-const calculateDelta = (league, season, previous, updated) => {
+const calculateDelta = (league, season, previous, updated, simulation = false) => {
   let deltaObject = {}
   for (const player in previous) {
     if (updated[player] === undefined) {
@@ -189,14 +193,15 @@ const calculateDelta = (league, season, previous, updated) => {
       deltaObject[player] = updated[player] - previous[player]
     }
   }
-  setDeltaV2(league, season, deltaObject)
+  if (!simulation) setDeltaV2(league, season, deltaObject)
+  return deltaObject
 }
 
-const graphData = (league, season, course, date, previous, elos) => {
+const graphData = (league, season, course, date, previous, elos, simulation = false) => {
   let holderElo = previous
   for (let player in elos) {
     holderElo[player] = elos[player]
   }
 
-  setEloGraphDataV2(league, season, {course, date, holderElo})
+  if (!simulation) setEloGraphDataV2(league, season, {course, date, holderElo})
 }

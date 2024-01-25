@@ -9,15 +9,16 @@ export default function FunStats(props) {
   const [loading, setLoading] = useState(true)
   
   useEffect(() => {
-    const leagues = props.leagues || []
-    const user = props.user || {}
-    if (user) {
+    let leagues = props.leagues || []
+    let user = props.user || {}
+    if (user && leagues.length > 0 && props.leagueNames.length > 0) {
       leagues.forEach(league => {
+        console.warn('league', league)
         getPlayerStats(user, league.id).then(stats => setStats(stats))
       })
+      setLoading(false)
     }
-    setLoading(false)
-  }, [props.leagues, props.user])
+  }, [props.leagueNames, props.leagues, props.user])
 
   return (
     <div>
@@ -28,7 +29,7 @@ export default function FunStats(props) {
             <TableBody>
               <TableRow>
                 <TableCell>League</TableCell>
-                <TableCell>{props.leagueNames[props.leagues[0].id]}</TableCell>
+                {/* <TableCell>{props.leagueNames[props.leagues[0].id]}</TableCell> */}
               </TableRow>
               <TableRow>
                 <TableCell>Season</TableCell>
