@@ -12,16 +12,15 @@ export default function LeagueHistoryHolder(props) {
   useEffect(() => {
     const fetchLeagueHistory = async () => {
       const history = await getLeagueHistory(league);
-      console.log(history);
       if (history) {
         const sortedHistory = Object.entries(history).sort((a, b) => b[1].season.localeCompare(a[1].season));
+        setExpanded(sortedHistory[0][0])
         setLeagueHistory(sortedHistory.reduce((acc, [year, data]) => {
           acc[year] = data;
           return acc;
         }, {}));
       }
     };
-
     fetchLeagueHistory();
   }, [league]);
 

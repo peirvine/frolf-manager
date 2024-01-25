@@ -758,7 +758,6 @@ export function setLeagueHistory (league, season, historyObj) {
   const db = getDatabase();
   return set(ref(db, league + '/info/leagueHistory/' + season), historyObj)
   .then(() => {
-    console.warn('success')
     return {code: "success", message: "League history added"}
   })
   .catch((error) => {
