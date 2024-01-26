@@ -12,6 +12,7 @@ import UserDashboard from './components/userDashboard/userDashboard'
 import ManageLeague from './components/userDashboard/manageLeague';
 import EditRound from './components/userDashboard/editRound'
 import SimulateRound from './components/userDashboard/simulateRound/simulateRound';
+import AboutDGM from './components/about/aboutDGM/aboutDGM';
 import ErrorPage from './errorPage';
 import RequireAuth from './protectedRoute'
 import reportWebVitals from './reportWebVitals';
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/about",
+        element: <AboutDGM />,
+      },
+      {
+        path: "/aboutLeague",
         element: <About />,
       },
       {

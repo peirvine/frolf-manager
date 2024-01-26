@@ -72,7 +72,6 @@ export default function DoinkManager(props) {
       res => {
         if (res) {
           setDoinkValues(res)
-          console.warn('res', res)
           let returnObj = []
           for (const [key, value] of Object.entries(res)) {
             returnObj.push(
@@ -99,20 +98,16 @@ export default function DoinkManager(props) {
   }, [props.league, render])
 
   const handleDoinkChange = (name, value) => {
-    console.log(name, value)
     let tempDoink = [...doinkValues]
     tempDoink.forEach((item) => {
       if (item.name === name) {
         item.doinks = parseInt(value);
       }
     });
-    console.log('tempDoink', tempDoink)
     setDoinkValues(tempDoink);
   }
 
   const reportDoink = () => {
-    console.warn('doinsk', doinkValues)
-
     updateDoinkBalanceV2(props.league, doinkValues)
       .then(res => {
         if (res) {
