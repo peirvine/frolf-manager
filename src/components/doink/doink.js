@@ -22,6 +22,7 @@ export default function Doink() {
   const [disabled, setDisabled] = useState(false)
   const [render, setRender] = useState('')
   const [maxDoink, setMaxDoink] = useState(50)
+  const [joinDisabled, setJoinDisabled] = useState(false)
   const [user] = useAuthState(auth);
   let doinks = []
 
@@ -116,7 +117,12 @@ export default function Doink() {
       const leagues = await getLeagueNames()
       if (userData.leagues.length > 1) {
         let optionsArray = []
-        userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+        userData.leagues.forEach(x => {
+          if (x.membershipStatus !== "Pending") {
+            optionsArray.push({ label: leagues[x.id], id: x.id });
+          }
+        });
+        if (optionsArray.length === 0) setJoinDisabled(true)
         setOptionArray(optionsArray)
         setLeague(userData.leagues[0].id)
         return optionsArray
@@ -194,7 +200,7 @@ export default function Doink() {
       {render}
       {user ? (
         <>
-          {!userRegistered && (<Button variant="contained" disabled={disabled} onClick={() => registerDoinkerV2(user)}>Register Me</Button>)}
+          {!userRegistered && (<Button variant="contained" disabled={disabled || joinDisabled} onClick={() => registerDoinkerV2(user)}>Register Me</Button>)}
           <TableContainer size="medium" className="doinkTable">
             <Table aria-label="simple table">
               <TableHead>
