@@ -18,21 +18,41 @@ export default function Add() {
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
   const [optionArray, setOptionArray] = useState([])
-  const [league, setLeague] = useState()
+  const [league, setLeague] = useState(null)
   const [settings, setSettings] = useState([])
+  const [addDisabled, setAddDisabled] = useState(false)
+
 
   useEffect(() => { 
-    buildOptions()
-    getLeagueSettings(league).then(res => {
-      setSettings(res)
-    })
+    buildOptions();
+    
+    const getSettings = async (league) => {
+      try {
+        const leagueSettings = await getLeagueSettings(league);
+        setSettings(leagueSettings);
+      } catch (error) {
+        console.error("Error getting league settings:", error);
+      }
+    };
+
+    if (league !== null) {
+      getSettings(league);
+    }
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [user, league])
+
+  
 
   const handleUdisc = () => {
     setOpen(true)
     setVariant('info')
     setAlertMessage('Adding scorecard, do not click submit again')
+    if (league === null) {
+      setVariant('error')
+      setAlertMessage('Please select a league, if none are available your membership is pending')
+      return
+    }
     const dumpResult = uDiscDump(udisc, league)
     dumpResult.then(res => {
       setUdisc('')
@@ -41,20 +61,29 @@ export default function Add() {
     })
   }
 
+  const getSettings = async (league) => {
+
+  }
+
   const buildOptions = async () => {
     if (user !== null) {
-      const userData = await getUserDataV2(user)
-      const leagues = await getLeagueNames()
+      const userData = await getUserDataV2(user);
+      const leagues = await getLeagueNames();
       if (userData.leagues.length > 1) {
-        let optionsArray = []
-        userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
-        setOptionArray(optionsArray)
-        setLeague(userData.leagues[0].id)
+        let optionsArray = [];
+        userData.leagues.forEach(x => {
+          if (x.membershipStatus !== "Pending") {
+            optionsArray.push({ label: leagues[x.id], id: x.id });
+          }
+        });
+        if (optionsArray.length === 0) setAddDisabled(true)
+        setOptionArray(optionsArray);
+        setLeague(userData.leagues[0].id);
       } else {
-        setLeague(userData.leagues[0].id)
+        setLeague(userData.leagues[0].id);
       }
     }
-  }
+  };
 
   return (
     <div className="addScorecard">
@@ -91,7 +120,8 @@ export default function Add() {
                       setLeague(newValue.id);
                     }}
                   />) : null}
-                  <Button className="submitButton" variant="contained" onClick={() => handleUdisc()}>Add {settings.isPreseason ? "Off-Season Round" : "Round"}</Button>
+                  <Button className="submitButton" variant="contained" onClick={() => handleUdisc()} disabled={addDisabled}>Add {settings.isPreseason ? "Off-Season Round" : "Round"}</Button>
+                  {addDisabled ? (<i>You are not a approved member of any leagues, if this is an error please reach out to your league admin</i>) : null }
                   <Button className="submitButton" variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
                 </FormControl>
               </Grid>
