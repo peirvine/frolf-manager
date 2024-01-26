@@ -82,6 +82,7 @@ export default function Add() {
                   />
                   {optionArray.length > 1 ? (<Autocomplete
                     disablePortal
+                    disableClearable
                     id="combo-box-demo"
                     options={optionArray}
                     sx={{ marginTop: 1 }}

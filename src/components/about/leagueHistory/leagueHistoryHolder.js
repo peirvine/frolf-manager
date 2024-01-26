@@ -6,10 +6,11 @@ import SeasonHolder from './seasonHolder';
 
 export default function LeagueHistoryHolder(props) {
   const league = props.league;
-  const [leagueHistory, setLeagueHistory] = useState(null);
+  const [leagueHistory, setLeagueHistory] = useState([]);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
+    setLeagueHistory([])
     const fetchLeagueHistory = async () => {
       const history = await getLeagueHistory(league);
       if (history) {
@@ -46,6 +47,9 @@ export default function LeagueHistoryHolder(props) {
           </Accordion>
         )
       })}
+      {leagueHistory.length === 0 && (
+        <i>No Past Seasons</i>
+      )}
     </div>
   );
 }

@@ -773,9 +773,11 @@ export function getLeagueHistory(league) {
       return snapshot.val();
     } else {
       logEvent(analytics, 'No league history available');
+      return null
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not get league history', { error: error });
+    return null;
   });
   return history;
 }

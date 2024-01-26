@@ -63,7 +63,6 @@ export default function SimulateRound() {
     }
 
     Object.entries(scoreList).map(([key, value]) => {
-      console.log(key, value)
       returnObj.push({
         player: key,
         total: value,

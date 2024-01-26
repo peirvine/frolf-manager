@@ -1,28 +1,76 @@
+import { useState, useEffect } from "react"
 import "./about.scss"
 import LeagueHistoryHolder from "./leagueHistory/leagueHistoryHolder"
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, getUserDataV2, getLeagueNames } from "../../firebase"
+import { Autocomplete, TextField } from "@mui/material";
 
 export default function About () {
+  const [user] = useAuthState(auth);
+  const [optionArray, setOptionArray] = useState([])
+  const [league, setLeague] = useState()
+
+  useEffect(() => {
+    buildOptions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
+  const buildOptions = async () => {
+    if (user !== null) {
+      const userData = await getUserDataV2(user)
+      const leagues = await getLeagueNames()
+      if (userData.leagues.length > 1) {
+        let optionsArray = []
+        userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+        setOptionArray(optionsArray)
+        setLeague(userData.leagues[0].id)
+      } else {
+        setLeague(userData.leagues[0].id)
+      }
+    }
+  }
+
   return (
     <div className="about">
 
-      <h1>Our History</h1>
-
+      <h1>League History</h1>
+      {optionArray.length > 1 ? (
+        <Autocomplete
+          disablePortal
+          disableClearable
+          id="combo-box-demo"
+          options={optionArray}
+          sx={{ marginTop: 1, width: "25%" }}
+          renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
+          onChange={(event, newValue) => {
+            setLeague(newValue.id);
+          }}
+        />
+      ) : null}
       <div className="aboutText">
-        <p>Welcome to Monday's are Fore the Boys, a disc golf community founded in 2022. We are a group of disc golf enthusiasts who come together every Monday to play, compete, and have fun. Our community is based on the principles of camaraderie, sportsmanship, and friendly competition.</p>
+        {league === "maftb" ? (
+          <div>
+            <p>Welcome to Monday's are Fore the Boys, a disc golf community founded in 2022. We are a group of disc golf enthusiasts who come together every Monday to play, compete, and have fun. Our community is based on the principles of camaraderie, sportsmanship, and friendly competition.</p>
 
-        <p>One of the unique features of our community is our custom rankings system. Each week, players are ranked based on their performance in the previous game. The player with the highest rank at the end of the season is crowned the regular season winner and gets to choose the first course for our Tournament of Champions.</p>
+            <p>One of the unique features of our community is our custom rankings system. Each week, players are ranked based on their performance in the previous game. The player with the highest rank at the end of the season is crowned the regular season winner and gets to choose the first course for our Tournament of Champions.</p>
 
-        <p>The Tournament of Champions is the highlight of our season, where the highest ranked player chooses the first course of a two-course tournament and the lowest ranked player chooses the second course. This ensures that all players have a chance to compete on courses they enjoy and challenges them to adapt to new environments.</p>
+            <p>The Tournament of Champions is the highlight of our season, where the highest ranked player chooses the first course of a two-course tournament and the lowest ranked player chooses the second course. This ensures that all players have a chance to compete on courses they enjoy and challenges them to adapt to new environments.</p>
 
-        <p>After the tournament, we celebrate with a BBQ hosted by the lowest ranked regular season player, where we hand out player awards and present the trophy to the winner. It's a great way to wrap up the season and celebrate the camaraderie and sportsmanship that make our community so special.</p>
+            <p>After the tournament, we celebrate with a BBQ hosted by the lowest ranked regular season player, where we hand out player awards and present the trophy to the winner. It's a great way to wrap up the season and celebrate the camaraderie and sportsmanship that make our community so special.</p>
 
-        <p>We also host a couples tournament where significant others or guests are invited to play. In this tournament, players alternate every other throw, allowing for a fun and unique experience for everyone involved. It's a great way to introduce friends and family to the sport, and it's always a blast to see new players join in on the fun.</p>
+            <p>We also host a couples tournament where significant others or guests are invited to play. In this tournament, players alternate every other throw, allowing for a fun and unique experience for everyone involved. It's a great way to introduce friends and family to the sport, and it's always a blast to see new players join in on the fun.</p>
 
-        <p>In our inaugural season, Benton was crowned the champion, while Alex took home the honor of being the lowest ranked player. But regardless of where you rank, everyone is welcome in our community. We believe that disc golf is for everyone, and we hope to see you on the course soon.</p>
+            <p>In our inaugural season, Benton was crowned the champion, while Alex took home the honor of being the lowest ranked player. But regardless of where you rank, everyone is welcome in our community. We believe that disc golf is for everyone, and we hope to see you on the course soon.</p>
+          </div>
+        ) : (
+          <div>
+            
+          </div>
+        )}
       </div>
       <div className="aboutHistory">
-        <h2>League History</h2>
-        <LeagueHistoryHolder league={"maftb"} />
+        <h3>Past Seasons</h3>
+        <LeagueHistoryHolder league={league} />
       </div>
     </div>
   )

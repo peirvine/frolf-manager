@@ -29,20 +29,8 @@ const pages = [
     route: "/"
   },
   {
-    display: 'About the League',
+    display: 'About DGM',
     route: "/about"
-  },
-  {
-    display: 'Add Scorecard',
-    route: "/add"
-  },
-  {
-    display: 'Current Rankings',
-    route: "/rankings"
-  },
-  {
-    display: 'Past Results',
-    route: "/scorecards"
   },
 ];
 
@@ -86,7 +74,6 @@ export default function Nav() {
 
   return (
     <AppBar position="static">
-
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <ParkIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -149,6 +136,34 @@ export default function Nav() {
               {user ? (
                 <>
                   <MenuItem
+                    key={'about'}
+                    onClick={handleCloseNavMenu}
+                    component={ NavLink }
+                    to={"/aboutLeague"}>
+                      League History
+                  </MenuItem>
+                  <MenuItem
+                    key={'add scorecard'}
+                    onClick={handleCloseNavMenu}
+                    component={ NavLink }
+                    to={"/add"}>
+                      Add Scorecard
+                  </MenuItem>
+                  <MenuItem
+                    key={'rankings'}
+                    onClick={handleCloseNavMenu}
+                    component={ NavLink }
+                    to={"/rankings"}>
+                      Current Rankings
+                  </MenuItem>
+                  <MenuItem
+                    key={'past results'}
+                    onClick={handleCloseNavMenu}
+                    component={ NavLink }
+                    to={"/scorecards"}>
+                      Past Results
+                  </MenuItem>
+                  <MenuItem
                     key={'doink fund'}
                     onClick={handleCloseNavMenu}
                     component={ NavLink }
@@ -202,15 +217,53 @@ export default function Nav() {
               </Button>
             ))}
             { user && (
-              <Button
-                key={'doink fund'}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-                onClick={handleCloseNavMenu}
-                component={ NavLink }
-                to={"/doink"}
-              >
-                Doink Fund
-              </Button>
+              <>
+                <Button
+                  key={'about'}
+                  sx={{ my: 2, color: 'white', display: 'block' }}
+                  onClick={handleCloseNavMenu}
+                  component={ NavLink }
+                  to={"/aboutLeague"}
+                >
+                  League History
+                </Button>
+                <Button
+                  key={'add scorecard'}
+                  sx={{ my: 2, color: 'white', display: 'block' }}
+                  onClick={handleCloseNavMenu}
+                  component={ NavLink }
+                  to={"/add"}
+                >
+                  Add Scorecard
+                </Button>
+                <Button
+                  key={'rankings'}
+                  sx={{ my: 2, color: 'white', display: 'block' }}
+                  onClick={handleCloseNavMenu}
+                  component={ NavLink }
+                  to={"/rankings"}
+                >
+                  Current Rankings
+                </Button>
+                <Button
+                  key={'past results'}
+                  sx={{ my: 2, color: 'white', display: 'block' }}
+                  onClick={handleCloseNavMenu}
+                  component={ NavLink }
+                  to={"/scorecards"}
+                >
+                  Past Results
+                </Button>
+                <Button
+                  key={'doink fund'}
+                  sx={{ my: 2, color: 'white', display: 'block' }}
+                  onClick={handleCloseNavMenu}
+                  component={ NavLink }
+                  to={"/doink"}
+                >
+                  Doink Fund
+                </Button>
+              </>
             )}
           </Box>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>

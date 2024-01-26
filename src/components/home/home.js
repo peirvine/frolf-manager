@@ -10,12 +10,12 @@ export default function Home () {
         {/* <img src={fullGroup} alt="group of disc golfers" /> */}
         <div className="homeText">
           {/* <h6>Such Frolf presents</h6> */}
-          <h1>Monday's are Fore the Boys</h1>
+          <h1>Disc Golf Manager</h1>
         </div>
       </div>
       <div className="textContent">
-        <h2>Monday's are Fore the Boys</h2>
-        <p>We're a Frolf (Disc Golf) League that drinks beer and plays frolf (in that order) weekly on Mondays.</p>
+        <h2>Disc Golf Manager</h2>
+        <p>Elevate your disc golf league experience with DGM - your all-in-one solution for seamless league organization, custom rankings, and tournament management, making every throw count.</p>
         <Button 
           variant="contained"
           component={ NavLink }
