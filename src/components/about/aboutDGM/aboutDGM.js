@@ -24,7 +24,7 @@ export default function AboutDGM() {
       <p>Join us in our mission to make disc golf more accessible and enjoyable for everyone. Whether you're a seasoned player or just starting out, DGM has something to offer you.</p>
       <p>Experience the difference with Disc Golf Manager.</p>
 
-      <p>We are currently in beta testing. If you are interested in joining our beta program, please contact us at <a href="mailto:joindgm@minnedev.com">joindgm@minnedev.com</a>.</p>
+      <p>We are currently in beta testing. If you are interested in joining our beta program, please contact us at <a href="mailto:join@discgolfmanager.com">join@discgolfmanager.com</a>.</p>
 
       {/* <DgmPricing /> */}
     </div>
