@@ -39,8 +39,11 @@ export async function uDiscDump (card, league, simulation = false) {
       })
     })
 
+    let course = settings.isPreseason ? "[Off-Season] " + parData[0].replace(/[.#$[\]]/g, '') : parData[0].replace(/[.#$[\]]/g, '')
+    
+    
     returnValue = {
-      course: parData[0].replace(/[.#$[\]]/g, ''),
+      course: course,
       layout: parData[1].replace(/[.#$[\]]/g, ''),
       par: parData[4],
       date: parData[2],
