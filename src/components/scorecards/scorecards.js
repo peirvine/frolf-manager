@@ -133,7 +133,7 @@ export default function ViewScorecards () {
             disableClearable
             id="combo-box-demo"
             options={optionArray}
-            sx={{ marginTop: 1, width: "25%" }}
+            sx={{ marginTop: 1 }}
             renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
             onChange={(event, newValue) => {
               handleChangeLeague(newValue);

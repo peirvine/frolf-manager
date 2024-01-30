@@ -2,7 +2,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { colorArray } from './colorArray'
 
 export default function HistoricalRankings (props) {
-  console.log(props)
   let players = props.playersInLeague
   if (props.playersInLeague === undefined) {
     players = []

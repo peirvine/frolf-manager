@@ -54,7 +54,7 @@ export default function ManageLeague() {
             <Tab label="history" {...a11yProps(1)} />
             <Tab label="players" {...a11yProps(2)} />
             <Tab label="doinks" {...a11yProps(3)} />
-            <Tab label="rounds" {...a11yProps(4)} disabled />
+            <Tab label="rounds" {...a11yProps(4)} />
           </Tabs>
         </Box>
         <CustomTabPanel value={value} index={0}>
