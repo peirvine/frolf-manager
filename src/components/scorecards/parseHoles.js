@@ -53,6 +53,10 @@ export default function DisplayHoles (props) {
           holeClass = "ace"
         }
 
+        if (hole === "0") {
+          holeClass = "par"
+        }
+
         if (props.parRow) {
           return (<div className="holeWrapper"><ParHole par={hole} hole={index + 1} /></div>)
         } else {

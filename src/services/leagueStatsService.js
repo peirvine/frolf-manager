@@ -18,7 +18,11 @@ export const getLeagueStats = async (league) => {
     numberOfRounds = Object.keys(scorecards).length;
   
     const courseStats = await getELOHistory(league, currentSeason)
-    hardestCourse = getHardestCourse(courseStats)
+    if (courseStats !== undefined) {
+      hardestCourse = getHardestCourse(courseStats)
+    } else {
+      hardestCourse = []
+    }
     
     currentElo = await getCurrentElo(league, currentSeason)
     mostAveragePlayer = getMostAverage(currentElo)

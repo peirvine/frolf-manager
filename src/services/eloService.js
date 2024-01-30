@@ -125,7 +125,13 @@ const getAverageEloOFPlayers = async (players, season, playersInLeague, league, 
 
 const calculatePointsPerThrow = (strokesPerHole) => {
   const roundedSPH = Math.round(strokesPerHole * 10) / 10
-  return pointPerThrowRef[roundedSPH]
+  if (roundedSPH > 5.5) {
+    return 6
+  } else if (roundedSPH < 2.6) {
+    return 10.6
+  } else {
+    return pointPerThrowRef[roundedSPH]
+  }
 }
 
 const calculatePlayerElo = (groupAverage, playerScore, pointsPerThrow, averageEloOfPlayers) => {

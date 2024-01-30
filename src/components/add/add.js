@@ -40,11 +40,12 @@ export default function Add() {
     }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, league])
+  }, [user])
 
   
 
   const handleUdisc = () => {
+    console.warn('league', league)
     setOpen(true)
     setVariant('info')
     setAlertMessage('Adding scorecard, do not click submit again')

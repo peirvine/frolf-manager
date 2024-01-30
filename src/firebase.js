@@ -130,6 +130,7 @@ export const getScorecards = (league, season) => {
     } else {
       // console.log("No data available");
       logEvent(analytics, 'No data available')
+      return []
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not fetch scorecards', {error: error} );
@@ -154,6 +155,30 @@ export const getSpecificScorecard = (league, season, scorecardId) => {
       return null;
     });
 };
+
+export const setSpecificScorecard = (league, season, scorecardId, scorecard) => {
+  const dbRef = ref(getDatabase());
+  const scorecardRef = child(dbRef, `${league}/scorecards/${season}/${scorecardId}`);
+  return set(scorecardRef, scorecard).then(() => {
+    return { code: "success", message: "Scorecard updated successfully." };
+  })
+  .catch((error) => {
+    logEvent(analytics, 'A user was unable to update a scorecard', {error: error} );
+    return { code: "error", message: "Error, card not updated." };
+  });
+};
+
+export const deleteSpecificScorecard = (league, season, scorecardId) => {
+  const dbRef = ref(getDatabase());
+  const scorecardRef = child(dbRef, `${league}/scorecards/${season}/${scorecardId}`);
+  return remove(scorecardRef).then(() => {
+    return { code: "success", message: "Scorecard deleted successfully." };
+  })
+  .catch((error) => {
+    logEvent(analytics, 'A user was unable to delete a scorecard', {error: error} );
+    return { code: "error", message: "Error, card not deleted." };
+  });
+}
 
 export const getAllScorecards = (league) => {
   const dbRef = ref(getDatabase());
