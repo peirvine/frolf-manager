@@ -1,4 +1,4 @@
-import { getLeagueMembers, getLeagueSettings, getUserDataV2, setDeltaV2, updateCurrentEloV2, updateLeagueSettings } from "../firebase";
+import { getLeagueMembers, getLeagueSettings, getUserDataV2, setDeltaV2, updateCurrentEloV2, updateLeagueSettings, resetEloData } from "../firebase";
 
 // Pattern: Update the database, check for error, then move on. This way if you click the button again it'll just overwrite the failed update. Updating the season is last.
 export async function startNewSeason ( league ) {
@@ -32,6 +32,36 @@ export async function startNewSeason ( league ) {
 
   // Big Success Vibes
   return {code: "success", message: newSeason + " started!"}
+}
+
+export async function resetCurrentSeason (league, season) {
+  // Players
+  const players = await getPlayers(league)
+  
+  // Start Updates
+  // Current Elo
+  const ceRes = await newCurrentElo(league, season, players)
+  if (!ceRes) return {code: "error", message: "Could not reset Current Elo"}
+
+  // Elo Delta
+  const eloDelta = await newEloDelta(league, season, players)
+  if (!eloDelta) return {code: "error", message: "Could not reset Elo Deltas"}
+
+  // eloGraphData
+  const eloGraphData = await resetEloGraphData(league, season)
+  if (!eloGraphData) return {code: "error", message: "Could not reset Elo Graph Data"}
+  
+  // eloTracking
+  const eloTracking = await reseteloTracking(league, season)
+  if (!eloTracking) return {code: "error", message: "Could not reset Elo Tracking"}
+
+  // playerEloHistory
+  const playerEloHistory = await resetPlayerEloHistory(league, season)
+  if (!playerEloHistory) return {code: "error", message: "Could not reset Player Elo History"}
+
+  // Big Success Vibes
+  return {code: "success", message: "elo reset!"}
+
 }
 
 async function getCurrentSeason ( league ) {
@@ -99,4 +129,18 @@ async function updateSeason (league, newSeason) {
   } else {
     return false
   }
+}
+
+
+// just delete the current season object
+async function resetEloGraphData (league, season) {
+  return await resetEloData(league, season, "eloGraphData")
+}
+
+async function reseteloTracking (league, season) {
+  return await resetEloData(league, season, "eloTracking")
+}
+
+async function resetPlayerEloHistory (league, season) {
+  return await resetEloData(league, season, "playerEloHistory")
 }
