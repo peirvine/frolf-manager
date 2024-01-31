@@ -13,7 +13,6 @@ export const editRound = async (league, season, scorecardId, updatedRound, prese
     if (editRes.code === "error") return editRes
 
     const scorecards = await getScorecards(league, season)
-    console.warn('scorecards', scorecards)
     if (scorecards === null) return { code: "error", message: "Error getting scorecards" }
 
     editRes = await resetCurrentSeason(league, season)
@@ -33,7 +32,6 @@ export const editRound = async (league, season, scorecardId, updatedRound, prese
 }
 
 export const deleteRound = async (league, season, scorecardId, preseason) => {
-  console.warn('deleteRound', league, season, scorecardId, preseason)
   let delRes = { code: "success", message: "Round Deleted Successfully"}
   if (preseason) {
     delRes = await deleteSpecificScorecard(league, season, scorecardId)
