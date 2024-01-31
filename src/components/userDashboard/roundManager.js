@@ -1,10 +1,10 @@
 /* eslint-disable no-unused-vars */
 import {useState, useEffect} from 'react'
-import { Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, Dialog, DialogActions,DialogTitle, DialogContent, DialogContentText, TextField, Collapse, Alert } from '@mui/material'
+import { Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, Dialog, DialogActions,DialogTitle, DialogContent, DialogContentText, TextField, Snackbar, Alert } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { getScorecards, getLeagueSettings, getLeagueMembers, deleteSpecificScorecard } from '../../firebase'
 import { Link } from 'react-router-dom'
-import { editRound } from '../../services/editRoundService'
+import { editRound, deleteRound } from '../../services/editRoundService'
 
 export default function RoundManager(props) {
   const [rounds, setRounds] = useState([])
@@ -30,8 +30,8 @@ export default function RoundManager(props) {
               <TableCell sx={{ width: 25 }}>{value.Layout}</TableCell>
               <TableCell sx={{ width: 25 }}>{value.Date}</TableCell>
               <TableCell sx={{ width: 100 }}>
-                <Button disabled={!settings.isPreseason} style={{ margin: 5 }} variant="outlined" onClick={() => handleEditRound(key, value)}>Edit</Button>
-                <Button disabled={!settings.isPreseason} style={{ margin: 5 }} color="error" variant="contained" onClick={() => handleDeleteRound(key)}>Delete</Button>
+                <Button style={{ margin: 5 }} variant="outlined" onClick={() => handleEditRound(key, value)}>Edit</Button>
+                <Button style={{ margin: 5 }} color="error" variant="contained" onClick={() => handleDeleteRound(key)}>Delete</Button>
               </TableCell>
             </TableRow>
           )
@@ -51,11 +51,22 @@ export default function RoundManager(props) {
   };
 
   const handleDeleteRound = key => {
-    deleteSpecificScorecard(props.league, settings.currentSeason, key).then(res => {
-      setAlertOpen(true)
-      setAlertMessage(res.message)
-      setAlertSeverity(res.code)
-    })
+    if (settings.currentSeason === undefined || settings.isPreseason === undefined) {
+      getLeagueSettings(props.league).then(settingsRes => {
+        deleteRound(props.league, settingsRes.currentSeason, key, settingsRes.isPreseason).then(res => {
+          setAlertOpen(true)
+          setAlertMessage(res.message)
+          setAlertSeverity(res.code)
+        })   
+      })
+    } else {
+      deleteRound(props.league, settings.currentSeason, key, settings.isPreseason).then(res => {
+        setAlertOpen(true)
+        setAlertMessage(res.message)
+        setAlertSeverity(res.code)
+      })   
+    }
+       
   }
 
   const handleEditRound = (key, round) => {
@@ -73,18 +84,18 @@ export default function RoundManager(props) {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertSeverity(res.code)
+      setDialogOpen(false)
     })
   }
     
     return (
       <div className="roundManager">
         <h3>Edit Rounds</h3>
-        <Collapse in={alertOpen}>
+        <Snackbar open={alertOpen}>
           <Alert severity={alertSeverity} onClose={() => setAlertOpen(false)}>
             {alertMessage}
           </Alert>
-        </Collapse>
-        <i>Currently, you can only edit rounds in the off-season.</i>
+        </Snackbar>
         <Paper sx={{padding: 3}}>
           <TableContainer>
             <Table>

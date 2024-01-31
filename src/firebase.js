@@ -415,6 +415,19 @@ export function getEloGraphData(league, season) {
   return eloGraph
 }
 
+
+export function resetEloData(league, season, dbEntry) {
+  const dbRef = ref(getDatabase());
+  const scorecardRef = child(dbRef, `${league}/${dbEntry}/${season}`);
+  return remove(scorecardRef).then(() => {
+    return { code: "success", message: `${dbEntry} reset successfully.` };
+  })
+  .catch((error) => {
+    logEvent(analytics, 'A user was unable to reset elo data', {error: error} );
+    return { code: "error", message: `Error ${dbEntry} reset was not successful.` };
+  });
+}
+
 /****************** Player Dashboard ******************/
 export const getUserDataV2 = (user) => {
   const dbRef = ref(getDatabase());
