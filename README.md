@@ -3,7 +3,6 @@
 ## Authors
 
 - Peter Irvine - [@peirvine](https://www.github.com/peirvine)
-- Lane Scherber - [@lanescherber](https://github.com/lanescherber)
 
 
 ## Contributing
