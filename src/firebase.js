@@ -335,7 +335,7 @@ export function getCurrentElo (league, season) {
     } else {
       // console.log("No data available");
       logEvent(analytics, 'no current elo data available')
-      return ([])
+      return ({})
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not fetch elo', {error: error} );
@@ -856,4 +856,46 @@ export function getAllUsers () {
   }).catch((error) => { 
     logEvent(analytics, 'Could not get users', { error: error });
   });
+}
+
+
+/****************** Ranking Admin System ******************/
+export function setRankingSystem (league, rankingSystem) {
+  const db = getDatabase();
+  return set(ref(db, league + '/info/rankingSystem'), rankingSystem)
+  .then(() => {
+    return {code: "success", message: "Ranking system added"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ranking system', {error: error} );
+    return {code: "error", message: "Ranking system was not added"}
+  });
+}
+
+export function createTagRankingSystem (league, rankingsObj, season) {
+  const db = getDatabase();
+  return set(ref(db, league + '/bagTags/currentRankings/' + season), rankingsObj)
+  .then(() => {
+    return {code: "success", message: "Ranking system added"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ranking system', {error: error} );
+    return {code: "error", message: "Ranking system was not added"}
+  });
+}
+
+export function getBagTagRankings (league, season) {
+  const dbRef = ref(getDatabase());
+  let rankings = get(child(dbRef, league + '/bagTags/currentRankings/' + season)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      logEvent(analytics, 'No bag tag rankings available');
+      return null
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get bag tag rankings', { error: error });
+    return null;
+  });
+  return rankings;
 }

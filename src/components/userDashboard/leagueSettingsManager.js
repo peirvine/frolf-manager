@@ -1,12 +1,13 @@
 /* eslint-disable no-unused-vars */
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress, Tooltip  } from '@mui/material'
+import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress, Tooltip, Typography  } from '@mui/material'
 import { Close, HelpOutline } from '@mui/icons-material'
 import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
 import { startNewSeason } from '../../services/leagueService'
 import { Link, Navigate } from 'react-router-dom'
 import LeagueStats from './leagueStats'
+import RankingsAdmin from './rankingsAdmin/rankingsAdmin'
 
 export default function LeagueSettingsManager(props) {
   const [name, setName] = useState(props.league.leagueName)

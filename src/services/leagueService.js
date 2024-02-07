@@ -72,7 +72,7 @@ async function getCurrentSeason ( league ) {
   return info.currentSeason
 }
 
-async function getPlayers (league) {
+export async function getPlayers (league) {
   const leaguePlayers = await getLeagueMembers(league)
   let players = []
 

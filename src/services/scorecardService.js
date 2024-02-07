@@ -1,6 +1,7 @@
 // import { addScorecardToGoogle } from './googleSheetsService'
 import { getLeagueSettings, writeScorecardToDatabase } from '../firebase'
 import { calculateElo } from './eloService'
+import { calculateBagTag } from './bagTagService'
 
 export async function uDiscDump (card, league, simulation = false) {
   const settings = await getLeagueSettings(league)
@@ -59,11 +60,20 @@ export async function uDiscDump (card, league, simulation = false) {
     if (!simulation) {
       response = await writeScorecardToDatabase(league, returnValue, season)
       if (!settings.isPreseason) {
-        const res = await calculateElo(returnValue, season, league)
-        if (res) {
-          response = {code: "success", message: "Card and Elo added successfully."}
+        if (settings?.rankingSystem === "bagTag") {
+          const res = await calculateBagTag(returnValue, season, league)
+          if (res) {
+            response = {code: "success", message: "Card and Bag Tag added successfully."}
+          } else {
+            response = {code: "error", message: "Error, card added, bag tag not added."}
+          }
         } else {
-          response = {code: "error", message: "Error, card added, elo not added."}
+          const res = await calculateElo(returnValue, season, league)
+          if (res) {
+            response = {code: "success", message: "Card and Elo added successfully."}
+          } else {
+            response = {code: "error", message: "Error, card added, elo not added."}
+          }
         }
       }
     } else {

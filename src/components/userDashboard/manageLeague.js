@@ -3,6 +3,7 @@ import {useState} from 'react'
 import { Link, useLocation } from "react-router-dom";
 import DoinkManager from './doinkManager';
 import RoundManager from './roundManager';
+import RankingsAdmin from './rankingsAdmin/rankingsAdmin';
 import LeaguePlayersManager from './leaguePlayersManager'
 import LeagueSettingsManager from './leagueSettingsManager'
 import { Tabs, Tab, Box, Typography } from '@mui/material'
@@ -52,9 +53,10 @@ export default function ManageLeague() {
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="scrollable" allowScrollButtonsMobile>
             <Tab label="league info" {...a11yProps(0)} />
             <Tab label="history" {...a11yProps(1)} />
-            <Tab label="players" {...a11yProps(2)} />
-            <Tab label="doinks" {...a11yProps(3)} />
-            <Tab label="rounds" {...a11yProps(4)} />
+            <Tab label="rankings" {...a11yProps(2)} />
+            <Tab label="players" {...a11yProps(3)} />
+            <Tab label="doinks" {...a11yProps(4)} />
+            <Tab label="rounds" {...a11yProps(5)} />
           </Tabs>
         </Box>
         <CustomTabPanel value={value} index={0}>
@@ -64,12 +66,15 @@ export default function ManageLeague() {
           <LeagueHistoryManager league={state.leagueId} />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={2}>
-          <LeaguePlayersManager league={state.leagueId} />
+          <RankingsAdmin league={state.leagueId} />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={3}>
+          <LeaguePlayersManager league={state.leagueId} />
+        </CustomTabPanel>
+        <CustomTabPanel value={value} index={4}>
           <DoinkManager league={state.leagueId} />
         </CustomTabPanel>
-        <CustomTabPanel value={value} index={4} >
+        <CustomTabPanel value={value} index={5} >
           <RoundManager league={state.leagueId} />
         </CustomTabPanel>
       </Box>

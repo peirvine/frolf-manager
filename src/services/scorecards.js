@@ -1,0 +1,153 @@
+export const plymouth = {
+  "course": "Plymouth Creek Woods",
+  "layout": "2022 Update",
+  "par": "49",
+  "date": "2023-04-17 2230",
+  "playerArray": [
+      {
+          "player": "Benton",
+          "total": "56",
+          "plusMinus": "7",
+          "rating": "",
+          "holes": [
+              "4",
+              "3",
+              "3",
+              "3",
+              "3",
+              "4",
+              "6",
+              "4",
+              "3",
+              "3",
+              "3",
+              "3",
+              "3",
+              "4",
+              "4",
+              "3"
+          ]
+      },
+      {
+          "player": "Lane ",
+          "total": "71",
+          "plusMinus": "22",
+          "rating": "",
+          "holes": [
+              "5",
+              "5",
+              "4",
+              "3",
+              "4",
+              "4",
+              "7",
+              "5",
+              "6",
+              "4",
+              "4",
+              "5",
+              "3",
+              "3",
+              "6",
+              "3"
+          ]
+      },
+      {
+          "player": "Jimmy",
+          "total": "65",
+          "plusMinus": "16",
+          "rating": "",
+          "holes": [
+              "3",
+              "3",
+              "3",
+              "4",
+              "4",
+              "5",
+              "6",
+              "4",
+              "5",
+              "4",
+              "3",
+              "3",
+              "4",
+              "4",
+              "5",
+              "5"
+          ]
+      },
+      {
+          "player": "Rob Renkor",
+          "total": "62",
+          "plusMinus": "13",
+          "rating": "",
+          "holes": [
+              "4",
+              "4",
+              "3",
+              "3",
+              "3",
+              "4",
+              "6",
+              "5",
+              "3",
+              "3",
+              "4",
+              "5",
+              "3",
+              "3",
+              "6",
+              "3"
+          ]
+      },
+      {
+          "player": "Peter",
+          "total": "63",
+          "plusMinus": "14",
+          "rating": "",
+          "holes": [
+              "4",
+              "3",
+              "3",
+              "3",
+              "4",
+              "3",
+              "7",
+              "3",
+              "3",
+              "3",
+              "3",
+              "5",
+              "2",
+              "5",
+              "6",
+              "6"
+          ]
+      },
+      {
+          "player": "Greg L",
+          "total": "58",
+          "plusMinus": "9",
+          "rating": "",
+          "holes": [
+              "4",
+              "3",
+              "3",
+              "3",
+              "4",
+              "5",
+              "6",
+              "5",
+              "4",
+              "3",
+              "2",
+              "4",
+              "1",
+              "3",
+              "5",
+              "3"
+          ]
+      }
+  ],
+  "rawUDiscCard": "PlayerName,CourseName,LayoutName,StartDate,EndDate,Total,+/-,RoundRating,Hole1,Hole2,Hole3,Hole4,Hole5,Hole6,Hole7,Hole8,Hole9,Hole10,Hole11,Hole12,Hole13,Hole14,Hole15,Hole16 Par,Plymouth Creek Woods,2022 Update,2023-04-17 2230,2023-04-18 0032,49,,,3,3,3,3,3,3,4,3,3,3,3,3,3,3,3,3 Benton,Plymouth Creek Woods,2022 Update,2023-04-17 2230,2023-04-18 0032,56,7,,4,3,3,3,3,4,6,4,3,3,3,3,3,4,4,3 Lane ,Plymouth Creek Woods,2022 Update,2023-04-17 2230,2023-04-18 0032,71,22,,5,5,4,3,4,4,7,5,6,4,4,5,3,3,6,3 Jimmy,Plymouth Creek Woods,2022 Update,2023-04-17 2230,2023-04-18 0032,65,16,,3,3,3,4,4,5,6,4,5,4,3,3,4,4,5,5 Rob Renkor,Plymouth Creek Woods,2022 Update,2023-04-17 2230,2023-04-18 0032,62,13,,4,4,3,3,3,4,6,5,3,3,4,5,3,3,6,3 Peter,Plymouth Creek Woods,2022 Update,2023-04-17 2230,2023-04-18 0032,63,14,,4,3,3,3,4,3,7,3,3,3,3,5,2,5,6,6 Greg L,Plymouth Creek Woods,2022 Update,2023-04-17 2230,2023-04-18 0032,58,9,,4,3,3,3,4,5,6,5,4,3,2,4,1,3,5,3"
+}
