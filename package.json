@@ -21,7 +21,7 @@
     "downloadjs": "^1.4.7",
     "firebase": "^10.0.0",
     "html-to-image": "^1.11.11",
-    "jose": "^4.13.1",
+    "jose": "^4.15.5",
     "jsrsasign": "^11.0.0",
     "jsrsasign-util": "^1.0.5",
     "papaparse": "^5.4.1",
