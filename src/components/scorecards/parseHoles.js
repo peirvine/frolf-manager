@@ -10,7 +10,6 @@ export default function DisplayHoles (props) {
 
   return (
     <div id="displayHoles">
-      
       {props.player.map((hole, index) => {
         const score = hole - par[index]
         let holeClass = "par"
