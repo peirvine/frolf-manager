@@ -45,7 +45,6 @@ export default function Add() {
   
 
   const handleUdisc = () => {
-    console.warn('league', league)
     setOpen(true)
     setVariant('info')
     setAlertMessage('Adding scorecard, do not click submit again')

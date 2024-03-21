@@ -57,7 +57,7 @@ const getCardAverage = (card, playersInLeague) => {
   let scores = 0
   let numPlayers = card.length
   card.map(player => {
-    if (playersInLeague.includes(player.player)) {
+    if (playersInLeague.includes(player.player) && !player.holes.includes(',0')) {
       scores += parseInt(player.total)
     } else {
       numPlayers--
@@ -82,6 +82,7 @@ const getPlayerEloHistory = async (player, season, league) => {
 
 const updateEloHistory = async (cards, season, league) => {
   for (const person in cards) {
+    console.warn('person', person)
     const res = await getPlayerEloHistory(person, season, league)
     if (res === 'null') {
       const apiObj = {
@@ -107,7 +108,7 @@ const getAverageEloOFPlayers = async (players, season, playersInLeague, league, 
   } else {
     let presentPlayers = []
     players.map(player => {
-      if (playersInLeague.includes(player.player)) {
+      if (playersInLeague.includes(player.player) && !player.holes.includes(',0')) {
         presentPlayers.push(player.player)
       }
     })
@@ -141,7 +142,7 @@ const calculatePlayerElo = (groupAverage, playerScore, pointsPerThrow, averageEl
 const calculateCardElo = (players, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers) => {
   let eloArray = []
   players.map(player => {
-    if (player.player !== null && playersInLeague.includes(player.player)) {
+    if (player.player !== null && playersInLeague.includes(player.player) && !player.holes.includes(',0')) {
       const prettyPlayer = player.player
       eloArray[prettyPlayer] = calculatePlayerElo(cardAverage, player.total, pointsPerThrow, averageEloOfPlayers)
     }

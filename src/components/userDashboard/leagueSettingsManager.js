@@ -1,12 +1,13 @@
 /* eslint-disable no-unused-vars */
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress, Tooltip  } from '@mui/material'
+import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress, Tooltip } from '@mui/material'
 import { Close, HelpOutline } from '@mui/icons-material'
 import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
 import { startNewSeason } from '../../services/leagueService'
 import { Link, Navigate } from 'react-router-dom'
 import LeagueStats from './leagueStats'
+import ManageLeagueRules from './manageLeagueRules'
 
 export default function LeagueSettingsManager(props) {
   const [name, setName] = useState(props.league.leagueName)
@@ -137,16 +138,15 @@ export default function LeagueSettingsManager(props) {
                 onChange={(e) => setName(e.target.value)}
                 style={{ marginBottom: 15}}
               />
+              <p htmlFor="league-blurb">League Blurb</p>
               <TextField
                 multiline
                 required
                 rows={5}
-                id="outlined-required"
-                label="League Blurb"
+                id="league-blurb"
                 defaultValue={blurb}
                 value={blurb}
                 onChange={(e) => setBlurb(e.target.value)}
-                style={{ marginBottom: 15}}
               />
               <FormControlLabel control={<Switch checked={checked} onChange={(event) => setChecked(event.target.checked)}/>} label="Accepting New Players" />
               <FormControlLabel control={<Switch checked={checked2} onChange={(event) => setChecked2(event.target.checked)}/>} label="Off-Season?" />
@@ -160,7 +160,12 @@ export default function LeagueSettingsManager(props) {
         </Grid>
       </Paper>
       <Paper className="paperContent" sx={{marginTop: 1}}>
-        <div className="resetDoinks" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
+        <div className="leagueRules" style={{ padding: 15}}>
+          <ManageLeagueRules league={id} />
+        </div>
+      </Paper>
+      <Paper className="paperContent" sx={{marginTop: 1}}>
+        <div className="dangerZone" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
           <FormControl>
             <h4>Danger Zone</h4>
             <Button variant='contained' onClick={() => handleNewSeason(id)} style={{ marginBottom: 15 }}>Start a new Season</Button>

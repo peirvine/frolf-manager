@@ -857,3 +857,48 @@ export function getAllUsers () {
     logEvent(analytics, 'Could not get users', { error: error });
   });
 }
+
+// league rules
+export function getLeagueRules ( league ) {
+  const dbRef = ref(getDatabase());
+  let rules = get(child(dbRef, league + `/info/leagueRules`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      logEvent(analytics, 'No league rules available for ' + league);
+      return null
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get league rules', { error: error });
+    return null;
+  });
+  return rules;
+}
+
+export function addLeagueRule (league, rules) {
+  const db = getDatabase();
+  let res = push(ref(db, league + '/info/leagueRules'), rules)
+  .then(() => {
+    return {code: "success", message: "Rule added"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the league rules', {error: error} );
+    return {code: "error", message: "League rule were not added"}
+  });
+
+  return res
+}
+
+export function deleteLeagueRule (league, rule) {
+  const db = getDatabase();
+  let res = remove(ref(db, league + '/info/leagueRules/' + rule))
+  .then(() => {
+    return {code: "success", message: "Rule deleted"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to delete the league rules', {error: error} );
+    return {code: "error", message: "League rules were not deleted"}
+  });
+
+  return res
+}
