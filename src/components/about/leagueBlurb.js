@@ -6,7 +6,6 @@ export function LeagueBlurb (props) {
 
   useEffect(() => {
     getLeagueSettings(props.league).then(res => {
-      console.warn('res', res)
       setBlurb(res.blurb)
     })
   }, [props.league])

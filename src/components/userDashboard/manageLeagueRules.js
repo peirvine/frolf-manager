@@ -4,7 +4,7 @@ import { Button, Table, TableHead, TableBody, TableContainer, TableCell, TableRo
 import { Close } from "@mui/icons-material";
 
 export default function ManageLeagueRules ( props ) {
-  const [rules, setRules] = useState()
+  const [rules, setRules] = useState([])
   const [newRule, setNewRule] = useState('')
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState('')
@@ -41,18 +41,18 @@ export default function ManageLeagueRules ( props ) {
 
   const buildTable = () => {
     let table = []
-    if (Object.entries(rules).length !== 0) {
-      for (const [key, value] of Object.entries(rules)) {
-        table.push(
-          <TableRow key={key}>
-            <TableCell>{value}</TableCell>
-            <TableCell>
-              <Button color="error" onClick={() => handleDeleteRule(key)}>Delete</Button>
-            </TableCell>
-          </TableRow>
-        )
-      }
+    
+    for (const [key, value] of Object.entries(rules)) {
+      table.push(
+        <TableRow key={key}>
+          <TableCell>{value}</TableCell>
+          <TableCell>
+            <Button color="error" onClick={() => handleDeleteRule(key)}>Delete</Button>
+          </TableCell>
+        </TableRow>
+      )
     }
+    
     return table
   }
 
@@ -81,7 +81,9 @@ export default function ManageLeagueRules ( props ) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {buildTable()}
+            {
+              Object.entries(rules).length > 0 && buildTable()
+            }
           </TableBody>
         </Table>
       </TableContainer>

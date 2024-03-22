@@ -1,7 +1,6 @@
 import { getLeagueSettings, getScorecards, getELOHistory } from '../firebase';
 
 export const getPlayerStats = async (user, league) => {
-  console.log(league)
   const leagueSettings = await getLeagueSettings(league)
   const currentSeason = leagueSettings.currentSeason
   const userName = user.uDiscDisplayName
