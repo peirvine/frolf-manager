@@ -82,7 +82,6 @@ const getPlayerEloHistory = async (player, season, league) => {
 
 const updateEloHistory = async (cards, season, league) => {
   for (const person in cards) {
-    console.warn('person', person)
     const res = await getPlayerEloHistory(person, season, league)
     if (res === 'null') {
       const apiObj = {

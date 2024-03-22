@@ -12,7 +12,6 @@ export default function ManageLeagueRules ( props ) {
 
   useEffect(() => {
     getLeagueRules(props.league)?.then(res => {
-      console.log(res || [])
       setRules(res || []);
     });
   }, [props.league]);
