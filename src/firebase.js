@@ -111,7 +111,8 @@ export function writeScorecardToDatabase(league, card, season) {
     Par: card.par,
     id: id,
     dateAdded: Date(Date.now()).toString(),
-    rawUDiscCard: card.rawUDiscCard
+    rawUDiscCard: card.rawUDiscCard,
+    isOffSeason: card.isOffSeason
   })
   .then(() => {
     return {code: "success", message: "Scorecard added successfully."}
@@ -202,7 +203,7 @@ export function writeEloTracking(league, elo, season) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   const date = Date(Date.now()).toString();
-  set(ref(db, league + '/eloTracking/' + season + '/' + elo.course + ' ' + elo.layout + ' ' + date), {
+  set(ref(db, league + '/eloTracking/' + season + '/' + elo.course + ' ' + elo.layout + ' ' + date + ' ' + id), {
     Course: elo.course,
     Layout: elo.layout,
     Players: elo.players,
@@ -388,7 +389,8 @@ export function setDeltaV2(league, season, deltaObject) {
 export function setEloGraphDataV2(league, season, graphObj) {
   const db = getDatabase();
   const now = Date(Date.now()).toString()
-  return set(ref(db, league + '/eloGraphData/' + season + '/' + graphObj.course + ' ' + now), graphObj)
+  const randomInt = Math.floor(Math.random() * 1000000);
+  return set(ref(db, league + '/eloGraphData/' + season + '/' + graphObj.course + ' ' + now + ' ' + randomInt), graphObj)
   .then(() => {
     return {code: "success", message: ""}
     // console.warn('success')

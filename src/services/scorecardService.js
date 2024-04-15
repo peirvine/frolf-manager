@@ -48,7 +48,8 @@ export async function uDiscDump (card, league, simulation = false) {
       par: parData[4],
       date: parData[2],
       playerArray,
-      rawUDiscCard: card
+      rawUDiscCard: card,
+      isOffSeason: settings.isPreseason
     }
   } catch (err) {
     return {code: "error", message: "Error, card input not valid." }

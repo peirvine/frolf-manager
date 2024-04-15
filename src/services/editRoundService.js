@@ -18,12 +18,16 @@ export const editRound = async (league, season, scorecardId, updatedRound, prese
     editRes = await resetCurrentSeason(league, season)
     if (editRes.code === "error") return editRes
     Object.entries(scorecards)
-      .sort(([, a], [, b]) => new Date(a.date) - new Date(b.date))
+      .sort(([, a], [, b]) => Date.parse(a.dateAdded) - Date.parse(b.dateAdded))
       .map(async ([key, value]) => {
         const formattedCard = formatCard(value.rawUDiscCard)
         if (formattedCard.code === "error") return { code: "error", message: "Error formatting scorecards" }
-        const res = await calculateElo(formattedCard, season, league)
-        if (res.code === "error") return { code: "error", message: "Error calculating elo" }
+        if (!value.isOffSeason) {
+          console.warn('huh')
+          const res = await calculateElo(formattedCard, season, league)
+          console.warn('res', res)
+          if (res.code === "error") return { code: "error", message: "Error calculating elo" }
+        }
       });
     editRes = { code: "success", message: "Round Edited Successfully"}
   }
@@ -50,8 +54,10 @@ export const deleteRound = async (league, season, scorecardId, preseason) => {
       .map(async ([key, value]) => {
         const formattedCard = formatCard(value.rawUDiscCard)
         if (formattedCard.code === "error") return { code: "error", message: "Error formatting scorecards" }
-        const res = await calculateElo(formattedCard, season, league)
-        if (res.code === "error") return { code: "error", message: "Error calculating elo" }
+        if (!value.isOffSeason) {
+          const res = await calculateElo(formattedCard, season, league)
+          if (res.code === "error") return { code: "error", message: "Error calculating elo" }
+        }
       });
     delRes = { code: "success", message: "Round Deleted Successfully"}
   }
@@ -110,6 +116,7 @@ const formatCard = (card) => {
       playerArray,
       rawUDiscCard: card
     }
+    console.warn('returnValue', returnValue)
   } catch (err) {
     return {code: "error", message: "Error, card input not valid." }
   }
