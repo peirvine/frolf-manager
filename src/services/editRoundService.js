@@ -10,7 +10,6 @@ export const editRound = async (league, season, scorecardId, updatedRound, prese
     editRes = await setSpecificScorecard(league, season, scorecardId, roundToEdit.round)
   } else {
     editRes = await setSpecificScorecard(league, season, scorecardId, roundToEdit.round)
-    if (editRes.code === "error") return editRes
 
     const scorecards = await getScorecards(league, season)
     if (scorecards === null) return { code: "error", message: "Error getting scorecards" }
@@ -23,9 +22,7 @@ export const editRound = async (league, season, scorecardId, updatedRound, prese
         const formattedCard = formatCard(value.rawUDiscCard)
         if (formattedCard.code === "error") return { code: "error", message: "Error formatting scorecards" }
         if (!value.isOffSeason) {
-          console.warn('huh')
           const res = await calculateElo(formattedCard, season, league)
-          console.warn('res', res)
           if (res.code === "error") return { code: "error", message: "Error calculating elo" }
         }
       });
@@ -114,9 +111,9 @@ const formatCard = (card) => {
       par: parData[4],
       date: parData[2],
       playerArray,
-      rawUDiscCard: card
+      rawUDiscCard: card,
+      isOffSeason: card.isOffSeason
     }
-    console.warn('returnValue', returnValue)
   } catch (err) {
     return {code: "error", message: "Error, card input not valid." }
   }
