@@ -130,6 +130,8 @@ export default function CurrentRankings () {
         return hold;
       })
     ]);
+    const playerEloHistory = await getElosOfAllPlayers( settings.currentSeason, league.id)
+    setPlayerEloHistoryRes(playerEloHistory)
   
     setRankings(rankings);
     setDeltas(deltas);
