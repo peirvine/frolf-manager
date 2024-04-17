@@ -10,7 +10,8 @@ export const editRound = async (league, season, scorecardId, updatedRound, prese
     editRes = await setSpecificScorecard(league, season, scorecardId, roundToEdit.round)
   } else {
     editRes = await setSpecificScorecard(league, season, scorecardId, roundToEdit.round)
-
+    if (editRes.code === "error") return editRes
+  
     const scorecards = await getScorecards(league, season)
     if (scorecards === null) return { code: "error", message: "Error getting scorecards" }
 
