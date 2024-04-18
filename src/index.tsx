@@ -13,6 +13,7 @@ import ManageLeague from './components/userDashboard/manageLeague';
 import EditRound from './components/userDashboard/editRound'
 import SimulateRound from './components/userDashboard/simulateRound/simulateRound';
 import AboutDGM from './components/about/aboutDGM/aboutDGM';
+import DiscCharger from './components/discCharger/discCharger';
 import ErrorPage from './errorPage';
 import RequireAuth from './protectedRoute'
 import reportWebVitals from './reportWebVitals';
@@ -58,6 +59,10 @@ const router = createBrowserRouter([
       {
         path: "/doink",
         element: <Doink />,
+      },
+      {
+        path: "/discCharger",
+        element: <DiscCharger />,
       },
       {
         path: "/dashboard",
