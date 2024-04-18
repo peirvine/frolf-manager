@@ -5,7 +5,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 export default function DiscCharger() {
   const [image, setImage] = useState()
   const [progress, setProgress] = useState(0);
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const divRef = useRef('#discCharger');
 
