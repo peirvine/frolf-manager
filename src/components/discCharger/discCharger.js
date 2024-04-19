@@ -128,7 +128,7 @@ export default function DiscCharger() {
               overflow: 'hidden',
             }}
           >
-            <video ref={videoRef} autoPlay style={{ width: "300px", height: "300px"}} playsinline></video>
+            <video ref={videoRef} autoPlay style={{ width: "300px", height: "300px", background: '#fff'}} playsinline></video>
           </div>
         }
         {upgrades}
