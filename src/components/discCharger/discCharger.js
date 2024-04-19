@@ -58,8 +58,8 @@ export default function DiscCharger() {
       "Tree Seeker (uh oh how'd that get in there)",
     ]
 
-    const randomUpgrades = [<b>Your Disc has been blessed with:</b>];
-    while (randomUpgrades.length <= 3) {
+    const randomUpgrades = [];
+    while (randomUpgrades.length < 3) {
       const randomIndex = Math.floor(Math.random() * upgrades.length);
       const randomUpgrade = upgrades[randomIndex];
       if (!randomUpgrades.includes(randomUpgrade)) {
@@ -123,10 +123,16 @@ export default function DiscCharger() {
             )}
           </Webcam>
         }
-        {upgrades}
+        {upgrades && 
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{ marginBottom: '0px' }}>Your Disc has been charged!</h3>
+            <p style={{margin: 0 }}>We've gifted your disc with some of the following upgrades:</p>
+            {upgrades}
+          </div>
+        }
         {charging && <Button color="warning" variant="contained" onClick={handleReset} startIcon={<RestartAltIcon />}>Charge Another</Button> }
+        <p><i>No images are saved to our servers.</i></p>
       </div>
-      <p><i>No images are saved to our servers.</i></p>
     </div>
   );
 }

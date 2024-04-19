@@ -171,6 +171,13 @@ export default function Nav() {
                       Doink Fund
                   </MenuItem>
                   <MenuItem
+                    key={'disc charger'}
+                    onClick={handleCloseNavMenu}
+                    component={ NavLink }
+                    to={"/discCharger"}>
+                      Disc Charger
+                  </MenuItem>
+                  <MenuItem
                     key={'dashboard'}
                     onClick={handleCloseNavMenu}
                     component={ NavLink }
