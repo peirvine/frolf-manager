@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button,  CircularProgress, Backdrop } from '@mui/material'
 import ElectricalServicesIcon from '@mui/icons-material/ElectricalServices';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import Webcam from "react-webcam";
 
 export default function DiscCharger() {
   const [charging, setCharging] = useState(false)
@@ -99,6 +100,13 @@ export default function DiscCharger() {
     setUpgrades(randomUpgrades)
   }
 
+  const videoConstraints = {
+    width: 300,
+    height: 300,
+    facingMode: "environment"
+  };
+  
+
   return (
     <div className="discCharger">
       <h1>Charge your disc!</h1>
@@ -114,7 +122,7 @@ export default function DiscCharger() {
         </div>
       </Backdrop>
       <div className="chargerView" style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", gap: 10}}>
-        <div style={{ width: '300px', height: charging ? '300px' : 0, borderRadius: '50%', overflow: 'hidden' }}>
+        {/* <div style={{ width: '300px', height: charging ? '300px' : 0, borderRadius: '50%', overflow: 'hidden' }}>
             <canvas ref={canvasRef}></canvas>
           </div>
         {!charging && 
@@ -130,7 +138,27 @@ export default function DiscCharger() {
           >
             <video ref={videoRef} autoPlay style={{ width: "300px", height: "300px", background: '#fff'}} webkit-playsinline playsinline></video>
           </div>
-        }
+        } */}
+        <Webcam
+          audio={false}
+          height={300}
+          screenshotFormat="image/jpeg"
+          width={300}
+          videoConstraints={videoConstraints}
+        >
+          {({ getScreenshot }) => (
+            <Button 
+              color="warning"
+              variant="contained"
+              onClick={() => {
+                const imageSrc = getScreenshot()
+                alert(imageSrc)
+              }}
+            >
+              Capture photo
+            </Button>
+          )}
+        </Webcam>
         {upgrades}
         {charging ? 
           <Button color="warning" variant="contained" onClick={handleReset} startIcon={<RestartAltIcon />}>Charge Another</Button> : 
