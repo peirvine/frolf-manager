@@ -15,7 +15,7 @@ export default function DiscCharger() {
   useEffect(() => {
     const getUserMedia = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({video: { width: 300, height: 300 }});
+        const stream = await navigator.mediaDevices.getUserMedia({video: { width: 300, height: 300, facingMode: 'environment' }});
         videoRef.current.srcObject = stream;
       } catch (err) {
         console.log(err);
