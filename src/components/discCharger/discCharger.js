@@ -18,7 +18,6 @@ export default function DiscCharger() {
         const stream = await navigator.mediaDevices.getUserMedia({video: { width: 300, height: 300, facingMode: 'environment' }});
         videoRef.current.srcObject = stream;
       } catch (err) {
-        alert(err)
         console.log(err);
       }
     };
@@ -126,6 +125,7 @@ export default function DiscCharger() {
               height: '300px',
               borderRadius: '50%',
               overflow: 'hidden',
+              podiyion: 'fixed'
             }}
           >
             <video ref={videoRef} autoPlay style={{ width: "300px", height: "300px", background: '#fff'}} webkit-playsinline playsinline></video>
