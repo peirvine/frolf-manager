@@ -18,6 +18,7 @@ export default function DiscCharger() {
         const stream = await navigator.mediaDevices.getUserMedia({video: { width: 300, height: 300, facingMode: 'environment' }});
         videoRef.current.srcObject = stream;
       } catch (err) {
+        alert(err)
         console.log(err);
       }
     };
@@ -56,7 +57,7 @@ export default function DiscCharger() {
     setUpgrades(null)
     const context = canvasRef.current.getContext('2d');
     context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height); // Clear the canvas
-    const stream = await navigator.mediaDevices.getUserMedia({video: { width: 300, height: 300 }});
+    const stream = await navigator.mediaDevices.getUserMedia({video: { width: 300, height: 300, facingMode: 'environment'}});
     videoRef.current.srcObject = stream;
   }
 
