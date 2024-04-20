@@ -17,13 +17,19 @@ export default function DiscCharger() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setProgress((prevProgress) => (prevProgress >= 100 ? 100 : prevProgress + 1));
-    }, 25);
+      setProgress((prevProgress) => (prevProgress >= 100 ? 0 : prevProgress + 10));
+    }, 250);
 
     return () => {
       clearInterval(timer);
     };
-  }, [charging])
+  }, [])
+
+  useEffect(() => {
+    if (progress === 100) {
+      setOpen(false)
+    }
+  }, [progress])
 
   const handleReset = async () => {
     setCharging(false)
@@ -83,16 +89,16 @@ export default function DiscCharger() {
       <p>Tired of your disc being low on energy and not flying as far as it should? We know that feeling. Do you also not want to vandalize park benches to hopefully improve your game? We know that feeling too. Were you hopeful that UDisc would actually implement their April Fools joke? We were too. But we're here to help! Take a picture of your disc to charge it with energy! Our Disc Charger is 100% guaranteed to do the same magical powers that the old school bench chargers have, but this time with the power of AI! Every charge is run through our Generative AI Machine Learning Big Data Driven model to give you the optimal flight pattern for the hole you are on!</p>
       <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={open && progress < 100}
+        open={open}
         onClick={handleClose}
       >
         <div style={{ textAlign: 'center'}} >
           <CircularProgress size={60} thickness={4} sx={{color: '#fff'}} variant="determinate" value={progress} />
-          <h2 style={{ color: '#fff', paddingLeft: 20, marginTop: -5 }}>Charging...</h2>
+          <h2 style={{ color: '#fff', paddingLeft: 20, marginTop: -5 }}>Charging your Disc...</h2>
         </div>
       </Backdrop>
       <div className="chargerView" style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", gap: 10}}>
-        {image && <img style={{ width: '300px', height: '300px', borderRadius: '50%' }} src={image} alt="captured" />}
+        {image && <img style={{ width: '300px', height: '300px', borderRadius: '50%', boxShadow: '0 0 200px goldenrod' }} src={image} alt="captured" className='discImage'/>}
         {!charging && 
           <Webcam
             audio={false}
@@ -123,7 +129,7 @@ export default function DiscCharger() {
             )}
           </Webcam>
         }
-        {upgrades && 
+        {!open && upgrades && 
           <div style={{ textAlign: 'center' }}>
             <h3 style={{ marginBottom: '0px' }}>Your Disc has been charged!</h3>
             <p style={{margin: 0 }}>We've gifted your disc with some of the following upgrades:</p>
