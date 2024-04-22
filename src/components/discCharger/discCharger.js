@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Button,  CircularProgress, Backdrop } from '@mui/material'
+import { useAuthState } from 'react-firebase-hooks/auth';
 import ElectricalServicesIcon from '@mui/icons-material/ElectricalServices';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import Webcam from "react-webcam";
 
+import { auth } from '../../firebase'
+
+
 export default function DiscCharger() {
+  const [user] = useAuthState(auth)
+  console.log(user)
   const [charging, setCharging] = useState(false)
   const [progress, setProgress] = useState(0);
   const [open, setOpen] = useState(false)
@@ -64,13 +70,39 @@ export default function DiscCharger() {
       "Tree Seeker (uh oh how'd that get in there)",
     ]
 
+    const gregrades = [
+      "Enhanced Salt to match it's player",
+      "Increased Dirt for a dirtier disc",
+      "Improved Grime for a grimier disc",
+      "Softer disc for optimal dent making",
+      "Enhanced Friction for better sticking to trees",
+      "Off center weight for better wobble",
+      "Inconsistent rim thickness for worse hammer throws",
+      "More likely to roll for better rollaways",
+      "More likely to cause a rage quit",
+      "OB Seeker (uh oh how'd that get in there)",
+      "More hydrodynamic to sink deeper in water",
+      "Glasslike texture for better shattering",
+    ]
+
     const randomUpgrades = [];
-    while (randomUpgrades.length < 3) {
+    const lengthOfList = user && user.email === "g.ledray@gmail.com" ? 1 : 3
+    while (randomUpgrades.length < lengthOfList) {
       const randomIndex = Math.floor(Math.random() * upgrades.length);
       const randomUpgrade = upgrades[randomIndex];
       if (!randomUpgrades.includes(randomUpgrade)) {
         randomUpgrades.push(<li>{randomUpgrade}</li>);
         upgrades.splice(randomIndex, 1);
+      }
+    }
+    if (user && user.email === "g.ledray@gmail.com") {
+      while (randomUpgrades.length < 3) {
+        const randomIndex = Math.floor(Math.random() * gregrades.length);
+        const randomUpgrade = gregrades[randomIndex];
+        if (!randomUpgrades.includes(randomUpgrade)) {
+          randomUpgrades.push(<li>{randomUpgrade}</li>);
+          gregrades.splice(randomIndex, 1);
+        }
       }
     }
     setUpgrades(randomUpgrades)
