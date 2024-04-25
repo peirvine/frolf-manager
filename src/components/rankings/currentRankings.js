@@ -21,6 +21,7 @@ import Chip from '@mui/material/Chip';
 import Modal from '@mui/material/Modal';
 import CloseIcon from '@mui/icons-material/Close';
 import { Autocomplete, TextField } from '@mui/material';
+import { Link } from "react-router-dom";
 
 import { toBlob } from 'html-to-image';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -42,6 +43,7 @@ export default function CurrentRankings () {
   const [open, setOpen] = useState(false)
   const [optionArray, setOptionArray] = useState([])
   const [league, setLeague] = useState()
+  const [season, setSeason] = useState()
   const [userData, setUserData] = useState('')
   const [members, setMembers] = useState([])
   const [graphData, setGraphData] = useState({})
@@ -55,6 +57,7 @@ export default function CurrentRankings () {
         if (res) {
           const leagueId = res.length > 1 ? res[0].id : res.id;
           getLeagueSettings(leagueId).then(settings => {
+            setSeason(settings.currentSeason);
             Promise.all([
               getCurrentElo(leagueId, settings.currentSeason),
               getDelta(leagueId, settings.currentSeason),
@@ -110,6 +113,7 @@ export default function CurrentRankings () {
     setLeague(league.id);
     const settings = await getLeagueSettings(league.id);
     const season = settings.currentSeason;
+    setSeason(season);
   
     const [rankings, deltas, graphData, members] = await Promise.all([
       getCurrentElo(league.id, season),
@@ -264,6 +268,16 @@ export default function CurrentRankings () {
             </TableBody>
           </Table>
         </TableContainer>
+      </div>
+      <div className="moreStats">
+       <Link to={`./detailedRankings`} state={{
+            leagueId: league,
+            season
+          }}>
+          <Button variant="contained" color="primary" style={{ margin: "5px" }}>
+            See Detailed Stats
+          </Button>
+        </Link>
       </div>
       <div className="getImg">
         <Button variant="contained" onClick={() => getImage()}>Share Rankings</Button>

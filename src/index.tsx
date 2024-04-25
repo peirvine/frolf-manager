@@ -21,6 +21,7 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
+import DetailedRankings from './components/rankings/detailedRankings/detailedRankings';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -51,6 +52,10 @@ const router = createBrowserRouter([
       {
         path: "/rankings",
         element: <CurrentRankings />,
+      },
+      {
+        path: "/rankings/detailedRankings",
+        element: <DetailedRankings />,
       },
       {
         path: "/admin",
