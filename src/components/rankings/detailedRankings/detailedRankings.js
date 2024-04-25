@@ -19,8 +19,6 @@ export default function DetailedRankings() {
 
   const buildData = () => {
     const formattedData = []
-
-    console.log(data)
     
     Object.entries(data)
       .sort(([, a], [, b]) => new Date(b.dateAdded) - new Date(a.dateAdded))
@@ -28,7 +26,7 @@ export default function DetailedRankings() {
       .map(([key, value]) => {
         formattedData.push(
           <div key={key} className="roundData">
-            <h2>{value.Course}</h2>
+            <h3>{value.Course}</h3>
             <Box sx={{ flexGrow: 1 }}>
               <Grid container spacing={2}>
                 <Grid item xs={8}>
@@ -95,6 +93,7 @@ export default function DetailedRankings() {
   return (
     <div>
       <h1>Detailed Season Stats</h1>
+      Detailed round breakdowns of how the elo was calculated for each round in the season. The ELO listed is the ELO of the player for the round was played, not their current elo.
       {buildData()}
       <Link to={`/rankings`}>Back</Link>
     </div>
