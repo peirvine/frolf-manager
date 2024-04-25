@@ -25,7 +25,7 @@ export const calculateElo = async (card, season, league, simulation = false) => 
 // updates current elo of player
   const currentElo = await updateCurrentElos(league, season, simulation)
 
-  const delta = await calculateDelta(league, season, previousElo, cardElo, simulation)
+  const delta = await calculateDelta(league, season, previousElo, currentElo, simulation)
 
   await graphData(league, season, card.course, card.date, previousElo, currentElo, simulation)
   
