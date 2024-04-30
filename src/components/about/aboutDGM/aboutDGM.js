@@ -1,3 +1,5 @@
+import DgmPricing from "./dgmPricing"
+
 export default function AboutDGM() {
   const features = [
     "Organize disc golf leagues",
@@ -26,7 +28,7 @@ export default function AboutDGM() {
 
       <p>We are currently in beta testing. If you are interested in joining our beta program, please fill out our <a href="https://forms.gle/xpSShX2rBhhckV12A" target="_blank" rel="noreferrer">interest form!</a></p>
 
-      {/* <DgmPricing /> */}
+      <DgmPricing />
     </div>
   );
 }
