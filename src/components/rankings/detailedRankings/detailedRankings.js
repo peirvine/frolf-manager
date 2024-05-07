@@ -29,7 +29,7 @@ export default function DetailedRankings() {
             <h3>{value.Course}</h3>
             <Box sx={{ flexGrow: 1 }}>
               <Grid container spacing={2}>
-                <Grid item xs={8}>
+                <Grid item md={8}>
                   <TableContainer component={Paper}>
                     <Table>
                       <TableBody>
@@ -61,7 +61,7 @@ export default function DetailedRankings() {
                     </Table>
                   </TableContainer>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item md={4}>
                   <TableContainer component={Paper}>
                     <Table>
                       <TableBody>
