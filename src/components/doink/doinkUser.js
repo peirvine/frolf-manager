@@ -16,12 +16,12 @@ export default function DoinkUser(props) {
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
-  const [doinkList, setDoinkList] = useState([])
+  // const [doinkList, setDoinkList] = useState([])
 
   useEffect(() => {
     setDoinkHolder(props.player.doinks)
     getDoinkFundPlayers(props.league).then(res => {
-      setDoinkList(res)
+      // setDoinkList(res)
     })
   }, [props.league, props.player.doinks])
 
