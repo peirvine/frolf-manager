@@ -4,23 +4,24 @@ import { IconButton, TableCell, TableRow, Alert, Snackbar } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-import { getDoinkFundPlayers, updateDoinkBalanceV2 } from '../../firebase'
+import { getDoinkFundPlayers, updateDoinkBalanceV3 } from '../../firebase'
 
 
 export default function DoinkUser(props) {
+  console.log('props', props)
   const player = props.player
-  const isUser = player.uid === props.user
+  const isUser = player.uid === props.user || props.isAdmin
   const maxDoink = props.maxDoink
   const [doinkHolder, setDoinkHolder] = useState(player.doinks)
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
-  const [doinkList, setDoinkList] = useState([])
+  // const [doinkList, setDoinkList] = useState([])
 
   useEffect(() => {
     setDoinkHolder(props.player.doinks)
     getDoinkFundPlayers(props.league).then(res => {
-      setDoinkList(res)
+      // setDoinkList(res)
     })
   }, [props.league, props.player.doinks])
 
@@ -32,26 +33,19 @@ export default function DoinkUser(props) {
       newBalance = doinkHolder - 1
     }
 
-    // eslint-disable-next-line array-callback-return
-    doinkList.map(x => {
-      if (player.uid === x.uid) {
-        x.doinks = newBalance
-      }
-    })
-
-    updateDoinkBalanceV2(props.league, doinkList)
-      .then(res => {
-        if (res) {
-          setOpen(true)
-          setVariant('success')
-          setAlertMessage('Doink Updated')
-        } else {
-          setOpen(true)
-          setVariant('error')
-          setAlertMessage('Doink not updated, please refresh and try again')
-        }
-      })
-    setDoinkHolder(newBalance)
+    updateDoinkBalanceV3(props.league, props.playerKey, newBalance).then(res => {
+          if (res) {
+            setOpen(true)
+            setVariant('success')
+            setAlertMessage('Doink Updated')
+            props.handleUpdateSumDoink && props.handleUpdateSumDoink(action === "up" ? 1 : -1)
+          } else {
+            setOpen(true)
+            setVariant('error')
+            setAlertMessage('Doink not updated, please refresh and try again')
+          }
+        })
+      setDoinkHolder(newBalance)
   }
 
   return (

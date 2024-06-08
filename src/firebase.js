@@ -627,6 +627,19 @@ export function joinDoinkFund (league, users) {
   return res
 }
 
+export function joinDoinkFundV2 (league, user) {
+  const db = getDatabase()
+  const res = push(ref(db, league + '/doinkfund/players/'), user)
+    .then(() => {
+      return {code: "success", message: "Doink user added"}
+    })
+    .catch((error) => {
+      logEvent(analytics, `The system failed to add a doink user`, {error: error} );
+      return {code: "error", message: "User not added to doink fund"}
+    });
+  return res
+}
+
 
 /**************** league Settings Page ****************/
 export function getLeagueSettings (league) {
@@ -782,6 +795,21 @@ export function getDoinkFundPlayers (league) {
 export function updateDoinkBalanceV2 (league, player) {
   const db = getDatabase();
   let res = set(ref(db, league + '/doinkfund/players/'), player)
+  .then(() => {
+    // console.warn('success')
+    return {code: "success", message: "Doink added"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the expense', {error: error} );
+    return {code: "error", message: "Doinkfund expense was not removed"}
+  });
+  return res
+}
+
+export function updateDoinkBalanceV3 (league, player, newBalance) {
+  console.warn('player', player)
+  const db = getDatabase();
+  let res = update(ref(db, league + '/doinkfund/players/' + player), {doinks: newBalance})
   .then(() => {
     // console.warn('success')
     return {code: "success", message: "Doink added"}

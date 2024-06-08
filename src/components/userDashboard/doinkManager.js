@@ -5,6 +5,7 @@ import {useState, useEffect} from 'react'
 import { TextField, Button, FormControl, Paper, Grid, Snackbar, Alert, IconButton, InputLabel, OutlinedInput, InputAdornment, Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
 import { Close } from '@mui/icons-material'
 import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund, deleteDoinkExpense, editDoinkExpense, getDoinkSettings, getDoinkFundPlayers, updateDoinkBalanceV2 } from '../../firebase'
+import DoinkUser from '../doink/doinkUser'
 
 export default function DoinkManager(props) {
   const [doinkEnabled, setDoinkEnabled] = useState(false)
@@ -74,21 +75,23 @@ export default function DoinkManager(props) {
           setDoinkValues(res)
           let returnObj = []
           for (const [key, value] of Object.entries(res)) {
+            console.log(value)
             returnObj.push(
-              <TableRow key={key}>
-                <TableCell>{value.name}</TableCell>
-                <TableCell>
-                  <TextField
-                    required
-                    margin="normal"
-                    id="outlined-required"
-                    defaultValue={value.doinks}
-                    onChange={(e) => handleDoinkChange(value.name, e.target.value)}
-                    style={{ marginBottom: 15}}
-                    type={"number"}
-                  />
-                </TableCell>
-              </TableRow>
+              // <TableRow key={key}>
+              //   <TableCell>{value.name}</TableCell>
+              //   <TableCell>
+              //     <TextField
+              //       required
+              //       margin="normal"
+              //       id="outlined-required"
+              //       defaultValue={value.doinks}
+              //       onChange={(e) => handleDoinkChange(value.name, e.target.value)}
+              //       style={{ marginBottom: 15}}
+              //       type={"number"}
+              //     />
+              //   </TableCell>
+              // </TableRow>
+              <DoinkUser playerKey={key} key={key} player={value} league={props.league} isAdmin={true} />
             )
           }
           setDoinkItems(returnObj)
@@ -97,17 +100,21 @@ export default function DoinkManager(props) {
     )
   }, [props.league, render])
 
-  const handleDoinkChange = (name, value) => {
-    let tempDoink = [...doinkValues]
-    tempDoink.forEach((item) => {
-      if (item.name === name) {
-        item.doinks = parseInt(value);
-      }
-    });
-    setDoinkValues(tempDoink);
-  }
+  // const handleDoinkChange = (name, value) => {
+  //   let tempDoink = [...doinkValues]
+  //   console.warn('fisrt tempDoink', doinkValues)
+  //   tempDoink.forEach((item) => {
+  //     console.warn('item', item)
+  //     if (item.name === name) {
+  //       item.doinks = parseInt(value);
+  //     }
+  //   });
+  //   console.warn('tempDoink', tempDoink)
+  //   setDoinkValues(tempDoink);
+  // }
 
   const reportDoink = () => {
+    console.warn('doinkValues', doinkValues)
     updateDoinkBalanceV2(props.league, doinkValues)
       .then(res => {
         if (res) {
