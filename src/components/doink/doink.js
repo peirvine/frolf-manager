@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Collapse, Alert, TableContainer, Table, TableHead, TableRow, TableBody, TableCell, Autocomplete, TextField, Button } from '@mui/material'
 import DoinkUser from './doinkUser'
-import { auth, joinDoinkFund, getDoinkFundPlayers, getLeagueNames, getUserDataV2, getLeagueSettings, getDoinkExpenses, getDoinkSettings } from '../../firebase'
+import { auth, joinDoinkFund, getDoinkFundPlayers, getLeagueNames, getUserDataV2, getLeagueSettings, getDoinkExpenses, getDoinkSettings, joinDoinkFundV2 } from '../../firebase'
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import './doink.scss'
@@ -20,96 +20,63 @@ export default function Doink() {
   const [expenses, setExpenses] = useState({})
   const [expenseTotal, setExpenseTotal] = useState(0)
   const [disabled, setDisabled] = useState(false)
-  const [render, setRender] = useState('')
   const [maxDoink, setMaxDoink] = useState(50)
   const [joinDisabled, setJoinDisabled] = useState(false)
   const [user] = useAuthState(auth);
-  let doinks = []
 
+  const fetchData = async (id) => {
+    const settings = await getLeagueSettings(id);
+    if (!settings.doinkFund) return;
+  
+    const [players, expenses, maxDoink] = await Promise.all([
+      getDoinkFundPlayers(id),
+      getDoinkExpenses(id),
+      getDoinkSettings(id),
+    ]);
+  
+    let holder = 0;
+    if (players) {
+      Object.values(players).forEach(x => {
+        holder += x.doinks;
+        x.uid === user.uid && setUserRegistered(true);
+      });
+      setData(players)
+    } else {
+      setData([]);
+    }
+
+    setSumDoink(holder);
+  
+    if (expenses !== undefined) {
+      setExpenses(expenses);
+      let sum = 0;
+      Object.entries(expenses).map(([key, value]) => {
+        sum += value.amount;
+      });
+      setExpenseTotal(sum);
+    } else {
+      setExpenses([]);
+      setExpenseTotal(0);
+    }
+  
+    setMaxDoink(maxDoink);
+  };
+  
   useEffect(() => {
-    buildOptions().then(res => {
+    const fetchOptionsAndData = async () => {
+      const res = await buildOptions();
       if (res) {
         if (res.length > 1) {
-          getLeagueSettings(res[0].id).then(settings => {
-            if (settings.doinkFund) {
-              getDoinkFundPlayers(res[0].id).then(res2 => {
-                let holder = 0
-                let users = []
-                if (res2) {
-                  setData(res2)
-                  res2.forEach(x => {
-                    holder += x.doinks
-                    users.push(x.name)
-                  })
-                } else {
-                  setData([])
-                }
-                setUserRegistered(users.indexOf(user.displayName) > -1)
-                setSumDoink(holder)
-              })
-              getDoinkExpenses(res[0].id).then(expensesRes => {
-                if (expensesRes !== undefined) {
-                  setExpenses(expensesRes)
-                  let sum = 0
-                  Object.entries(expenses).map(([key, value], i) => {
-                    sum += value.amount
-                  })
-                  setExpenseTotal(sum)
-                } else {
-                  setExpenses([])
-                  setExpenseTotal(0)
-                }
-              })
-            }
-          })
-          getDoinkSettings(res[0].id).then(
-            res => {
-              setMaxDoink(res)
-            }
-          )
+          fetchData(res[0].id);
         } else {
-          getLeagueSettings(res.id).then(settings => {
-            if (settings.doinkFund) {
-              getDoinkFundPlayers(res.id).then(res2 => {
-                let holder = 0
-                let users = []
-                if (res2) {
-                  setData(res2)
-                  res2.forEach(x => {
-                    holder += x.doinks
-                    users.push(x.name)
-                  })
-                } else {
-                  setData([])
-                }
-                setUserRegistered(users.indexOf(user.displayName) > -1)
-                setSumDoink(holder)
-                getDoinkExpenses(res.id).then(expensesRes => {
-                  if (expensesRes !== undefined) {
-                    setExpenses(expensesRes)
-                    let sum = 0
-                    Object.entries(expenses).map(([key, value], i) => {
-                      sum += value.amount
-                    })
-                    setExpenseTotal(sum)
-                  } else {
-                    setExpenses([])
-                    setExpenseTotal(0)
-                  }
-                })
-              })
-              getDoinkSettings(res.id).then(
-                res => {
-                  setMaxDoink(res)
-                }
-              )
-            }
-          })
+          fetchData(res.id);
         }
       }
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+    };
+  
+    fetchOptionsAndData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const buildOptions = async () => {
     if (user !== null) {
@@ -135,43 +102,27 @@ export default function Doink() {
 
   const handleChangeLeague = async league => {
     setLeague(league.id)
-    getDoinkFundPlayers(league.id).then(res2 => {
-      if (res2) {
-        setData(res2);
-        const holder = res2.reduce((sum, x) => sum + x.doinks, 0);
-        const users = res2.map(x => x.name);
-        setUserRegistered(users.includes(user.displayName));
-        setSumDoink(holder);
-      } else {
-        setData([]);
-        setUserRegistered(false);
-        setSumDoink(0);
-      }
+    fetchData(league.id)
+  }
+
+  const registerDoinkerV3 = (user) => {
+    const data = {
+      doinks: 0,
+      name: user.displayName,
+      uid: user.uid
+    }
+
+    joinDoinkFundV2(league, data).then((res) => {
+      setAlertMessage(res.message)
+      setVariant(res.variant)
+      setOpen(true)
+      setDisabled(true)
+      fetchData(league)
     })
   }
 
-  const registerDoinkerV2 = (user) => {
-    getDoinkFundPlayers(league).then(res => {
-      let resHolder
-      if (res) {
-        resHolder = res
-        resHolder.push({
-          doinks: 0,
-          name: user.displayName,
-          uid: user.uid
-        })
-      } else {
-        resHolder = [{
-          doinks: 0,
-          name: user.displayName,
-          uid: user.uid
-        }]
-      }
-      
-      joinDoinkFund(league, resHolder).then(() => {
-        setDisabled(true)
-      })
-    })
+  const handleUpdateSumDoink = (doinks) => {
+    setSumDoink(sumDoink + doinks)
   }
 
   return (
@@ -197,10 +148,9 @@ export default function Doink() {
           />
         ) : null
       }
-      {render}
       {user ? (
         <>
-          {!userRegistered && (<Button variant="contained" disabled={disabled || joinDisabled} onClick={() => registerDoinkerV2(user)}>Register Me</Button>)}
+          {!userRegistered && (<Button variant="contained" disabled={disabled || joinDisabled} onClick={() => registerDoinkerV3(user)}>Register Me</Button>)}
           <TableContainer size="medium" className="doinkTable">
             <Table aria-label="simple table">
               <TableHead>
@@ -211,11 +161,14 @@ export default function Doink() {
               </TableHead>
               <TableBody>
                 {data && (
-                  data.forEach(player => {
-                    doinks.push(<DoinkUser player={player} user={user.uid} league={league} maxDoink={maxDoink} />)
-                  })
+                  // data.forEach(player => {
+                  //   doinks.push(<DoinkUser player={player} user={user.uid} league={league} maxDoink={maxDoink} />)
+                  // })
+                  Object.entries(data).map(([key, value], i) =>  (
+                    <DoinkUser key={key} player={value} user={user.uid} league={league} maxDoink={maxDoink} playerKey={key} handleUpdateSumDoink={handleUpdateSumDoink} />
+                  ))
                 )}
-                {doinks}
+                {/* {doinks} */}
               </TableBody>    
             </Table>    
           </TableContainer>
