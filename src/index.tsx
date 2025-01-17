@@ -22,6 +22,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import DetailedRankings from './components/rankings/detailedRankings/detailedRankings';
+import UserDashboardV2 from './components/userDashboard/userDashboardV2';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: <UserDashboard />,
+      },
+      {
+        path: "/dashboard-new",
+        element: <UserDashboardV2 />,
       },
       {
         path: "/dashboard/manageLeague",

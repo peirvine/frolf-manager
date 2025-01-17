@@ -37,15 +37,17 @@ function App() {
       <CssBaseline />
       <div className="frolfLeague">
         <header className="frolfHeader">
-            <Nav />
+          <Nav />
         </header>
-        {pathname === "/" ? <Home /> : (
-          <div className="content">
-            <Paper className="paperContent">
-              <Outlet context={[user]} />
-            </Paper>
-          </div>
-        )}
+        {pathname === "/dashboard-new" ? <Outlet context={[user]} /> :
+          pathname === "/" ? <Home /> : (
+            <div className="content">
+              <Paper className="paperContent">
+                <Outlet context={[user]} />
+              </Paper>
+            </div>
+          )
+        }
         <Footer />
       </div>
     </ThemeProvider>

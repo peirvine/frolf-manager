@@ -1,4 +1,4 @@
-import { Button } from '@mui/material'
+import { Button, Skeleton, Box } from '@mui/material'
 import { NavLink } from "react-router-dom";
 
 import "./home.scss"
@@ -7,33 +7,43 @@ export default function Home () {
   return (
     <div className="home">
       <div className="hero">
-        {/* <img src={fullGroup} alt="group of disc golfers" /> */}
-        <div className="homeText">
-          {/* <h6>Such Frolf presents</h6> */}
-          <h1>Disc Golf Manager</h1>
-        </div>
-      </div>
-      <div className="textContent">
-        <h2>Disc Golf Manager</h2>
-        <p>Elevate your disc golf league experience with DGM - your all-in-one solution for seamless league organization, custom rankings, and tournament management, making every throw count.</p>
+        <h1>An all-in-one solution for seamless league organization</h1>
         <Button 
           variant="contained"
           component={ NavLink }
           to={"/about"}
         >
-          About the League
+          Get Started
         </Button>
       </div>
-      <div className="aboutContent">
-        <h2>Score a Round</h2>
-        <p>Add your round to our custom ranking system</p>
-        <Button 
-          variant="contained"
-          component={ NavLink }
-          to={"/add"}
-        >
-          Add a Round
-        </Button>
+      <div className="ctaBoxes">
+        <Box className="homeBox">
+          <Skeleton className="ctaImage" variant="rectangular" width={200} height={200} />
+          <h2>Score a Round</h2>
+          <p>Add your round to our custom ranking system</p>
+        </Box>
+        <Box className="homeBox">
+          <Skeleton className="ctaImage" variant="rectangular" width={200} height={200} />
+          <h2>Log a Doink</h2>
+          <p>Manage your league with ease</p>
+        </Box>
+      </div>
+      <div className="ctaBoxes">
+        <Box className="homeBox">
+          <Skeleton className="ctaImage" variant="rectangular" width={200} height={200} />
+          <h2>League History</h2>
+          <p>Manage your league with ease</p>
+        </Box>
+        <Box className="homeBox">
+          <Skeleton className="ctaImage" variant="rectangular" width={200} height={200} />
+          <h2>Current Rankins</h2>
+          <p>Add your round to our custom ranking system</p>
+        </Box>
+        <Box className="homeBox">
+          <Skeleton className="ctaImage" variant="rectangular" width={200} height={200} />
+          <h2>Past Rounds</h2>
+          <p>View your league's leaderboard</p>
+        </Box>
       </div>
     </div>
   )

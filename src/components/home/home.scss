@@ -13,12 +13,13 @@ img {
   .home {
     font-family: Roboto, sans-serif;
     min-height: calc(100vh - 120px);
+    background-color: #f2f2f2;
 
     .hero {
-      background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../images/fullGroup.jpg');
+      // background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../images/fullGroup.jpg');
       background-size: 100%;
       width: 100%;
-      color: white;
+      color: black;
       height: 505px;
 
       .homeText {
@@ -35,37 +36,56 @@ img {
       }
     }
 
-    .textContent {
+    .ctaBoxes {
       text-align: center;
-      background-color: #f2f2f2;
-      padding: $padding-lg;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
 
-      h2 {
-        font-size: 38px;
-        line-height: 36px;
-        font-weight: 300;
+      .homeBox {
+        width: 400px;
+        aspect-ratio: 1/1;
+        border: 1px solid #0e4071;
+        margin: 10px;
+
+        .ctaImage {
+          margin: auto;
+          margin-top: 20px;
+        }
+      }
+    }
+
+    // .textContent {
+    //   text-align: center;
+    //   background-color: #f2f2f2;
+    //   padding: 70px;
+
+    //   h2 {
+    //     font-size: 38px;
+    //     line-height: 36px;
+    //     font-weight: 300;
         
-      }
+    //   }
 
-      p {
-        width: 80%;
-        margin: auto;
-        margin-bottom: 10px;
-      }
-    }
+    //   p {
+    //     width: 80%;
+    //     margin: auto;
+    //     margin-bottom: 10px;
+    //   }
+    // }
 
-    .aboutContent {
-      text-align: center;
-      background-color: #fff;
-      padding: $padding-lg;
+    // .aboutContent {
+    //   text-align: center;
+    //   background-color: #fff;
+    //   padding: $padding-lg;
 
-      h2 {
-        font-size: 38px;
-        line-height: 36px;
-        font-weight: 300;
-        font-family: Roboto, sans-serif;
-      }
-    }
+    //   h2 {
+    //     font-size: 38px;
+    //     line-height: 36px;
+    //     font-weight: 300;
+    //     font-family: Roboto, sans-serif;
+    //   }
+    // }
   }
 }
 
@@ -91,17 +111,36 @@ img {
       }
     }
 
-    .textContent {
-      text-align: center;
-      background-color: #f2f2f2;
-      padding: $padding-lg;
-      margin-top: -30px;
-    }
+    // .textContent {
+    //   text-align: center;
+    //   background-color: #f2f2f2;
+    //   padding: $padding-lg;
+    //   margin-top: -30px;
+    // }
 
-    .aboutContent {
+    // .aboutContent {
+    //   text-align: center;
+    //   background-color: #fff;
+    //   padding: $padding-lg;
+    // }
+    .ctaBoxes {
       text-align: center;
-      background-color: #fff;
-      padding: $padding-lg;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      .homeBox {
+        width: 75%;
+        
+        border: 1px solid dodgerblue;
+        margin: 10px;
+
+        .ctaImage {
+          margin: auto;
+          margin-top: 20px;
+        }
+      }
     }
   }
 }
