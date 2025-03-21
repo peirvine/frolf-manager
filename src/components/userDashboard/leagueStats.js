@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getLeagueStats } from '../../services/leagueStatsService';
+import { getLeagueMembers } from '../../firebase'
+import { getPlayerStats } from '../../services/playerStatsService'
 import { Table, TableBody, TableCell, TableContainer, TableRow, Paper, Skeleton } from '@mui/material';
 
 export default function LeagueStats(props) {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState([])
+  const [playerStats, setPlayerStats] = useState([])
 
   useEffect(() => { 
     getLeagueStats(props.league).then(res => {
@@ -12,6 +16,40 @@ export default function LeagueStats(props) {
       setLoading(false);
     });
   }, [props]);
+
+  useEffect(() => {
+    const fetchLeagueMembers = async () => {
+      try {
+      const leagueMembers = await getLeagueMembers(props.league)
+      setMembers(leagueMembers)
+      } catch (error) {
+      console.error('Error fetching league members:', error)
+      }
+    }
+
+    fetchLeagueMembers()
+  }, [props.league])
+  
+  useEffect(() => {
+    async function fetchPlayerStats() {
+      try {
+        const membersWithStats = await Promise.all(
+          members.map(async (member) => {
+            const stats = await getPlayerStats(member, props.league)
+            return { ...member, stats }
+          })
+        )
+        setPlayerStats(membersWithStats)
+      } catch (error) {
+        console.error('Error fetching player stats:', error)
+      }
+    }
+
+    if (members.length > 0) {
+      fetchPlayerStats()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [members])
 
   return (
     <div className="leagueHistoryManager">
@@ -52,6 +90,14 @@ export default function LeagueStats(props) {
                   })}
                 </TableCell>
               </TableRow>
+              <TableRow>
+                <TableCell>Number of Rounds Played by Player</TableCell>
+                <TableCell>
+                  {playerStats.map(player => {
+                    return <div>{player.uDiscDisplayName}: {player.stats.numberOfRounds} rounds</div>;
+                  })}
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>
@@ -59,6 +105,14 @@ export default function LeagueStats(props) {
         <TableContainer component={Paper}>
           <Table>
             <TableBody>
+              <TableRow>
+                <TableCell>
+                  <Skeleton />
+                </TableCell>
+                <TableCell>
+                  <Skeleton />
+                </TableCell>
+              </TableRow>
               <TableRow>
                 <TableCell>
                   <Skeleton />

@@ -25,14 +25,14 @@ import { getDatabase, ref, set, child, get, update, push, remove } from "firebas
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBVjXWI3_l6e9OZU-TVmEUE_EXalxJWdTY",
-  authDomain: "such-frolf-fb20a.firebaseapp.com",
-  projectId: "such-frolf-fb20a",
-  storageBucket: "such-frolf-fb20a.appspot.com",
-  messagingSenderId: "800449624957",
-  appId: "1:800449624957:web:61def805c5062902096a14",
-  measurementId: "G-Q0H6ZHJ4QS",
-  databaseURL: "https://such-frolf-fb20a-default-rtdb.firebaseio.com",
+  apiKey: process.env.FIREBASE_API,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECTID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGINGSENDERID,
+  appId: process.env.FIREBASE_APPID,
+  measurementId: process.env.FIREBASE_MEASUREMENTID,
+  databaseURL: process.env.FIREBASE_DATABASEURL,
 };
 
 const app = initializeApp(firebaseConfig);
@@ -807,7 +807,7 @@ export function updateDoinkBalanceV2 (league, player) {
 }
 
 export function updateDoinkBalanceV3 (league, player, newBalance) {
-  console.warn('player', player)
+  // console.warn('player', player)
   const db = getDatabase();
   let res = update(ref(db, league + '/doinkfund/players/' + player), {doinks: newBalance})
   .then(() => {

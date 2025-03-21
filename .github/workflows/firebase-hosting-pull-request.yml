@@ -16,3 +16,12 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUCH_FROLF_FB20A }}'
           projectId: such-frolf-fb20a
           channelId: dev
+        env: 
+          FIREBASE_API: ${{ secrets.FIREBASE_API }}
+          FIREBASE_APPID: ${{ secrets.FIREBASE_APPID }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_DATABASEURL: ${{ secrets.FIREBASE_DATABASEURL }}
+          FIREBASE_MEASUREMENTID: ${{ secrets.FIREBASE_MEASUREMENTID }}
+          FIREBASE_MESSAGINGSENDERID: ${{ secrets.FIREBASE_MESSAGINGSENDERID }}
+          FIREBASE_PROJECTID: ${{ secrets.FIREBASE_PROJECTID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}

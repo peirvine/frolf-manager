@@ -66,8 +66,10 @@ const getNumberOfRounds = (user, scorecards) => {
 
   // eslint-disable-next-line no-unused-vars
   for (const [key, value] of Object.entries(scorecards)) {
-    if (value.Players.some(player => player.player === user)) {
-      numberOfRounds++;
+    if (value.Course && !value.Course.includes("(Off-Season)")) {
+      if (value.Players.some(player => player.player === user)) {
+        numberOfRounds++;
+      }
     }
   }
 

@@ -237,11 +237,11 @@ export function LeagueHistoryManager(props) {
         <DialogContent>
           <ul>
             {editSeason && editSeason.tournamentRounds.map((round, index) => {
-              console.warn('round', round)
+              // console.warn('round', round)
             })
             }
             {editSeason && editSeason.awards.map((award, index) => {
-              console.warn('award', award)
+              // console.warn('award', award)
             })
             }
             {/* {editSeason.stats.map((stat, index) => {

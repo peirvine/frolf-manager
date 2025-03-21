@@ -7,6 +7,7 @@ import LeaguePlayersManager from './leaguePlayersManager'
 import LeagueSettingsManager from './leagueSettingsManager'
 import { Tabs, Tab, Box, Typography } from '@mui/material'
 import { LeagueHistoryManager } from './leagueHistoryManager';
+import ChooseTournamentHost from './chooseTournamentHost';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -55,6 +56,7 @@ export default function ManageLeague() {
             <Tab label="players" {...a11yProps(2)} />
             <Tab label="doinks" {...a11yProps(3)} />
             <Tab label="rounds" {...a11yProps(4)} />
+            <Tab label="tournament" {...a11yProps(5)} />
           </Tabs>
         </Box>
         <CustomTabPanel value={value} index={0}>
@@ -71,6 +73,9 @@ export default function ManageLeague() {
         </CustomTabPanel>
         <CustomTabPanel value={value} index={4} >
           <RoundManager league={state.leagueId} />
+        </CustomTabPanel>
+        <CustomTabPanel value={value} index={5} >
+          <ChooseTournamentHost league={state.leagueId} />
         </CustomTabPanel>
       </Box>
       <Link to={`/dashboard`}>Back</Link>
