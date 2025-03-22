@@ -25,14 +25,14 @@ import { getDatabase, ref, set, child, get, update, push, remove } from "firebas
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECTID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGINGSENDERID,
-  appId: process.env.FIREBASE_APPID,
-  measurementId: process.env.FIREBASE_MEASUREMENTID,
-  databaseURL: process.env.FIREBASE_DATABASEURL,
+  apiKey: process.env.REACT_APP_FIREBASE_API,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECTID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGINGSENDERID,
+  appId: process.env.REACT_APP_FIREBASE_APPID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENTID,
+  databaseURL: process.env.REACT_APP_FIREBASE_DATABASEURL,
 };
 
 const app = initializeApp(firebaseConfig);
