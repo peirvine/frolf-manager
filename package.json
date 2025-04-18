@@ -19,7 +19,7 @@
     "@types/react-router": "^5.1.20",
     "axios": "^1.6.0",
     "downloadjs": "^1.4.7",
-    "firebase": "^10.0.0",
+    "firebase": "^10.12.2",
     "html-to-image": "^1.11.11",
     "jose": "^4.15.5",
     "jsrsasign": "^11.0.0",
