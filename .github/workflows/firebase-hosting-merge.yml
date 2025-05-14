@@ -36,6 +36,3 @@ jobs:
           REACT_APP_FIREBASE_MESSAGINGSENDERID: ${{ secrets.REACT_APP_FIREBASE_MESSAGINGSENDERID }}
           REACT_APP_FIREBASE_PROJECTID: ${{ secrets.REACT_APP_FIREBASE_PROJECTID }}
           REACT_APP_FIREBASE_STORAGE_BUCKET: ${{ secrets.REACT_APP_FIREBASE_STORAGE_BUCKET }}
-      - name: Debug
-        run: |
-          echo ${{ secrets.REACT_APP_FIREBASE_PROJECTID }} | sed 's/./& /g'
