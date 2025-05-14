@@ -15,7 +15,7 @@ See [contributing.md](https://github.com/peirvine/frolf-manager/blob/main/CONTRI
 Please do not push code that you have not tested locally ([@Gregory-Ledray](https://github.com/Gregory-Ledray) I'm looking at you.)
 
 ## Installation
-
+ 
 Install Firebase with npm
 
 ```bash
