@@ -28,8 +28,10 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 
 import HistoricalRankings from './historicalRankings'
 
+import { calculateHandicap } from '../../services/handicapService';
+
 // import { getRankingsFromGoogle } from '../../services/googleSheetsService';
-import { auth, getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers, getElosOfAllPlayers } from '../../firebase'
+import { auth, getCurrentElo, getCurrentHandicap, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers, getElosOfAllPlayers } from '../../firebase'
 
 import './rankings.scss'
 // import { calculateElo, resetCurrentElo } from '../../services/eloService';
@@ -38,6 +40,7 @@ import './rankings.scss'
 export default function CurrentRankings () {
   const [user] = useAuthState(auth)
   const [rankings, setRankings] = useState()
+  const [handicaps, setHandicaps] = useState()
   const [deltas, setDeltas] = useState()
   const imageRef = useRef(null);
   const [open, setOpen] = useState(false)
@@ -60,6 +63,7 @@ export default function CurrentRankings () {
             setSeason(settings.currentSeason);
             Promise.all([
               getCurrentElo(leagueId, settings.currentSeason),
+              getCurrentHandicap(leagueId),
               getDelta(leagueId, settings.currentSeason),
               getEloGraphData(leagueId, settings.currentSeason),
               getLeagueMembers(leagueId).then(value => {
@@ -76,8 +80,9 @@ export default function CurrentRankings () {
                 return Promise.all(hold);
               }),
               getElosOfAllPlayers( settings.currentSeason, leagueId)
-            ]).then(([rankings, deltas, graphData, members, playerEloHistory]) => {
+            ]).then(([rankings, handicaps, deltas, graphData, members, playerEloHistory]) => {
               setRankings(rankings);
+              setHandicaps(handicaps);
               setDeltas(deltas);
               setMembers(members);
               const graphObj = {
@@ -115,8 +120,9 @@ export default function CurrentRankings () {
     const season = settings.currentSeason;
     setSeason(season);
   
-    const [rankings, deltas, graphData, members] = await Promise.all([
+    const [rankings, handicaps, deltas, graphData, members] = await Promise.all([
       getCurrentElo(league.id, season),
+      getCurrentHandicap(league.id),
       getDelta(league.id, season),
       getEloGraphData(league.id, season),
       getLeagueMembers(league.id).then(async (value) => {
@@ -138,6 +144,7 @@ export default function CurrentRankings () {
     setPlayerEloHistoryRes(playerEloHistory)
   
     setRankings(rankings);
+    setHandicaps(handicaps);
     setDeltas(deltas);
   
     const graphObj = {
@@ -201,14 +208,10 @@ export default function CurrentRankings () {
   const formatRankings = (passedRankings) => {
     let sorted = Object.entries(passedRankings).sort((a,b) => b[1]-a[1]).map(el=>el[0])
     let playerRankings = []
-    let qualified = true
     sorted.map(x => {
-      let numRounds = 0
+      let qualified = true
       if (playerEloHistoryRes[x] !== undefined) {
-        numRounds = playerEloHistoryRes[x].length
-      }
-      if (numRounds < 8) {
-        qualified = false
+        qualified = playerEloHistoryRes[x].length < 8 ? false : true
       }
       playerRankings.push(
         <TableRow
@@ -221,6 +224,7 @@ export default function CurrentRankings () {
           </TableCell>
           <TableCell align="center">{Math.round(passedRankings[x] * 10) /10}</TableCell>
           {deltas && (<TableCell align="center">{getIcon(deltas[x])}</TableCell>)}
+          <TableCell align="center">{handicaps[x] && Math.round(handicaps[x] * 10) /10}</TableCell>
         </TableRow>
       )
     })
@@ -261,6 +265,7 @@ export default function CurrentRankings () {
                 <TableCell align="center">Player</TableCell>
                 <TableCell align="center">Rating</TableCell>
                 <TableCell align="center">Rating Change</TableCell>
+                <TableCell align="center">Handicap</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -269,6 +274,7 @@ export default function CurrentRankings () {
           </Table>
         </TableContainer>
       </div>
+      <Button variant="contained" color="primary" style={{ margin: "5px" }} onClick={() => calculateHandicap()}>Go</Button>
       <div className="moreStats">
        <Link to={`./detailedRankings`} state={{
             leagueId: league,

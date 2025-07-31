@@ -1,6 +1,7 @@
 // import { addScorecardToGoogle } from './googleSheetsService'
 import { getLeagueSettings, writeScorecardToDatabase } from '../firebase'
 import { calculateElo } from './eloService'
+import { calculateHandicap } from './handicapService'
 
 export async function uDiscDump (card, league, simulation = false) {
   const settings = await getLeagueSettings(league)
@@ -61,6 +62,7 @@ export async function uDiscDump (card, league, simulation = false) {
       response = await writeScorecardToDatabase(league, returnValue, season)
       if (!settings.isPreseason) {
         const res = await calculateElo(returnValue, season, league)
+        // const handicap = await calculateHandicap(returnValue, season, league)
         if (res) {
           response = {code: "success", message: "Card and Elo added successfully."}
         } else {
@@ -70,8 +72,7 @@ export async function uDiscDump (card, league, simulation = false) {
     } else {
       const elo = await calculateElo(returnValue, season, league, true)
       return elo
-    }
-    
+    }    
     return response
   } else {
     return {code: "error", message: "Error, card not valid. Validations failed."}

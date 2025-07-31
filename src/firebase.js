@@ -430,6 +430,71 @@ export function resetEloData(league, season, dbEntry) {
   });
 }
 
+/****************** Handicap ******************/
+export function writeHandicapTracking(league, handicap) {
+  const db = getDatabase();
+  const id = Math.floor(Math.random() * 100000000)
+  const date = Date(Date.now()).toString();
+  set(ref(db, league + '/handicapTracking/' + handicap.course + " " + handicap.layout + " " + Date(Date.now()).toString()), {
+    Course: handicap.course,
+    Layout: handicap.layout,
+    Players: handicap.players,
+    id: id,
+    dateAdded: date
+  })
+  .then(() => {
+    // console.warn('success')
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
+  });
+}
+
+export function getHandicapTracking(league) {
+  const dbRef = ref(getDatabase());
+  let handicap = get(child(dbRef, league + `/handicapTracking/`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      // console.log("No data available");
+      logEvent(analytics, 'no current handicap data available')
+      return ([])
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch handicap', {error: error} );
+  });
+  return handicap
+}
+
+export function getCurrentHandicap(league) {
+  const dbRef = ref(getDatabase());
+  let handicap = get(child(dbRef, league + `/currentHandicap/`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      // console.log("No data available");
+      logEvent(analytics, 'no current handicap data available')
+      return ([])
+    }
+  }).catch((error) => {
+    logEvent(analytics, 'Could not fetch handicap', {error: error} );
+  });
+  return handicap
+}
+
+export function updateCurrentHandicap(league, handicapArray) {
+  const db = getDatabase()
+  return set(ref(db, league + '/currentHandicap/'), handicapArray).then(() => {
+    // Data saved successfully!
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could write to current handicap', {error: error} );
+    return {code: "error", message: "Could not create a new season in Current Handicap"}
+  });
+}
+
+
 /****************** Player Dashboard ******************/
 export const getUserDataV2 = (user) => {
   const dbRef = ref(getDatabase());
