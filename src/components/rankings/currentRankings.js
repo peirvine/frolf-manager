@@ -221,7 +221,7 @@ export default function CurrentRankings () {
       if (playerEloHistoryRes[x] !== undefined) {
         numRounds = playerEloHistoryRes[x].length
       }
-      if (numRounds < 1) {
+      if (numRounds < 8) {
         qualified = false
       }
       playerRankings.push(
@@ -231,7 +231,7 @@ export default function CurrentRankings () {
           // onClick={() => handleShowStats(player[0])}
         >
           <TableCell align="center">
-            {capitalizeFirstLetter(x)} {qualified ? null : " - Not Qualified"}
+            {capitalizeFirstLetter(x)} {/* {qualified ? null : " - Not Qualified"} */}
           </TableCell>
           <TableCell align="center">{Math.round(passedRankings[x] * 10) /10}</TableCell>
           {deltas && (<TableCell align="center">{getIcon(deltas[x], x === playerWithMaxDrop)}</TableCell>)}
