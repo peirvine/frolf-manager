@@ -1,6 +1,8 @@
 # Disc Golf Manager
 [discgolfmanager.com](https://discgolfmanager.com)
 
+
+[![Deploy to Firebase Hosting on merge](https://github.com/peirvine/frolf-manager/actions/workflows/firebase-hosting-merge.yml/badge.svg)](https://github.com/peirvine/frolf-manager/actions/workflows/firebase-hosting-merge.yml)
 ## Authors
 
 - Peter Irvine - [@peirvine](https://www.github.com/peirvine)
