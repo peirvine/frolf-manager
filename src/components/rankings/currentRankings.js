@@ -17,6 +17,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import SchoolIcon from '@mui/icons-material/School';
 import Chip from '@mui/material/Chip';
 import Modal from '@mui/material/Modal';
 import CloseIcon from '@mui/icons-material/Close';
@@ -25,6 +26,8 @@ import { Link } from "react-router-dom";
 
 import { toBlob } from 'html-to-image';
 import { useAuthState } from 'react-firebase-hooks/auth';
+
+import Hat from '../../images/hat.png'
 
 import HistoricalRankings from './historicalRankings'
 
@@ -175,7 +178,10 @@ export default function CurrentRankings () {
     setOpen(true)
   }
 
-  const getIcon = value => {
+  const getIcon = (value, isMaxDropPlayer) => {
+    if (isMaxDropPlayer && league === "maftb") {
+      return  <Chip icon={<img style={{ width: 24, marginLeft: 8 }} src={Hat} className="changeIcon" alt="Max Drop" />} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
+    }
     const roundedValue = Math.round(value * 10) / 10
     if (roundedValue <= 1 && roundedValue >= -1) {
       return <Chip icon={<UnfoldMoreIcon className="changeIcon"/>} label={roundedValue} color="primary" variant="outlined" />
@@ -199,6 +205,14 @@ export default function CurrentRankings () {
   }
 
   const formatRankings = (passedRankings) => {
+    let maxDrop = 0;
+    let playerWithMaxDrop = '';
+    Object.entries(deltas).forEach(([player, delta]) => {
+      if (delta < maxDrop) {
+        maxDrop = delta;
+        playerWithMaxDrop = player;
+      }
+    });
     let sorted = Object.entries(passedRankings).sort((a,b) => b[1]-a[1]).map(el=>el[0])
     let playerRankings = []
     let qualified = true
@@ -220,7 +234,7 @@ export default function CurrentRankings () {
             {capitalizeFirstLetter(x)} {qualified ? null : " - Not Qualified"}
           </TableCell>
           <TableCell align="center">{Math.round(passedRankings[x] * 10) /10}</TableCell>
-          {deltas && (<TableCell align="center">{getIcon(deltas[x])}</TableCell>)}
+          {deltas && (<TableCell align="center">{getIcon(deltas[x], x === playerWithMaxDrop)}</TableCell>)}
         </TableRow>
       )
     })

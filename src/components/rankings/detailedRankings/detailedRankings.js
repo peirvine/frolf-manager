@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from "react-router-dom";
-import { Box, Grid, Paper, TableContainer, Table, TableBody, TableRow, TableCell } from '@mui/material';
+import { Box, Button, Grid, Paper, TableContainer, Table, TableBody, TableRow, TableCell } from '@mui/material';
+import { toBlob } from 'html-to-image';
 
 import { getELOHistory } from '../../../firebase'
 
@@ -17,6 +18,28 @@ export default function DetailedRankings() {
     fetchData()
   }, [state.leagueId, state.season])
 
+  const getImage = async (roundId) => {
+      const roundDiv = document.getElementById(roundId);
+      const newFile = await toBlob(roundDiv, { cacheBust: true });
+      const data = {
+        files: [
+          new File([newFile], "frolfStats.png", {
+            type: newFile.type
+          })
+        ],
+        title: "Frolf Stats",
+        text: "Frolf Stats"
+      };
+      try {
+        if (!navigator.canShare(data)) {
+          alert("Can't share, this is an error with the site sorry.");
+        }
+        await navigator.share(data);
+      } catch (err) {
+        // console.log(err);
+      }
+    }
+
   const buildData = () => {
     const formattedData = []
     
@@ -25,65 +48,61 @@ export default function DetailedRankings() {
       // eslint-disable-next-line array-callback-return
       .map(([key, value]) => {
         formattedData.push(
-          <div key={key} className="roundData">
-            <h3>{value.Course}</h3>
-            <Box sx={{ flexGrow: 1 }}>
-              <Grid container spacing={2}>
-                <Grid item md={8}>
-                  <TableContainer component={Paper}>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>Course</TableCell>
-                          <TableCell>{value.Course}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>Layout</TableCell>
-                          <TableCell>{value.Layout}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>Average ELO of Present Players</TableCell>
-                          <TableCell>{value.averageEloOfPlayers.toFixed(1)}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>Card Average</TableCell>
-                          <TableCell>{value.cardAverage.toFixed(3)}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>Strokes Per Hole</TableCell>
-                          <TableCell>{value.strokesPerHole.toFixed(3)}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>Points Per Throw</TableCell>
-                          <TableCell>{value.pointsPerThrow.toFixed(3)}</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+          <div key={key}>
+            <div id={value.id} className="roundData">
+              <h3>{value.Course}</h3>
+              <Box sx={{ flexGrow: 1 }}>
+                <Grid container spacing={2}>
+                  <Grid item md={8}>
+                    <TableContainer component={Paper}>
+                      <Table>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>Course</TableCell>
+                            <TableCell>{value.Course}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Layout</TableCell>
+                            <TableCell>{value.Layout}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Average ELO of Present Players</TableCell>
+                            <TableCell>{value.averageEloOfPlayers.toFixed(1)}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Card Average</TableCell>
+                            <TableCell>{value.cardAverage.toFixed(3)}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Strokes Per Hole</TableCell>
+                            <TableCell>{value.strokesPerHole.toFixed(3)}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Points Per Throw</TableCell>
+                            <TableCell>{value.pointsPerThrow.toFixed(3)}</TableCell>
+                          </TableRow>
+                           <TableRow>
+                            <TableCell><b>Player Round ELO</b></TableCell><TableCell></TableCell>
+                          </TableRow>
+                          {Object.entries(value.Players).map(([key, value]) => {
+                            return (
+                              <TableRow key={key}>
+                                <TableCell>{key}</TableCell>
+                                <TableCell>{value.toFixed(1)}</TableCell>
+                              </TableRow>
+                            )
+                          }
+                        )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Grid>
                 </Grid>
-                <Grid item md={4}>
-                  <TableContainer component={Paper}>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell><b>Player Round ELO</b></TableCell><TableCell></TableCell>
-                        </TableRow>
-                        {Object.entries(value.Players).map(([key, value]) => {
-                          return (
-                            <TableRow key={key}>
-                              <TableCell>{key}</TableCell>
-                              <TableCell>{value.toFixed(1)}</TableCell>
-                            </TableRow>
-                          )
-                        }
-                      )}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Grid>
-              </Grid>
-            </Box>
-            
+              </Box>
+            </div>
+            <div className="getImg" style={{ marginTop: '10px' }}>
+              <Button variant="contained" onClick={() => getImage(value.id)}>Share Stats</Button>
+            </div>
           </div>
         )
       })

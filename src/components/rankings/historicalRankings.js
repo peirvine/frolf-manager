@@ -42,7 +42,7 @@ export default function HistoricalRankings (props) {
             const color = colorArray[i]
             i += 1
             return (
-              <Line type="monotone" dataKey={"elo."+ player} name={player} stroke={color} />
+              <Line type="monotone" dataKey={"elo."+ player} name={player} stroke={color} key={player + "-line"} />
             )
           })}
         </LineChart>
