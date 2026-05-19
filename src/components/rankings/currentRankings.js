@@ -221,7 +221,7 @@ export default function CurrentRankings () {
       if (playerEloHistoryRes[x] !== undefined) {
         numRounds = playerEloHistoryRes[x].length
       }
-      if (numRounds < 8) {
+      if (numRounds < 1) {
         qualified = false
       }
       playerRankings.push(
