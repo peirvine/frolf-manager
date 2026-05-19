@@ -152,7 +152,7 @@ export default function CurrentRankings () {
   };
   
   const getImage = async () => {
-    const newFile = await toBlob(imageRef.current, { cacheBust: true });
+    const newFile = await toBlob(imageRef.current, { cacheBust: true, useCORS: true });
     const data = {
       files: [
         new File([newFile], "frolf.png", {
@@ -180,7 +180,7 @@ export default function CurrentRankings () {
 
   const getIcon = (value, isMaxDropPlayer) => {
     if (isMaxDropPlayer && league === "maftb") {
-      return  <Chip icon={<img style={{ width: 24, marginLeft: 8 }} src={Hat} className="changeIcon" alt="Max Drop" />} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
+      return  <Chip icon={<img style={{ width: 24, marginLeft: 8 }} src={Hat} crossOrigin="anonymous" className="changeIcon" alt="Max Drop" />} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
     }
     const roundedValue = Math.round(value * 10) / 10
     if (roundedValue <= 1 && roundedValue >= -1) {
