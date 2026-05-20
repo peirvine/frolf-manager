@@ -28,7 +28,6 @@ import { toBlob } from 'html-to-image';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import Hat from '../../images/hat.png'
-
 import HistoricalRankings from './historicalRankings'
 
 // import { getRankingsFromGoogle } from '../../services/googleSheetsService';
@@ -37,6 +36,31 @@ import { auth, getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagu
 import './rankings.scss'
 // import { calculateElo, resetCurrentElo } from '../../services/eloService';
 // import { mockCard } from '../../services/mockData';
+
+function HatCanvas({ src, size = 17 }) {
+  const canvasRef = useRef(null);
+  const canvasWidth = Math.round(size * 639 / 306);
+  const canvasHeight = size;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = src;
+    img.onload = () => {
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+    };
+  }, [src, canvasWidth, canvasHeight]);
+
+  return <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} style={{ width: canvasWidth, height: canvasHeight, marginLeft: 8, marginRight: -8 }} className="changeIcon" />;
+}
 
 export default function CurrentRankings () {
   const [user] = useAuthState(auth)
@@ -180,7 +204,7 @@ export default function CurrentRankings () {
 
   const getIcon = (value, isMaxDropPlayer) => {
     if (isMaxDropPlayer && league === "maftb") {
-      return  <Chip icon={<img style={{ width: 24, marginLeft: 8 }} src={Hat} crossOrigin="anonymous" className="changeIcon" alt="Max Drop" />} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
+      return  <Chip icon={<HatCanvas src={Hat} />} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
     }
     const roundedValue = Math.round(value * 10) / 10
     if (roundedValue <= 1 && roundedValue >= -1) {
