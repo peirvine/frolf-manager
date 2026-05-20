@@ -182,7 +182,7 @@ export default function CurrentRankings () {
 
   const getIcon = (value, isMaxDropPlayer) => {
     if (isMaxDropPlayer && league === "maftb") {
-      return  <Chip avatar={<Avatar alt="Natacha" src={Hat} sx={{ width: 24, height: 24 }}/>} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
+      return  <Chip avatar={<Avatar alt="hat" src={Hat} sx={{ width: 24, height: 24 }} className="changeIcon"/>} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
     }
     const roundedValue = Math.round(value * 10) / 10
     if (roundedValue <= 1 && roundedValue >= -1) {
