@@ -51,6 +51,7 @@ export default function CurrentRankings () {
   const [members, setMembers] = useState([])
   const [graphData, setGraphData] = useState({})
   const [playerEloHistoryRes, setPlayerEloHistoryRes] = useState([])
+  const [hatDataUrl, setHatDataUrl] = useState(null)
   // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -150,6 +151,22 @@ export default function CurrentRankings () {
   
     setGraphData(graphObj);
   };
+
+  useEffect(() => {
+    const loadHatBase64 = async () => {
+      try {
+        const response = await fetch(Hat);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => setHatDataUrl(reader.result);
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error('Failed to load hat image as base64', err);
+      }
+    };
+
+    loadHatBase64();
+  }, []);
   
   const getImage = async () => {
     const newFile = await toBlob(imageRef.current, { cacheBust: true });
@@ -180,7 +197,7 @@ export default function CurrentRankings () {
 
   const getIcon = (value, isMaxDropPlayer) => {
     if (isMaxDropPlayer && league === "maftb") {
-      return  <Chip icon={<img style={{ width: 24, marginLeft: 8 }} src={Hat} className="changeIcon" alt="Max Drop" />} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
+      return  <Chip icon={<img style={{ width: 24, marginLeft: 8 }} src={hatDataUrl || Hat} className="changeIcon" alt="Max Drop" />} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
     }
     const roundedValue = Math.round(value * 10) / 10
     if (roundedValue <= 1 && roundedValue >= -1) {
