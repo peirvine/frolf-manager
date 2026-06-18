@@ -25,6 +25,17 @@ export default function Home () {
         </Button>
       </div>
       <div className="aboutContent">
+        <h2>Add a Doink</h2>
+        <p>Log a Doink in our Doink Tracker</p>
+        <Button 
+          variant="contained"
+          component={ NavLink }
+          to={"/doink"}
+        >
+          Add a Doink
+        </Button>
+      </div>
+      <div className="aboutContent">
         <h2>Score a Round</h2>
         <p>Add your round to our custom ranking system</p>
         <Button 
