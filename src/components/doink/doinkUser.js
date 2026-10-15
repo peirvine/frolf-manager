@@ -4,11 +4,10 @@ import { IconButton, TableCell, TableRow, Alert, Snackbar } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-import { getDoinkFundPlayers, updateDoinkBalanceV3 } from '../../firebase'
+import { getDoinkFundPlayers, updateDoinkBalanceV3, logDoinkEvent } from '../../firebase'
 
 
 export default function DoinkUser(props) {
-  console.log('props', props)
   const player = props.player
   const isUser = player.uid === props.user || props.isAdmin
   const maxDoink = props.maxDoink
@@ -34,7 +33,13 @@ export default function DoinkUser(props) {
     }
 
     updateDoinkBalanceV3(props.league, props.playerKey, newBalance).then(res => {
-          if (res) {
+          if (res.code === "success") {
+            logDoinkEvent({
+              league: props.league,
+              action: action === "up" ? "add" : "remove",
+              new_balance: newBalance,
+              admin_edit: player.uid !== props.user
+            })
             setOpen(true)
             setVariant('success')
             setAlertMessage('Doink Updated')

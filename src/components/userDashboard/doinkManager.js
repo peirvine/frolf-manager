@@ -75,7 +75,6 @@ export default function DoinkManager(props) {
           setDoinkValues(res)
           let returnObj = []
           for (const [key, value] of Object.entries(res)) {
-            console.log(value)
             returnObj.push(
               // <TableRow key={key}>
               //   <TableCell>{value.name}</TableCell>

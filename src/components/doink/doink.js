@@ -22,7 +22,10 @@ export default function Doink() {
   const [disabled, setDisabled] = useState(false)
   const [maxDoink, setMaxDoink] = useState(50)
   const [joinDisabled, setJoinDisabled] = useState(false)
+  const [userLeagues, setUserLeagues] = useState([])
   const [user] = useAuthState(auth);
+  // Admins can edit every player's doinks in the league they're viewing
+  const isLeagueAdmin = userLeagues.some(x => x.id === league && x.isAdmin)
 
   const fetchData = async (id) => {
     const settings = await getLeagueSettings(id);
@@ -82,6 +85,7 @@ export default function Doink() {
     if (user !== null) {
       const userData = await getUserDataV2(user)
       const leagues = await getLeagueNames()
+      setUserLeagues(userData.leagues)
       if (userData.leagues.length > 1) {
         let optionsArray = []
         userData.leagues.forEach(x => {
@@ -165,7 +169,7 @@ export default function Doink() {
                   //   doinks.push(<DoinkUser player={player} user={user.uid} league={league} maxDoink={maxDoink} />)
                   // })
                   Object.entries(data).map(([key, value], i) =>  (
-                    <DoinkUser key={key} player={value} user={user.uid} league={league} maxDoink={maxDoink} playerKey={key} handleUpdateSumDoink={handleUpdateSumDoink} />
+                    <DoinkUser key={key} player={value} user={user.uid} league={league} maxDoink={maxDoink} isAdmin={isLeagueAdmin} playerKey={key} handleUpdateSumDoink={handleUpdateSumDoink} />
                   ))
                 )}
                 {/* {doinks} */}

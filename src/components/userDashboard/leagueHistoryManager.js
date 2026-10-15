@@ -363,7 +363,6 @@ export function LeagueHistoryManager(props) {
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" color="error" onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" color="info" onClick={() => console.log('update')}>Update</Button>
         </DialogActions>
       </Dialog>
       <Dialog open={DNFDialog} onClose={handleCloseDialog}>

@@ -808,6 +808,10 @@ export function updateDoinkBalanceV2 (league, player) {
   return res
 }
 
+export function logDoinkEvent (params) {
+  logEvent(analytics, 'doink_updated', params)
+}
+
 export function updateDoinkBalanceV3 (league, player, newBalance) {
   // console.warn('player', player)
   const db = getDatabase();

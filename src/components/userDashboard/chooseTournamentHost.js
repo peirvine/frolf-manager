@@ -51,15 +51,10 @@ export default function ChooseTournamentHost(props) {
     const playerToRemove = prompt('Enter the name of the player to remove from the rankings:')
     if (playerToRemove && elo[playerToRemove]) {
       delete updatedElo[playerToRemove]
-      console.log(`${playerToRemove} has been removed from the rankings.`)
     } else {
       console.error('Invalid player name or player does not exist in the rankings.')
     }
-    const rankings = Object.keys(updatedElo).reduce((acc, player, index) => {
-      acc[player] = index + 1
-      return acc
-    }, {})
-    console.log('Player Rankings:', rankings)
+    // The host selection result was only ever logged; nothing consumes it yet
   }
 
   return (

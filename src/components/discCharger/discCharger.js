@@ -10,7 +10,6 @@ import { auth } from '../../firebase'
 
 export default function DiscCharger() {
   const [user] = useAuthState(auth)
-  console.log(user)
   const [charging, setCharging] = useState(false)
   const [progress, setProgress] = useState(0);
   const [open, setOpen] = useState(false)
