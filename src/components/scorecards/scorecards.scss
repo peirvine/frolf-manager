@@ -1,5 +1,6 @@
 @import '../../globalStyles.scss';
 
+// Hole score colors, shared by the wide scoreboard and the mobile hole grid
 .holeWrapper {
   &.ace {
     background-color: $ace;
@@ -42,84 +43,298 @@
   }
 }
 
-
 @media (min-width: $lv) {
   .mobileView {
     display: none;
   }
-
-  .allScore {
-    text-align: center !important;
-  }
-
-  
-  .holeWrapper {
-    margin-left: $margin-sm;
-    margin-right: $margin-sm;
-    margin-top: $margin-sm;
-    height: 40px;
-    width: 40px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .parHole {
-    text-align: center;
-  
-    .hole {
-      font-size: $font-sm;
-      margin: 0;
-    }
-  
-    .par {
-      font-size: $font-xs;
-      margin-top: 0;
-      margin-bottom: $margin-lg;
-    }
-  }
-  
 }
-
 
 @media (max-width: $sv) {
   .desktopView {
     display: none !important;
   }
-
-  .holeWrapper {
-    margin-left: $margin-sm;
-    margin-right: $margin-sm;
-    margin-top: $margin-sm;
-    height: 40px;
-    width: 40px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-  }
-
-  .parHole {
-    text-align: center;
-  
-    .hole {
-      font-size: $font-sm;
-      margin: 0;
-    }
-  
-    .par {
-      font-size: $font-xs;
-      margin-top: 0;
-      margin-bottom: $margin-lg;
-    }
-  }
-  
 }
 
 .scorecards {
   .skeletor {
     .individualSkeletor {
       margin-bottom: 15px;
+    }
+  }
+}
+
+// Wide-screen round display, styled to match the league history cards
+.scoreboard {
+  --cell: 34px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+
+  .sbRow {
+    display: grid;
+    grid-template-columns: 28px minmax(80px, 140px) 3rem 1fr 3rem;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(128, 128, 128, 0.2);
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
+
+  .sbHeader {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background: rgba(128, 128, 128, 0.12);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .sbRank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: bold;
+    background: rgba(128, 128, 128, 0.2);
+
+    &.rank1 {
+      background: darken(gold, 8%);
+      color: white;
+    }
+
+    &.rank2 {
+      background: silver;
+      color: white;
+    }
+
+    &.rank3 {
+      background: #cd7f32;
+      color: white;
+    }
+  }
+
+  .sbName {
+    overflow-wrap: anywhere;
+    font-weight: bold;
+  }
+
+  .sbPlusMinus {
+    text-align: center;
+    font-weight: bold;
+
+    &.under {
+      color: $eagle;
+    }
+  }
+
+  .sbTotal {
+    text-align: center;
+  }
+
+  // Wraps between front/back nine groups
+  .sbHoles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+  }
+
+  .sbGroup {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .sbCell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--cell);
+    height: var(--cell);
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+
+  .sbHeaderCell {
+    flex-direction: column;
+    gap: 0;
+    line-height: 1.15;
+    font-size: 0.7rem;
+    text-transform: none;
+    letter-spacing: 0;
+
+    span {
+      opacity: 0.65;
+    }
+  }
+
+  .sbSubtotal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    margin-left: 4px;
+    padding-left: 8px;
+    border-left: 1px solid rgba(128, 128, 128, 0.4);
+    line-height: 1.15;
+  }
+
+  .sbSubtotalLabel {
+    font-size: 0.65rem;
+    opacity: 0.65;
+  }
+}
+
+// Medium screens: smaller cells so a whole 18 hole round fits on one or two clean lines
+@media (min-width: $lv) and (max-width: 1400px) {
+  .scoreboard {
+    --cell: 28px;
+
+    .sbRow {
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .sbHoles {
+      column-gap: 10px;
+    }
+
+    .sbCell {
+      font-size: 0.8rem;
+    }
+
+    .sbSubtotal {
+      min-width: 2.25rem;
+      padding-left: 5px;
+    }
+  }
+}
+
+// Mobile round display (shown by the .mobileView wrapper; hidden on desktop by the rules above)
+.mobileRound {
+  .mRoundHeader {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 $margin-sm $margin-md;
+    font-size: $font-xs;
+    opacity: 0.7;
+  }
+
+  .mPlayer {
+    border-top: 1px solid rgba(128, 128, 128, 0.3);
+  }
+
+  .mPlayerSummary {
+    display: flex;
+    align-items: center;
+    gap: $margin-md;
+    width: 100%;
+    padding: 12px $margin-sm;
+    background: none;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mRank {
+    width: 1.5em;
+    text-align: center;
+    font-weight: bold;
+    opacity: 0.7;
+  }
+
+  .mName {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: $font-md;
+  }
+
+  .mPlusMinus {
+    min-width: 2.5em;
+    text-align: right;
+    font-size: $font-md;
+    font-weight: bold;
+
+    &.under {
+      color: $eagle;
+    }
+  }
+
+  .mTotal {
+    min-width: 2em;
+    text-align: right;
+    opacity: 0.7;
+  }
+
+  .mChevron {
+    font-size: 8pt;
+    opacity: 0.5;
+  }
+
+  .mHoleGrid {
+    padding: 0 $margin-sm $margin-md;
+  }
+
+  .mHoleRow {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr) 1.4fr;
+    gap: 3px;
+    margin-bottom: $margin-md;
+  }
+
+  .mHoleCell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    font-size: 8pt;
+
+    .mHoleNum {
+      font-weight: bold;
+    }
+
+    .mHolePar {
+      opacity: 0.6;
+      margin-bottom: 2px;
+    }
+
+    &.mSubtotal {
+      border-left: 1px solid rgba(128, 128, 128, 0.4);
+      padding-left: 2px;
+    }
+
+    .mSubtotalValue {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      font-weight: bold;
+      font-size: $font-xs;
+    }
+
+    .holeWrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 28px;
+      margin: 0;
+
+      p {
+        margin: 0;
+        font-size: $font-xs;
+      }
     }
   }
 }

@@ -1,84 +1,81 @@
 import './leagueHistory.scss'
 
-export default function TournamentStandings(props) {
-  let players = []
+const ordinal = (n) => {
+  const suffixes = { 1: "st", 2: "nd", 3: "rd" }
+  const lastTwo = n % 100
+  return n + (lastTwo >= 11 && lastTwo <= 13 ? "th" : suffixes[n % 10] || "th")
+}
 
-  // eslint-disable-next-line array-callback-return
-  Object.entries(props.round).map(([key, value], i) => {
-    value.Players.forEach((player) => {
+const formatPlusMinus = (value) => (value > 0 ? "+" + value : String(value))
+
+// Podium order puts the winner in the middle: 2nd, 1st, 3rd
+const podiumOrder = (finishers) => [finishers[1], finishers[0], finishers[2]].filter(Boolean)
+
+export default function TournamentStandings(props) {
+  const rounds = Object.values(props.round || {}).filter(round => round && round.Players)
+  if (rounds.length === 0) return <div>Loading...</div>
+
+  const par = rounds.reduce((sum, round) => sum + (Number(round.Par) || 0), 0)
+  const totals = {}
+  rounds.forEach(round => {
+    round.Players.forEach(player => {
       if (player.player !== "Par") {
-        players.push({player: player.player, total: parseInt(player.total)})
+        totals[player.player] = (totals[player.player] || 0) + (parseInt(player.total) || 0)
       }
     })
   })
 
-  const playerTotals = players.reduce((acc, curr) => {
-    if (acc[curr.player]) {
-      acc[curr.player] += curr.total;
-    } else {
-      acc[curr.player] = curr.total;
-    }
-    return acc;
-  }, {});
+  const dnfs = new Set(props.data || [])
+  const finishers = Object.entries(totals)
+    .filter(([name]) => !dnfs.has(name))
+    .map(([name, total]) => ({ name, total }))
+    .sort((a, b) => a.total - b.total)
+  const dnfPlayers = Object.keys(totals).filter(name => dnfs.has(name))
 
-  let playerArray = Object.keys(playerTotals)
-    .map((player) => {
-      return { player: player, total: playerTotals[player] };
-    })
+  // Tied players share a rank (1, 1, 3, ...)
+  finishers.forEach(player => {
+    player.rank = 1 + finishers.filter(other => other.total < player.total).length
+    player.plusMinus = par ? formatPlusMinus(player.total - par) : null
+  })
 
-  // Check if player is in DNFList and update their total to "DNF"
-  playerArray.forEach((player) => {
-    if (props.data && props.data.includes(player.player)) {
-      player.total = "DNF";
-    }
-  });
-
-  playerArray.sort((a, b) => {
-    if (a.total === "DNF" && b.total !== "DNF") {
-      return 1;
-    } else if (a.total !== "DNF" && b.total === "DNF") {
-      return -1;
-    } else {
-      return a.total > b.total ? 1 : -1;
-    }
-  });
-  
+  const podium = podiumOrder(finishers.slice(0, 3))
+  const rest = finishers.slice(3)
 
   return (
-    <div>
-      {playerArray.length === 0 ? (
-        <div>Loading...</div>
-      ) : (
-        <>
-          <h3>Tournament Standings</h3>
-          <div className="podium">
-            <div className="place place2">
-              <span>
-                {playerArray[1].player} ({playerArray[1].total})
+    <div className="tournamentStandings">
+      <h3>Tournament Standings</h3>
+      <div className="podium">
+        {podium.map(player => (
+          <div key={player.name} className={`place place${Math.min(player.rank, 3)}`}>
+            <div className="placeInfo">
+              <span className="placeName">{player.name}</span>
+              <span className="placeScore">
+                {player.total}{player.plusMinus && <small> ({player.plusMinus})</small>}
               </span>
-              2nd
             </div>
-            <div className="place place1">
-              <span>
-                {playerArray[0].player} ({playerArray[0].total})
-              </span>
-              1st
-            </div>
-            <div className="place place3">
-              <span>
-                {playerArray[2].player} ({playerArray[2].total})
-              </span>
-              3rd
-            </div>
+            <div className="placeBlock">{ordinal(player.rank)}</div>
           </div>
-          <div className="standings">
-            {playerArray.slice(3).map((player, i) => (
-              <div key={i} className="player">
-                {i+3}. {player.player} ({player.total})
-              </div>
-            ))}
-          </div>
-        </>
+        ))}
+      </div>
+      {(rest.length > 0 || dnfPlayers.length > 0) && (
+        <ol className="standingsList">
+          {rest.map(player => (
+            <li key={player.name}>
+              <span className="rank">{ordinal(player.rank)}</span>
+              <span className="name">{player.name}</span>
+              <span className="score">
+                {player.total}{player.plusMinus && <small> ({player.plusMinus})</small>}
+              </span>
+            </li>
+          ))}
+          {dnfPlayers.map(name => (
+            <li key={name} className="dnf">
+              <span className="rank">–</span>
+              <span className="name">{name}</span>
+              <span className="score">DNF</span>
+            </li>
+          ))}
+        </ol>
       )}
     </div>
   );

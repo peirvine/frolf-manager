@@ -1,12 +1,10 @@
-import React from 'react';
+import './leagueHistory.scss'
 
 export default function SeasonNotes (notes) {
-  // Component logic goes here
-
   return (
-    <div>
-      <h4>A Note from the League Comissioner</h4>
-      {notes.notes}
+    <div className="historyCard seasonNotesCard">
+      <h3>A Note from the League Commissioner</h3>
+      <blockquote>{notes.notes}</blockquote>
     </div>
   );
 };

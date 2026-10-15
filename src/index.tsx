@@ -5,6 +5,7 @@ import App from './App';
 import Add from './components/add/add'
 import CurrentRankings from './components/rankings/currentRankings'
 import ViewScorecards from './components/scorecards/scorecards'
+import AllRounds from './components/scorecards/allRounds'
 import About from './components/about/about'
 import Admin from './components/admin/admin'
 import Doink from './components/doink/doink'
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: "/scorecards",
         element: <ViewScorecards />,
+      },
+      {
+        path: "/scorecards/seasons",
+        element: <AllRounds />,
       },
       {
         path: "/rankings",

@@ -1,23 +1,13 @@
 import { useState } from 'react'
 import { Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Grid,  Accordion, AccordionSummary, AccordionDetails} from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ScorecardTable from '../scorecards/scorecardTable';
+import { RoundDetails } from '../scorecards/roundList';
 import "./about.scss"
 
 export default function LeagueRankingsHistory ( props ) {
   const [expanded, setExpanded] = useState(false);
 
   const standings = props.standings
-
-  const getCoursePar = (card) => {
-    return card[card.map((e) => { return e.player; }).indexOf("Par")]
-  }
-
-  const sortCard = (card, coursePar) => {
-    const newCard = card.filter(e => e.player !== "Par")
-    const sortedCard = newCard.sort((a, b) =>  (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0))
-    return [coursePar].concat(sortedCard)
-  }
 
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
@@ -72,21 +62,11 @@ export default function LeagueRankingsHistory ( props ) {
               <p className="winner">Winner: {props.stats.winner}</p>
               <p className="rest">{props.stats.rest}</p>
               {props.tourney.map((x) => {
-                const coursePar = getCoursePar(x.Players)
-                const sortedCard = sortCard(x.Players, coursePar)
                 return (
-                <> 
+                <div key={x.id || x.Course + x.Date}>
                   <p className="courseName"><strong>{x.Course}</strong>: {x.Layout}</p>
-                  <TableContainer>
-                    <Table>
-                      <TableBody>
-                        {sortedCard.map((y) => (
-                          <ScorecardTable card={y} par={x.Par} coursePar={coursePar} />
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </>
+                  <RoundDetails round={x} />
+                </div>
               )})}
             </Grid>
           </Grid>
