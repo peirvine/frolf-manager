@@ -1,0 +1,120 @@
+@import '../../../globalStyles.scss';
+
+.detailedRankings {
+  .drIntro {
+    margin: 0 0 20px;
+    font-size: 0.95rem;
+    opacity: 0.75;
+  }
+
+  .drRound {
+    margin-bottom: 24px;
+  }
+
+  // The part that gets exported as an image by "Share Stats"
+  .drCapture {
+    padding: 16px;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    border-radius: 10px;
+    background: white;
+
+    header {
+      margin-bottom: 12px;
+
+      h3 {
+        margin: 0;
+        font-size: 1.3rem;
+      }
+
+      span {
+        font-size: 0.85rem;
+        opacity: 0.7;
+      }
+    }
+
+    h4 {
+      margin: 20px 0 8px;
+    }
+  }
+
+  .drStats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .drStat {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(128, 128, 128, 0.12);
+
+    .drStatLabel {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      opacity: 0.7;
+    }
+
+    .drStatValue {
+      font-size: 1.6rem;
+      line-height: 1.2;
+    }
+
+    small {
+      opacity: 0.6;
+    }
+  }
+
+  .drPlayers {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 0;
+    }
+  }
+
+  .drRank {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: bold;
+    background: rgba(128, 128, 128, 0.2);
+
+    &.rank1 {
+      background: darken(gold, 8%);
+      color: white;
+    }
+
+    &.rank2 {
+      background: silver;
+      color: white;
+    }
+
+    &.rank3 {
+      background: #cd7f32;
+      color: white;
+    }
+  }
+
+  .drPlayerName {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .drShare {
+    margin-top: 10px;
+  }
+}

@@ -155,36 +155,14 @@
     }
   }
 
-  .rankDetails {
+  .rankName {
     flex: 1;
     min-width: 0;
-  }
-
-  .rankLine {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .rankName {
     overflow-wrap: anywhere;
   }
 
   .rankElo {
     font-weight: bold;
-  }
-
-  .rankBar {
-    height: 4px;
-    margin-top: 4px;
-    border-radius: 2px;
-    background: rgba(128, 128, 128, 0.2);
-
-    div {
-      height: 100%;
-      border-radius: 2px;
-      background: rgb(42, 103, 182);
-    }
   }
 }
 
