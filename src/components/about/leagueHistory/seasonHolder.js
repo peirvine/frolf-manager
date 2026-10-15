@@ -2,7 +2,8 @@ import Layout1 from './layouts/layout1';
 import Layout2 from './layouts/layout2';
 
 export default function SeasonHolder(props) {
-  const { tournamentRounds } = props.season;
+  // Firebase drops empty arrays, so a season with no tournament rounds has no tournamentRounds key
+  const { tournamentRounds = [] } = props.season;
 
   const hasTournament = tournamentRounds.length > 0
 
