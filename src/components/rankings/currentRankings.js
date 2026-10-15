@@ -1,7 +1,7 @@
 /* eslint-disable array-callback-return */
 /* eslint-disable no-unused-vars */
 import { useRef, useEffect, useState } from 'react'
-import IndividualRankings from './individualRankings';
+import PlayerHistory from './playerHistory';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -53,6 +53,7 @@ export default function CurrentRankings () {
   const [graphData, setGraphData] = useState({})
   const [playerEloHistoryRes, setPlayerEloHistoryRes] = useState([])
   const [hatDataUrl, setHatDataUrl] = useState(null)
+  const [selectedPlayer, setSelectedPlayer] = useState(null)
   // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -218,7 +219,7 @@ export default function CurrentRankings () {
     let sorted = Object.entries(passedRankings).sort((a,b) => b[1]-a[1]).map(el=>el[0])
     let playerRankings = []
     let qualified = true
-    sorted.map(x => {
+    sorted.map((x, index) => {
       let numRounds = 0
       if (playerEloHistoryRes[x] !== undefined) {
         numRounds = playerEloHistoryRes[x].length
@@ -229,13 +230,22 @@ export default function CurrentRankings () {
       playerRankings.push(
         <TableRow
           key={x}
+          className="clickable"
+          hover
+          tabIndex={0}
+          role="button"
+          aria-label={`Show rating history for ${x}`}
           sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-          // onClick={() => handleShowStats(player[0])}
+          onClick={() => setSelectedPlayer(x)}
+          onKeyDown={(e) => { if (e.key === 'Enter') setSelectedPlayer(x) }}
         >
-          <TableCell align="center">
+          <TableCell align="center" className="rankCell">
+            <span className={`rankBadge rank${Math.min(index + 1, 4)}`}>{index + 1}</span>
+          </TableCell>
+          <TableCell align="center" className="playerCell">
             {capitalizeFirstLetter(x)} {/* {qualified ? null : " - Not Qualified"} */}
           </TableCell>
-          <TableCell align="center">{Math.round(passedRankings[x] * 10) /10}</TableCell>
+          <TableCell align="center" className="ratingCell">{Math.round(passedRankings[x] * 10) /10}</TableCell>
           {deltas && (<TableCell align="center">{getIcon(deltas[x], x === playerWithMaxDrop)}</TableCell>)}
         </TableRow>
       )
@@ -245,17 +255,7 @@ export default function CurrentRankings () {
 
   return (
     <div className="currentRankings">
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <div>
-          <CloseIcon onClick={() => handleClose()} className="closeBtn"/>
-          <IndividualRankings user={user}/>
-        </div>
-      </Modal>
+      <PlayerHistory player={selectedPlayer} eloGraph={graphData.eloGraph} onClose={() => setSelectedPlayer(null)} />
       <h1>Current Rankings</h1>
       {optionArray.length > 1 ? (
         <Autocomplete
@@ -270,13 +270,14 @@ export default function CurrentRankings () {
           }}
         />) : null}
       <div ref={imageRef}>
-        <TableContainer component={Paper} size="medium" className="rankingsTable">
+        <TableContainer component={Paper} variant="outlined" size="medium" className="rankingsTable">
           <Table aria-label="simple table">
             <TableHead>
               <TableRow>
+                <TableCell align="center">#</TableCell>
                 <TableCell align="center">Player</TableCell>
                 <TableCell align="center">Rating</TableCell>
-                <TableCell align="center">Rating Change</TableCell>
+                <TableCell align="center">Change</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

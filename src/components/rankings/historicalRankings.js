@@ -1,50 +1,71 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { colorArray } from './colorArray'
 
+import './rankings.scss'
+
+const round1 = (value) => Math.round(value * 10) / 10
+
+function SeasonTooltip ({ active, payload }) {
+  if (!active || !payload || !payload.length) return null
+  const round = payload[0].payload
+  const players = [...payload].filter(p => p.value !== undefined).sort((a, b) => b.value - a.value)
+  return (
+    <div className="phTooltip">
+      <strong>{round.course}</strong>
+      <div>{round.date}</div>
+      {players.map((p, index) => (
+        <div key={p.dataKey + index} style={{ color: p.color }}>{p.name}: {round1(p.value)}</div>
+      ))}
+    </div>
+  )
+}
+
 export default function HistoricalRankings (props) {
-  let players = props.playersInLeague
-  if (props.playersInLeague === undefined) {
-    players = []
-  }
-  let i = 0
-  const graph = []
-  for (const x in props.eloGraph) {
-    let data = {}
-    data['course'] = props.eloGraph[x].course
-    data['elo'] = props.eloGraph[x].holderElo
-    data['date'] = props.eloGraph[x].date
-    graph.push(data)
-  }
-  graph.sort((a,b) => {return new Date(a.date.substring(0,10)) - new Date(b.date.substring(0,10))})
+  // Members can contain blanks or repeats; a repeated name would draw the same line (and tooltip row) twice
+  const players = [...new Set((props.playersInLeague || []).filter(Boolean))]
+
+  // One point per round: everyone's rating after that round, oldest first
+  const graph = Object.values(props.eloGraph || {})
+    .filter(entry => entry && entry.holderElo)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    .map((entry, index) => ({
+      index,
+      course: entry.course,
+      date: String(entry.date).slice(0, 10),
+      elo: entry.holderElo
+    }))
+
+  const ratings = graph.flatMap(round => Object.values(round.elo)).filter(Number.isFinite)
+  const domain = ratings.length
+    ? [Math.floor(Math.min(...ratings, 1000) / 10) * 10 - 10, Math.ceil(Math.max(...ratings, 1000) / 10) * 10 + 10]
+    : [900, 1100]
 
   return (
     <div className="graph">
       <h3>Season ELO Ratings</h3>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          width={500}
-          height={300}
-          data={graph}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 50,
-          }}
-        >
+        <LineChart data={graph} margin={{ top: 5, right: 10, left: -15, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="course" interval={0} angle={-25} dy={10} />
-          <YAxis domain={[875, 1150]}/>
-          <Tooltip />
+          <XAxis
+            dataKey="index"
+            tickFormatter={(index) => graph[index]?.date.slice(5) || ""}
+            interval="preserveStartEnd"
+            minTickGap={24}
+          />
+          <YAxis domain={domain} width={50} />
+          <Tooltip content={<SeasonTooltip />} />
           <Legend verticalAlign="top" height={36} />
-          <ReferenceLine y={1000} stroke="red" label="1000" strokeDasharray="3 3" />
-          {players.map(player => {
-            const color = colorArray[i]
-            i += 1
-            return (
-              <Line type="monotone" dataKey={"elo."+ player} name={player} stroke={color} key={player + "-line"} />
-            )
-          })}
+          <ReferenceLine y={1000} stroke="red" strokeDasharray="3 3" />
+          {players.map((player, i) => (
+            <Line
+              type="monotone"
+              dataKey={"elo." + player}
+              name={player}
+              stroke={colorArray[i]}
+              dot={{ r: 3 }}
+              key={player + "-line"}
+            />
+          ))}
         </LineChart>
       </ResponsiveContainer>
     </div>
