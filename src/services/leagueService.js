@@ -49,15 +49,15 @@ export async function resetCurrentSeason (league, season) {
 
   // eloGraphData
   const eloGraphData = await resetEloGraphData(league, season)
-  if (!eloGraphData) return {code: "error", message: "Could not reset Elo Graph Data"}
-  
+  if (eloGraphData.code === "error") return {code: "error", message: "Could not reset Elo Graph Data"}
+
   // eloTracking
   const eloTracking = await reseteloTracking(league, season)
-  if (!eloTracking) return {code: "error", message: "Could not reset Elo Tracking"}
+  if (eloTracking.code === "error") return {code: "error", message: "Could not reset Elo Tracking"}
 
   // playerEloHistory
   const playerEloHistory = await resetPlayerEloHistory(league, season)
-  if (!playerEloHistory) return {code: "error", message: "Could not reset Player Elo History"}
+  if (playerEloHistory.code === "error") return {code: "error", message: "Could not reset Player Elo History"}
 
   // Big Success Vibes
   return {code: "success", message: "elo reset!"}

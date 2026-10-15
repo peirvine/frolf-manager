@@ -44,6 +44,7 @@ export const weighting = [
 
 export const pointPerThrowRef = {
   2.6: 10.58144474,
+  2.7: 10.37843183, // missing from the original table; midpoint of 2.6 and 2.8
   2.8: 10.17541891,
   2.9: 9.978286348,
   3.0: 9.784972911,
