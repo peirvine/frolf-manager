@@ -2,10 +2,9 @@
 /* eslint-disable array-callback-return */
 import React, {useState, useEffect} from "react"
 import { getLeagueSettings, getScorecards, getUserDataV2, getLeagueNames, getAllScorecards } from "../../firebase"
-import { useOutletContext } from 'react-router-dom'
-import ScorecardTable from "./scorecardTable";
-import { Autocomplete, TextField, Table, TableBody, TableContainer, Accordion, AccordionSummary, AccordionDetails, Skeleton, Button  } from '@mui/material'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useOutletContext, Link } from 'react-router-dom'
+import RoundList from "./roundList";
+import { Autocomplete, TextField, Skeleton } from '@mui/material'
 
 import './scorecards.scss'
 
@@ -108,16 +107,6 @@ export default function ViewScorecards () {
     return new Date(date.slice(0, date.indexOf(" ")))
   }
 
-  const sortCard = (card, coursePar) => {
-    const newCard = card.filter(e => e.player !== "Par")
-    const sortedCard = newCard.sort((a, b) =>  (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0))
-    return [coursePar].concat(sortedCard)
-  }
-
-  const getCoursePar = (card) => {
-    return card[card.map((e) => { return e.player; }).indexOf("Par")]
-  }
-  
   return (
     <div className="scorecards">
       <h1>Past Results</h1>
@@ -137,32 +126,10 @@ export default function ViewScorecards () {
         ) : null
       }
       <h3>{allSeasons ? "All Seasons" : "Most Recent Season"}</h3>
-      {dataV2.length !== 0 ? (dataV2.map(round => {
-        const coursePar = getCoursePar(round.Players)
-        const sortedCard = sortCard(round.Players, coursePar)
-        return (
-          <Accordion expanded={expanded === round.id} onChange={handleChange(round.id)}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel1a-content"
-              id="panel1a-header"
-            >
-              <p><strong>{round.Course}</strong>: {round.Layout} - {round.Date.slice(0, round.Date.indexOf(" "))}</p>
-            </AccordionSummary>
-            <AccordionDetails>
-              <TableContainer>
-                <Table>
-                  <TableBody>
-                    {sortedCard.map((y) => (
-                      <ScorecardTable card={y} par={round.Par} coursePar={coursePar} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </AccordionDetails>
-          </Accordion>
-        )
-      })) : (
+      <Link to="/scorecards/seasons">View every season</Link>
+      {dataV2.length !== 0 ? (
+        <RoundList rounds={dataV2} />
+      ) : (
         <div className="skeletor">
           <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
           <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />

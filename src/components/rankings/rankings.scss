@@ -3,13 +3,9 @@
 @media (min-width: $lv) {
   .currentRankings {
     .rankingsTable {
-      width: 350px;
-      text-align: center;
+      width: 100%;
+      max-width: 420px;
       margin: 0 auto;
-
-      td {
-        text-align: center;
-      }
 
       .green {
         background-color: #3cb043
@@ -28,7 +24,8 @@
   }
 
   .getImg {
-    display: none !important;
+    margin: 10px auto;
+    width: 165px;
   }
 
   .statsBox {
@@ -84,4 +81,186 @@
 .moreStats {
   text-align: center;
   margin-top: 10px;
+}
+// Current rankings table
+.currentRankings {
+  .rankingsTable {
+    border-radius: 10px;
+    overflow: hidden;
+
+    // MUI cells default to 16px on each side, which makes the columns feel too wide
+    th,
+    td {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    thead th {
+      padding-top: 8px;
+      padding-bottom: 8px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: rgba(128, 128, 128, 0.12);
+    }
+
+    tbody tr:hover {
+      background: rgba(128, 128, 128, 0.08);
+    }
+
+    .rankCell {
+      width: 2.5rem;
+      padding-right: 0;
+    }
+
+    .playerCell {
+      font-size: 1.05rem;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .ratingCell {
+      font-size: 1.05rem;
+      font-weight: bold;
+    }
+
+    .rankBadge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: bold;
+      background: rgba(128, 128, 128, 0.2);
+
+      &.rank1 {
+        background: darken(gold, 8%);
+        color: white;
+      }
+
+      &.rank2 {
+        background: silver;
+        color: white;
+      }
+
+      &.rank3 {
+        background: #cd7f32;
+        color: white;
+      }
+    }
+  }
+}
+
+// Clickable rows
+.currentRankings .rankingsTable tbody tr.clickable {
+  cursor: pointer;
+}
+
+// Player history dialog
+.phTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.playerHistory {
+  .phStats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .phStat {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(128, 128, 128, 0.12);
+
+    span {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      opacity: 0.7;
+    }
+
+    strong {
+      font-size: 1.5rem;
+    }
+  }
+
+  .phChart {
+    height: 220px;
+  }
+
+  h4 {
+    margin: 16px 0 4px;
+  }
+
+  .phRounds {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-top: 1px solid rgba(128, 128, 128, 0.2);
+    }
+
+    .phCourse {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+
+      strong {
+        overflow-wrap: anywhere;
+      }
+
+      small {
+        opacity: 0.7;
+      }
+    }
+
+    .phRating {
+      font-weight: bold;
+    }
+
+    .phChange {
+      min-width: 3.5em;
+      text-align: right;
+      font-size: 0.9rem;
+
+      &.up {
+        color: #2e7d32;
+      }
+
+      &.down {
+        color: #c62828;
+      }
+    }
+  }
+}
+
+.phTooltip {
+  padding: 8px 10px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 6px;
+  background: white;
+  font-size: 0.85rem;
+}
+
+// Season chart needs an explicit height on phones too (the desktop height is set above)
+@media (max-width: $sv) {
+  .graph {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 40px;
+  }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getLeagueStats } from '../../services/leagueStatsService';
 import { getLeagueMembers } from '../../firebase'
 import { getPlayerStats } from '../../services/playerStatsService'
-import { Table, TableBody, TableCell, TableContainer, TableRow, Paper, Skeleton } from '@mui/material';
+import { Skeleton } from '@mui/material';
 
 export default function LeagueStats(props) {
   const [stats, setStats] = useState({});
@@ -51,111 +51,56 @@ export default function LeagueStats(props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [members])
 
+  const round1 = (value) => Math.round(value * 10) / 10
+  const rounds = [...playerStats].sort((a, b) => b.stats.numberOfRounds - a.stats.numberOfRounds)
+
   return (
-    <div className="leagueHistoryManager">
+    <div className="leagueStats">
       <h3>League Stats</h3>
       {!loading ? (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell>Season</TableCell>
-                <TableCell>{stats.season}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Number of Rounds</TableCell>
-                <TableCell>{stats.numberOfRounds}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Most Played Course</TableCell>
-                <TableCell>
-                  {stats.mostPlayedCourse.map(course => {
-                    return <div>{course.course + " - " + course.count}</div>;
-                  })}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Hardest Course</TableCell>
-                <TableCell>
-                  {stats.hardestCourse.map(course => {
-                    return <div>{course.course + " - " + course.highestStrokesPerHole}</div>;
-                  })}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Most Average Player</TableCell>
-                <TableCell>
-                  {stats.mostAveragePlayer.map(player => {
-                    return <div>{player.player + " - " + player.elo}</div>;
-                  })}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Number of Rounds Played by Player</TableCell>
-                <TableCell>
-                  {playerStats.map(player => {
-                    return <div>{player.uDiscDisplayName}: {player.stats.numberOfRounds} rounds</div>;
-                  })}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <>
+          <div className="statTiles">
+            <div className="statTile">
+              <span className="statLabel">Season</span>
+              <strong>{stats.season}</strong>
+            </div>
+            <div className="statTile">
+              <span className="statLabel">Rounds</span>
+              <strong className="bigNumber">{stats.numberOfRounds}</strong>
+            </div>
+            <div className="statTile">
+              <span className="statLabel">Most Played Course</span>
+              {stats.mostPlayedCourse.length > 0 ? stats.mostPlayedCourse.map(course => (
+                <div key={course.course}>{course.course} <small>{course.count} rounds</small></div>
+              )) : <small>–</small>}
+            </div>
+            <div className="statTile">
+              <span className="statLabel">Hardest Course</span>
+              {stats.hardestCourse.length > 0 ? stats.hardestCourse.map(course => (
+                <div key={course.course}>{course.course} <small>{round1(course.highestStrokesPerHole)} strokes/hole</small></div>
+              )) : <small>–</small>}
+            </div>
+            <div className="statTile">
+              <span className="statLabel">Most Average Player</span>
+              {stats.mostAveragePlayer.length > 0 ? stats.mostAveragePlayer.map(player => (
+                <div key={player.player}>{player.player} <small>{round1(player.elo)} Elo</small></div>
+              )) : <small>–</small>}
+            </div>
+          </div>
+          <h4>Rounds played by player</h4>
+          <ul className="roundsByPlayer">
+            {rounds.map(player => (
+              <li key={player.id || player.uDiscDisplayName}>
+                <span>{player.uDiscDisplayName}</span>
+                <strong>{player.stats.numberOfRounds}</strong>
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-                <TableCell>
-                  <Skeleton />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <div className="statTiles">
+          {[0, 1, 2, 3, 4].map(i => <Skeleton key={i} variant="rounded" height={64} />)}
+        </div>
       )}
     </div>
   );

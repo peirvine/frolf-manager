@@ -1,11 +1,21 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
 import { auth, getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2, getLeagueSettings } from "../../firebase"
-import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar } from '@mui/material'
+import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar, Avatar, Chip } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
 import { Link } from "react-router-dom";
+import './userDashboard.scss'
 import FunStats from './funStats';
 import { useAuthState } from "react-firebase-hooks/auth";
+
+// "Disc Golf Club" -> "DG"
+const initials = (name = "") => name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0].toUpperCase()).join("")
+
+const statusColor = (status) => {
+  if (status === "Admin") return "success"
+  if (status === "Pending") return "warning"
+  return "default"
+}
 
 export default function UserDashboard () {
   const [user] = useAuthState(auth);
@@ -226,6 +236,10 @@ export default function UserDashboard () {
     })
   }
 
+  const confirmLeaveLeague = (league) => {
+    if (window.confirm(`Leave ${leagues[league]}?`)) handleLeaveLeague(league)
+  }
+
   const handleChange = (event) => {
     setDoink(event.target.checked);
   };
@@ -233,6 +247,7 @@ export default function UserDashboard () {
   return (
     <div className="userDashboard">
       <h1>Hi, {user?.displayName}</h1>
+      <p className="dashIntro">Manage your leagues, run what-if rounds, or start something new.</p>
       {/* <FunStats user={userData} leagues={userData.leagues} leagueNames={leagues} /> */}
       <Box sx={{ width: '100%' }}>
         <Snackbar open={alertOpen}>
@@ -257,89 +272,97 @@ export default function UserDashboard () {
           </Alert>
         </Snackbar>
       </Box>
-      <h2>My Leagues</h2>
-      {userData.leagues ? (
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: 25 }}>League</TableCell>
-                <TableCell sx={{ width: 25 }}>Member Status</TableCell>
-                <TableCell sx={{ width: 100 }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {userData.leagues.map(x => {
-                return (
-                  <TableRow sx={{ '&:last-child td, &:last-child th': { border: 0 }}}>
-                    <TableCell sx={{ width: 25 }}>{leagues[x.id]}</TableCell>
-                    <TableCell sx={{ width: 25 }}>{x.membershipStatus}</TableCell>
-                    <TableCell sx={{ width: 100 }}>
-                      {x.isAdmin ? 
-                        <Link to={`./manageLeague`} state={{
-                            leagueId: x.id,
-                            leagueName: leagues[x.id]
-                          }}>
-                          <Button variant="contained" color="success" style={{ margin: "5px" }}>
-                            Manage
-                          </Button>
-                        </Link> : null}
-                        <Link 
-                          to={`./simulateRound`} 
-                          state={{
-                            leagueId: x.id,
-                            leagueName: leagues[x.id]
-                          }}>
-                          <Button variant="contained" style={{ margin: "5px" }}>
-                            Simulate Round
-                          </Button>
-                        </Link>
-                      <Button disabled variant="contained" style={{ margin: "5px" }}>My Profile</Button>
-                      <Button variant="contained" color="error" onClick={() => handleLeaveLeague(x.id)} style={{ margin: "5px" }}>Leave</Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer> 
-        ) : (
-          <div>
-            <p>You're not a member of a leauge</p>
+      <section className="dashSection">
+        <h2>My Leagues</h2>
+        {userData.leagues && userData.leagues.length > 0 ? (
+          <div className="leagueGrid">
+            {userData.leagues.map(x => (
+              <div className="leagueCard" key={x.id}>
+                <div className="leagueCardHeader">
+                  <Avatar className="leagueAvatar">{initials(leagues[x.id])}</Avatar>
+                  <div className="leagueCardTitle">
+                    <strong>{leagues[x.id]}</strong>
+                    <Chip
+                      size="small"
+                      label={x.membershipStatus}
+                      color={statusColor(x.membershipStatus)}
+                      variant={x.membershipStatus === "Member" ? "outlined" : "filled"}
+                    />
+                  </div>
+                </div>
+                {x.membershipStatus === "Pending" && (
+                  <p className="leagueCardNote">Waiting for a league admin to approve your request.</p>
+                )}
+                <div className="leagueCardActions">
+                  {x.isAdmin && (
+                    <Button
+                      variant="contained"
+                      color="success"
+                      component={Link}
+                      to="./manageLeague"
+                      state={{ leagueId: x.id, leagueName: leagues[x.id] }}
+                    >
+                      Manage
+                    </Button>
+                  )}
+                  <Button
+                    variant="contained"
+                    component={Link}
+                    to="./simulateRound"
+                    state={{ leagueId: x.id, leagueName: leagues[x.id] }}
+                  >
+                    Simulate Round
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => confirmLeaveLeague(x.id)}
+                  >
+                    Leave
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-        )
-      }
+        ) : (
+          <div className="emptyCard">
+            <p>You're not a member of a league yet.</p>
+            <p>Join one below, or create your own.</p>
+          </div>
+        )}
+      </section>
+
       {leaguesToJoin && leaguesToJoin.length > 0 ? (
-        <div>
+        <section className="dashSection">
           <h2>Leagues Available to Join</h2>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ width: 25 }}>League</TableCell>
-                  <TableCell sx={{ width: 25 }}></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {leaguesToJoin.map(league => {
-                  return (
-                    <TableRow sx={{ '&:last-child td, &:last-child th': { border: 0 }}}>
-                      <TableCell sx={{ width: 25 }}>{leagues[league]}</TableCell>
-                      <TableCell sx={{ width: 25 }}>
-                        <Button variant="outlined" color="info" onClick={() => handleJoinLeague(league, user)}>Join</Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-      ) : null 
+          <div className="leagueGrid">
+            {leaguesToJoin.map(league => (
+              <div className="leagueCard joinCard" key={league}>
+                <div className="leagueCardHeader">
+                  <Avatar className="leagueAvatar">{initials(leagues[league])}</Avatar>
+                  <div className="leagueCardTitle">
+                    <strong>{leagues[league]}</strong>
+                  </div>
+                </div>
+                <div className="leagueCardActions">
+                  <Button variant="outlined" color="info" onClick={() => handleJoinLeague(league, user)}>Join</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null
       }
-      <h2>Create a new League</h2>
-      <p>Want to get in on the fun? Make your own league</p>
-      <Button variant="outlined" color="success" onClick={() => setOpen(true)}>Create League</Button>
+
+      <section className="dashSection">
+        <div className="createCard">
+          <div>
+            <h2>Create a new League</h2>
+            <p>Want to get in on the fun? Make your own league.</p>
+          </div>
+          <Button variant="contained" color="success" onClick={() => setOpen(true)}>Create League</Button>
+        </div>
+      </section>
       <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
@@ -376,7 +399,7 @@ export default function UserDashboard () {
                   </TableCell>
                 </TableRow>
               </Table>
-              <Button variant="contained" color="success" onClick={() => handleCreateNewLeague(user)}>Craete League</Button>
+              <Button variant="contained" color="success" onClick={() => handleCreateNewLeague(user)}>Create League</Button>
             </FormGroup>
           </Box>
         </Fade>

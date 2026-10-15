@@ -2,9 +2,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { TextField, Button, FormControl, Paper, Grid, Snackbar, Alert, IconButton, InputLabel, OutlinedInput, InputAdornment, Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
+import { TextField, Button, FormControl, Snackbar, Alert, IconButton, InputLabel, OutlinedInput, InputAdornment, Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
 import { Close } from '@mui/icons-material'
-import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund, deleteDoinkExpense, editDoinkExpense, getDoinkSettings, getDoinkFundPlayers, updateDoinkBalanceV2 } from '../../firebase'
+import { getLeagueSettings, updateDoinkSettings, addDoinkExpense, getDoinkExpenses, initDoinkFund, updateLeagueSettings, resetDoinkFund, deleteDoinkExpense, editDoinkExpense, getDoinkSettings, getDoinkFundPlayers } from '../../firebase'
 import DoinkUser from '../doink/doinkUser'
 
 export default function DoinkManager(props) {
@@ -23,7 +23,6 @@ export default function DoinkManager(props) {
   const [key, setKey] = useState('')
   const [render, setRender] = useState('')
   const [doinkItems, setDoinkItems] = useState([])
-  const [doinkValues, setDoinkValues] = useState([])
 
   const handleDoinkUpdate = () => {
     updateDoinkSettings(props.league, maxDoink).then(res => {
@@ -72,10 +71,8 @@ export default function DoinkManager(props) {
     getDoinkFundPlayers(props.league).then(
       res => {
         if (res) {
-          setDoinkValues(res)
           let returnObj = []
           for (const [key, value] of Object.entries(res)) {
-            console.log(value)
             returnObj.push(
               // <TableRow key={key}>
               //   <TableCell>{value.name}</TableCell>
@@ -112,22 +109,6 @@ export default function DoinkManager(props) {
   //   console.warn('tempDoink', tempDoink)
   //   setDoinkValues(tempDoink);
   // }
-
-  const reportDoink = () => {
-    console.warn('doinkValues', doinkValues)
-    updateDoinkBalanceV2(props.league, doinkValues)
-      .then(res => {
-        if (res) {
-          setAlertOpen(true)
-          setAlertLevel('success')
-          setAlertMessage('Doink Updated')
-        } else {
-          setAlertOpen(true)
-          setAlertLevel('error')
-          setAlertMessage('Doink not updated, please refresh and try again')
-        }
-      })
-    }
 
   const enableDoinkFund = () => {
     const payload = {
@@ -223,98 +204,88 @@ export default function DoinkManager(props) {
 
   return (
     <div className="doinkManager">
-      <h3>Doinks</h3>{render}
+      {render}
+      <Snackbar open={alertOpen} autoHideDuration={6000} onClose={(e, reason) => { if (reason !== 'clickaway') setAlertOpen(false) }}>
+        <Alert
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => {
+                setAlertOpen(false);
+              }}
+            >
+              <Close fontSize="inherit" />
+            </IconButton>
+          }
+          sx={{ mb: 2 }}
+          severity={alertLevel}
+          variant="filled"
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
       {doinkEnabled ? (
         <>
-          <Paper className="paperContent">
-          <h4>General Settings</h4>
-            <Grid container spacing={2}>
-              <Snackbar open={alertOpen}>
-                <Alert
-                  action={
-                    <IconButton
-                      aria-label="close"
-                      color="inherit"
-                      size="small"
-                      onClick={() => {
-                        setAlertOpen(false);
-                      }}
-                    >
-                      <Close fontSize="inherit" />
-                    </IconButton>
-                  }
-                  sx={{ mb: 2 }}
-                  severity={alertLevel}
-                  variant="filled"
-                >
-                  {alertMessage}
-                </Alert>
-              </Snackbar>
-              <Grid xs={12} md={6}>
-                <FormControl fullWidth sx={{ padding: 3}}>
-                  <TextField
-                    required
-                    margin="normal"
-                    id="outlined-required"
-                    label="Max Number of Doinks"
-                    defaultValue={maxDoink}
-                    onChange={(e) => setMaxDoink(e.target.value)}
-                    style={{ marginBottom: 15}}
-                  />
-                  <Button variant="contained" size="large" onClick={() => handleDoinkUpdate()} style={{marginBottom: 15}}>Update Doink Limit</Button>
-                </FormControl>
-              </Grid>
-              <Grid xs={12} md={6}>
-                <FormControl fullWidth sx={{ padding: 3}}>
-                  <TextField
-                    required
-                    margin="normal"
-                    id="outlined-required"
-                    label="League Expense Description"
-                    defaultValue={''}
-                    onChange={(e) => setDesc(e.target.value)}
-                    style={{ marginBottom: 15}}
-                  />
-                 <FormControl fullWidth>
+          <div className="manageGrid">
+            <section className="manageCard">
+              <h3>Doink Limit</h3>
+              <div className="manageForm">
+                <TextField
+                  required
+                  id="outlined-required"
+                  label="Max Number of Doinks"
+                  defaultValue={maxDoink}
+                  onChange={(e) => setMaxDoink(e.target.value)}
+                />
+                <Button variant="contained" onClick={() => handleDoinkUpdate()}>Update Doink Limit</Button>
+              </div>
+            </section>
+            <section className="manageCard">
+              <h3>Add League Expense</h3>
+              <div className="manageForm">
+                <TextField
+                  required
+                  id="expense-description"
+                  label="League Expense Description"
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                />
+                <FormControl fullWidth>
                   <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
                   <OutlinedInput
                     id="outlined-adornment-amount"
                     startAdornment={<InputAdornment position="start">$</InputAdornment>}
                     label="Amount"
+                    value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                   />
                 </FormControl>
-                  <Button variant="contained" size="large" onClick={() => handleLeagueExpense()} style={{marginBottom: 15, marginTop: 15}}>Add League Expense</Button>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </Paper>
-          <Paper className="paperContent" sx={{marginTop: 1}}>
-            <h4>Current Doinks</h4>
+                <Button variant="contained" onClick={() => handleLeagueExpense()}>Add League Expense</Button>
+              </div>
+            </section>
+          </div>
+          <section className="manageCard">
+            <h3>Current Doinks</h3>
             <TableContainer>
-              <Table sx={{width: "75%", marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>
+              <Table className="manageTable">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Player</TableCell>
-                    <TableCell>Doinks</TableCell>
+                    <TableCell align="center">Player</TableCell>
+                    <TableCell align="center">Doinks</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {doinkItems}
-                  <TableRow>
-                    <TableCell />
-                    <TableCell>
-                      <Button variant="contained" onClick={() => reportDoink()}>Update Doinks</Button>
-                    </TableCell>
-                  </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>
-          </Paper>
-          <Paper className="paperContent" sx={{marginTop: 1}}>
-            <h4>Current Expenses</h4>
+          </section>
+          <section className="manageCard">
+            <h3>Current Expenses</h3>
             <TableContainer>
-              <Table sx={{width: "75%", marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>
+              <Table className="manageTable">
                 <TableHead>
                   <TableRow>
                     <TableCell>Expense</TableCell>
@@ -327,16 +298,18 @@ export default function DoinkManager(props) {
                 </TableBody>
               </Table>
             </TableContainer>
-          </Paper>
-          <Paper className="paperContent" sx={{marginTop: 1}}>
-            <div className="resetDoinks" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
-              <div>Is the season over? Reset your doinkfund here. This action cannot be undone.</div>
-              <Button style={{marginTop: 10}} variant="contained" size="large" color="error" onClick={() => handleLeagueDoinkReset()}>Reset Doink Balance</Button>
+          </section>
+          <section className="manageCard dangerCard">
+            <div>
+              <h3>Reset Doink Fund</h3>
+              <p>Is the season over? Reset your doink fund here. This action cannot be undone.</p>
             </div>
-          </Paper>
+            <Button variant="outlined" color="error" onClick={() => handleLeagueDoinkReset()}>Reset Doink Balance</Button>
+          </section>
         </>
       ) : (
-        <>
+        <section className="manageCard">
+          <h3>Doink Fund</h3>
           <div className="aboutDoinks">
             <h4>Doink Fund Rules</h4>
             <p>In a disc golf game, if a player's throw hits a tree and goes backwards, landing behind the middle of the tree parallel to the tee box, it is considered a "doink". The throw must originate from a tee box or fairway, and the disc must hit the trunk or major limb of the tree, which is predominantly vertical in nature. It's important to note that if the disc hits the ground first and then hits a tree, it does not count as a doink. The sound of the disc hitting the tree is a crucial factor in determining whether it's a doink or not.</p>
@@ -347,7 +320,7 @@ export default function DoinkManager(props) {
             <p>Funds will go to the Couples BBQ first, then to a slush fund to pay for Pay-To-Play courses and potentially beer. Players will settle up their current balances before the Couples Tournament and before the end of the season.</p>
           </div>
           <Button variant="contained" size="large" onClick={() => enableDoinkFund(props.league)}>Enable Doink Fund</Button>
-        </>
+        </section>
       )}
       <Dialog
         open={dialogOpen}

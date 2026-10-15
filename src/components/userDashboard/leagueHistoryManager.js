@@ -1,9 +1,9 @@
 /* eslint-disable array-callback-return */
 import { useEffect, useState } from 'react';
-import { Alert, Snackbar, Button, FormControl, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions, OutlinedInput, InputLabel, FormHelperText, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Alert, Snackbar, Button, FormControl, TextField, Dialog, DialogTitle, DialogContent, DialogActions, OutlinedInput, InputLabel, FormHelperText, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { getLeagueStats } from '../../services/leagueStatsService';
 import { Close } from '@mui/icons-material'
-import { getScorecards, setLeagueHistory, getLeagueHistory, deleteLeagueHistory, getLeagueMembers } from  '../../firebase'
+import { getScorecards, setLeagueHistory, getLeagueHistory, updateLeagueHistory, deleteLeagueHistory, getLeagueMembers } from  '../../firebase'
 import './userDashboard.scss'
 
 export function LeagueHistoryManager(props) {
@@ -25,6 +25,11 @@ export function LeagueHistoryManager(props) {
   const [DNFDialog, setDNFDialog] = useState(false)
   const [DNFList, setDNFList] = useState([])
   const [memberList, setMemberList] = useState([])
+  const [editAwards, setEditAwards] = useState([])
+  const [editNotes, setEditNotes] = useState("")
+  const [editRounds, setEditRounds] = useState([])
+  const [editDNF, setEditDNF] = useState([])
+  const [editRoundOptions, setEditRoundOptions] = useState({})
 
   useEffect(() => { 
     const fetchData = async () => {
@@ -128,9 +133,46 @@ export function LeagueHistoryManager(props) {
     handleCloseDialog();
   }
 
-  const handleEdit = (season) => {
-    setEditSeason(history[season])
+  const refreshHistory = async () => {
+    setHistory(await getLeagueHistory(props.league))
+  }
+
+  const handleEdit = async (season) => {
+    const seasonHistory = history[season]
+    setEditSeason(seasonHistory)
+    setEditAwards((seasonHistory.awards || []).map(a => ({ award: a.award || "", recipient: a.recipient || "" })))
+    setEditNotes(seasonHistory.seasonNotes || "")
+    setEditRounds(seasonHistory.tournamentRounds || [])
+    setEditDNF(seasonHistory.DNFList || [])
+    // Tournament rounds come from that season's own scorecards, not the current season's
+    const seasonRounds = await getScorecards(props.league, season)
+    setEditRoundOptions(seasonRounds || {})
     setEditOpen(true)
+  }
+
+  const toggleInList = (list, setList, item) => {
+    setList(list.includes(item) ? list.filter(x => x !== item) : [...list, item])
+  }
+
+  const updateEditAward = (index, field, value) => {
+    setEditAwards(editAwards.map((a, i) => i === index ? { ...a, [field]: value } : a))
+  }
+
+  const handleSaveEdit = async () => {
+    // Stats are a snapshot taken when the season ended, so they are left alone
+    const res = await updateLeagueHistory(props.league, editSeason.season, {
+      awards: editAwards.filter(a => a.award.trim() !== "" || a.recipient.trim() !== ""),
+      seasonNotes: editNotes,
+      tournamentRounds: editRounds,
+      DNFList: editRounds.length > 0 ? editDNF : []
+    })
+    setAlertOpen(true)
+    setAlertLevel(res.code)
+    setAlertMessage(res.message)
+    if (res.code === "success") {
+      setEditOpen(false)
+      await refreshHistory()
+    }
   }
 
   const handleAddPlayerDNF = () => {
@@ -159,6 +201,7 @@ export function LeagueHistoryManager(props) {
         setAlertOpen(true)
         setAlertLevel(res.code)
         setAlertMessage(res.message)
+        refreshHistory()
       } else {
         alert("There was an error deleting the season stats. Please try again.")
       }
@@ -167,10 +210,10 @@ export function LeagueHistoryManager(props) {
 
   return (
     <div className="leagueHistoryManager">
-      <h3>Manage League History</h3>
-      This form generates a year end summary of the league. You can add awards, tournament rounds, and season notes. Once you are done, click the "Add Season End Stats" button to add the stats to the league history. This will display on the "About the League" page.
-      <Paper className="paperContent">
-          <h4>Add Season</h4>
+      <h3>League History</h3>
+      <p className="manageIntro">This form generates a year end summary of the league. You can add awards, tournament rounds, and season notes. Once you are done, click the "Add Season End Stats" button to add the stats to the league history. This will display on the "About the League" page.</p>
+      <section className="manageCard">
+          <h3>Add Season</h3>
           You can add custom League Awards here. <br />
           {awardHolder}
           <Button className="addButton" variant="outlined" onClick={() => setNumAwards(numAwards + 1)}>Add Award</Button>
@@ -217,39 +260,96 @@ export function LeagueHistoryManager(props) {
             )}
             <Button style={{marginTop: 15}} variant="contained" onClick={handleAddHistory}>Add Season End Stats</Button>
           </FormControl>
-      </Paper>
-      <Paper className="paperContent" style={{marginTop: 15}}>
-        <h4>Past Seasons</h4>
-        {history && (
-          Object.entries(history).map(([id, year], index) => {
-            return (
-              <div key={index}>
-                {year.season} 
-                <Button disabled style={{margin: 15}} variant="outlined" onClick={() => handleEdit(year.season)}>Edit</Button>
-                <Button color="error" variant="outlined" onClick={() => handleDelete(year.season)}>Delete</Button>
-              </div>
-            )
-          })
+      </section>
+      <section className="manageCard">
+        <h3>Past Seasons</h3>
+        {history && Object.keys(history).length > 0 ? (
+          <ul className="manageList">
+            {Object.entries(history).map(([id, year]) => (
+              <li key={id}>
+                <strong>{year.season}</strong>
+                <div className="manageActions">
+                  <Button variant="outlined" onClick={() => handleEdit(year.season)}>Edit</Button>
+                  <Button color="error" variant="outlined" onClick={() => handleDelete(year.season)}>Delete</Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <i>No past seasons yet</i>
         )}
-      </Paper>
-      <Dialog open={editOpen} onClose={handleCloseDialog}>
+      </section>
+      <Dialog open={editOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>Edit {editSeason?.season}</DialogTitle>
         <DialogContent>
-          <ul>
-            {editSeason && editSeason.tournamentRounds.map((round, index) => {
-              // console.warn('round', round)
-            })
-            }
-            {editSeason && editSeason.awards.map((award, index) => {
-              // console.warn('award', award)
-            })
-            }
-            {/* {editSeason.stats.map((stat, index) => {
-              console.warn('round', stat)
-            })
-            } */}
-          </ul>
+          <h4>Awards</h4>
+          {editAwards.map((award, index) => (
+            <div className="awardRow" key={index} style={{ marginBottom: 10 }}>
+              <TextField
+                label="Award"
+                value={award.award}
+                onChange={(e) => updateEditAward(index, "award", e.target.value)}
+              />
+              <TextField
+                label="Recipient"
+                value={award.recipient}
+                onChange={(e) => updateEditAward(index, "recipient", e.target.value)}
+              />
+              <IconButton aria-label="remove award" onClick={() => setEditAwards(editAwards.filter((_, i) => i !== index))}>
+                <Close />
+              </IconButton>
+            </div>
+          ))}
+          <Button variant="outlined" onClick={() => setEditAwards([...editAwards, { award: "", recipient: "" }])}>Add Award</Button>
+
+          <h4>Season Notes</h4>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Season Notes"
+            value={editNotes}
+            onChange={(e) => setEditNotes(e.target.value)}
+          />
+
+          <h4>Tournament Rounds</h4>
+          Click a round to add or remove it.
+          <div>
+            {Object.entries(editRoundOptions).map(([key, value]) => (
+              <div key={key}>
+                <Button
+                  style={{ marginBottom: 5 }}
+                  variant="contained"
+                  color={editRounds.includes(key) ? "success" : "primary"}
+                  onClick={() => toggleInList(editRounds, setEditRounds, key)}
+                >
+                  {value.Course} - {value.Date}
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {editRounds.length > 0 && (
+            <>
+              <h4>Tournament DNFs</h4>
+              {Object.entries(memberList).map(([id, member]) => (
+                <Button
+                  key={id}
+                  style={{ margin: 3 }}
+                  variant="contained"
+                  color={editDNF.includes(member.uDiscDisplayName) ? "warning" : "primary"}
+                  onClick={() => toggleInList(editDNF, setEditDNF, member.uDiscDisplayName)}
+                >
+                  {member.uDiscDisplayName}
+                </Button>
+              ))}
+            </>
+          )}
         </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" color="error" onClick={handleCloseDialog}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveEdit}>Save</Button>
+        </DialogActions>
       </Dialog>
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Add a Tournament Round</DialogTitle>
@@ -267,7 +367,6 @@ export function LeagueHistoryManager(props) {
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" color="error" onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" color="info" onClick={() => console.log('update')}>Update</Button>
         </DialogActions>
       </Dialog>
       <Dialog open={DNFDialog} onClose={handleCloseDialog}>

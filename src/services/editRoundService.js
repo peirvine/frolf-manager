@@ -2,122 +2,97 @@ import { getScorecards, setSpecificScorecard, deleteSpecificScorecard } from "..
 import { resetCurrentSeason } from "./leagueService"
 import { calculateElo } from "./eloService"
 
-export const editRound = async (league, season, scorecardId, updatedRound, preseason, roundToEdit) => {
-  let editRes = { code: "error", message: "Error editing round"}
-  updateCardTotals(roundToEdit, updatedRound);
+// Editing or deleting a round changes every later round's Elo (each card builds on the state left by the
+// previous one), so we reset the season's derived data and replay every remaining card in order.
+// Pattern: update the scorecard, rebuild, report. If the rebuild fails the card change is already saved,
+// and running any edit/delete again will redo the whole rebuild.
+export const editRound = async (league, season, scorecardId, updatedRound, roundToEdit) => {
+  const round = JSON.parse(JSON.stringify(roundToEdit.round))
+  const updateRes = updateCardTotals(round, updatedRound)
+  if (updateRes.code === "error") return updateRes
 
-  if (preseason) {
-    editRes = await setSpecificScorecard(league, season, scorecardId, roundToEdit.round)
-  } else {
-    editRes = await setSpecificScorecard(league, season, scorecardId, roundToEdit.round)
-    if (editRes.code === "error") return editRes
+  const editRes = await setSpecificScorecard(league, season, scorecardId, round)
+  if (editRes.code === "error") return editRes
 
-    const scorecards = await getScorecards(league, season)
-    if (scorecards === null) return { code: "error", message: "Error getting scorecards" }
+  if (round.isOffSeason) return { code: "success", message: "Round Edited Successfully" }
 
-    editRes = await resetCurrentSeason(league, season)
-    if (editRes.code === "error") return editRes
-    Object.entries(scorecards)
-      .sort(([, a], [, b]) => Date.parse(a.dateAdded) - Date.parse(b.dateAdded))
-      .map(async ([key, value]) => {
-        const formattedCard = formatCard(value.rawUDiscCard)
-        if (formattedCard.code === "error") return { code: "error", message: "Error formatting scorecards" }
-        if (!value.isOffSeason) {
-          const res = await calculateElo(formattedCard, season, league)
-          if (res.code === "error") return { code: "error", message: "Error calculating elo" }
-        }
-      });
-    editRes = { code: "success", message: "Round Edited Successfully"}
+  const rebuildRes = await rebuildSeason(league, season)
+  if (rebuildRes.code === "error") {
+    return { code: "error", message: "Round saved, but rankings could not be recalculated: " + rebuildRes.message }
   }
-
-  return editRes
+  return { code: "success", message: "Round Edited Successfully" }
 }
 
-export const deleteRound = async (league, season, scorecardId, preseason) => {
-  let delRes = { code: "success", message: "Round Deleted Successfully"}
-  if (preseason) {
-    delRes = await deleteSpecificScorecard(league, season, scorecardId)
-  } else {
-    delRes = await deleteSpecificScorecard(league, season, scorecardId)
-    if (delRes.code === "error") return delRes
+export const deleteRound = async (league, season, scorecardId, round) => {
+  const delRes = await deleteSpecificScorecard(league, season, scorecardId)
+  if (delRes.code === "error") return delRes
 
-    const scorecards = await getScorecards(league, season)
-    if (delRes.code === "error") return delRes
+  if (round?.isOffSeason) return { code: "success", message: "Round Deleted Successfully" }
 
-    delRes = await resetCurrentSeason(league, season)
-    if (delRes.code === "error") return delRes
-
-    Object.entries(scorecards)
-      .sort(([, a], [, b]) => new Date(a.date) - new Date(b.date))
-      .map(async ([key, value]) => {
-        const formattedCard = formatCard(value.rawUDiscCard)
-        if (formattedCard.code === "error") return { code: "error", message: "Error formatting scorecards" }
-        if (!value.isOffSeason) {
-          const res = await calculateElo(formattedCard, season, league)
-          if (res.code === "error") return { code: "error", message: "Error calculating elo" }
-        }
-      });
-    delRes = { code: "success", message: "Round Deleted Successfully"}
+  const rebuildRes = await rebuildSeason(league, season)
+  if (rebuildRes.code === "error") {
+    return { code: "error", message: "Round deleted, but rankings could not be recalculated: " + rebuildRes.message }
   }
-
-  return delRes
+  return { code: "success", message: "Round Deleted Successfully" }
 }
 
-const updateCardTotals = (oldCard, updatedTotals) => {
-  oldCard.round.Players.map(player => {
-    const vals = Object.values(updatedTotals);
-    const playerValue = vals.find(val => val.key === player.player);
-    player.total = playerValue.data;
-    return player;
-  });
-}
+// Clears all Elo data for the season and replays every in-season scorecard, one at a time.
+export const rebuildSeason = async (league, season) => {
+  const scorecards = await getScorecards(league, season)
+  if (!scorecards) return { code: "error", message: "Error getting scorecards" }
 
-const formatCard = (card) => {
-  let returnValue = {}
-  let playerArray = []
+  const resetRes = await resetCurrentSeason(league, season)
+  if (resetRes.code === "error") return resetRes
 
-  try {
-    // eslint-disable-next-line no-unused-vars
-    const init = card.replace(/,\d\s[A-Z]/g, (match, offset) => match.replace(" ", "remove"))
-    const remove = init.split('remove')
-    const parRow = remove[0].split(/(Par),/)
-    const res = remove.slice(1)
-    
-    
-    const parData = parRow[2].split(',')
-    playerArray.push({
-      player: "Par",
-      total: parData[4],
-      plusMinus: '',
-      rating: '',
-      holes: parData.slice(7)
-    })
-  
-    
-    // eslint-disable-next-line array-callback-return
-    res.map(x => {
-      const y = x.split(',')
-      playerArray.push({
-        player: y[0],
-        total: y[5],
-        plusMinus: y[6],
-        rating: y[7],
-        holes: y.slice(8),
-      })
-    })
-    
-    returnValue = {
-      course: parData[0].replace(/[.#$[\]]/g, ''),
-      layout: parData[1].replace(/[.#$[\]]/g, ''),
-      par: parData[4],
-      date: parData[2],
-      playerArray,
-      rawUDiscCard: card,
-      isOffSeason: card.isOffSeason
-    }
-  } catch (err) {
-    return {code: "error", message: "Error, card input not valid." }
+  const ordered = Object.entries(scorecards)
+    .filter(([, card]) => !card.isOffSeason)
+    .sort(compareCards)
+
+  // Must be sequential: each card reads the Elo state written by the one before it.
+  for (const [key, card] of ordered) {
+    const res = await calculateElo(cardFromStored(card), season, league)
+    if (!res) return { code: "error", message: `Error calculating Elo for ${card.Course} (${key})` }
   }
 
-  return returnValue
+  return { code: "success", message: "Season recalculated" }
+}
+
+// Round date first, then the time it was submitted, then key so the order is always deterministic.
+const compareCards = ([keyA, a], [keyB, b]) => {
+  const byDate = timeOf(a.Date) - timeOf(b.Date)
+  if (byDate !== 0) return byDate
+  const byAdded = timeOf(a.dateAdded) - timeOf(b.dateAdded)
+  if (byAdded !== 0) return byAdded
+  return keyA < keyB ? -1 : keyA > keyB ? 1 : 0
+}
+
+const timeOf = (value) => {
+  const parsed = Date.parse(value)
+  return Number.isNaN(parsed) ? 0 : parsed
+}
+
+// Builds the input calculateElo expects from a stored scorecard. Uses the stored Players (which hold any
+// edits) rather than rawUDiscCard, which is only the original pasted export.
+const cardFromStored = (card) => {
+  return {
+    course: card.Course,
+    layout: card.Layout,
+    par: card.Par,
+    date: card.Date,
+    playerArray: JSON.parse(JSON.stringify(card.Players)),
+    isOffSeason: card.isOffSeason
+  }
+}
+
+const updateCardTotals = (card, updatedTotals) => {
+  const par = Number(card.Par)
+  for (const { key, data } of Object.values(updatedTotals)) {
+    const player = card.Players.find(p => p.player === key)
+    if (!player || player.player === "Par") return { code: "error", message: `Unknown player ${key}` }
+    const total = Number(data)
+    if (data === "" || Number.isNaN(total)) return { code: "error", message: `Invalid score for ${key}` }
+    player.total = String(total)
+    if (!Number.isNaN(par)) player.plusMinus = String(total - par)
+  }
+  return { code: "success" }
 }

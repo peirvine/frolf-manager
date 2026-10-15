@@ -94,6 +94,7 @@ export default function LeagueSettingsManager(props) {
   }
 
   const handleNewSeason = (id) => {
+    if (!window.confirm("Start a new season? Rankings start over for everyone.")) return
     startNewSeason(id).then(res => {
       setAlertOpen(true)
       setAlertMessage(res.message)
@@ -103,76 +104,78 @@ export default function LeagueSettingsManager(props) {
 
   return (
     <div className="leagueSettingsManager">
-      <h3>Manage League Settings</h3>
-      <Paper className="paperContent">
-        <Grid container spacing={2}>
-          <Snackbar open={alertOpen}>
-            <Alert
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    setAlertOpen(false);
-                  }}
-                >
-                  <Close fontSize="inherit" />
-                </IconButton>
-              }
-              sx={{ mb: 2 }}
-              severity={alertLevel}
-              variant="filled"
+      <Snackbar open={alertOpen} autoHideDuration={6000} onClose={(e, reason) => { if (reason !== 'clickaway') setAlertOpen(false) }}>
+        <Alert
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => {
+                setAlertOpen(false);
+              }}
             >
-              {alertMessage}
-            </Alert>
-          </Snackbar>
-          <Grid md={6}>
-            <FormControl fullWidth sx={{ padding: 2}}>
-              <TextField
-                required
-                id="outlined-required"
-                label="League Name"
-                fullWidth 
-                defaultValue={name}
-                onChange={(e) => setName(e.target.value)}
-                style={{ marginBottom: 15}}
-              />
-              <p htmlFor="league-blurb">League Blurb</p>
-              <TextField
-                multiline
-                required
-                rows={5}
-                id="league-blurb"
-                defaultValue={blurb}
-                value={blurb}
-                onChange={(e) => setBlurb(e.target.value)}
-              />
-              <FormControlLabel control={<Switch checked={checked} onChange={(event) => setChecked(event.target.checked)}/>} label="Accepting New Players" />
-              <FormControlLabel control={<Switch checked={checked2} onChange={(event) => setChecked2(event.target.checked)}/>} label="Off-Season?" />
-              <i>This will add rounds and count them towards stats, but won't add them to elo</i>
-              <Button variant="contained" onClick={() => updateLeagueData()}>Save</Button>
-            </FormControl>
-          </Grid>
-          <Grid md={6} sx={{ padding: 2}}>
-            <LeagueStats league={id} />
-          </Grid>
-        </Grid>
-      </Paper>
-      <Paper className="paperContent" sx={{marginTop: 1}}>
-        <div className="leagueRules" style={{ padding: 15}}>
-          <ManageLeagueRules league={id} />
+              <Close fontSize="inherit" />
+            </IconButton>
+          }
+          sx={{ mb: 2 }}
+          severity={alertLevel}
+          variant="filled"
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
+
+      <div className="manageGrid">
+        <section className="manageCard">
+          <h3>League Settings</h3>
+          <div className="manageForm">
+            <TextField
+              required
+              id="outlined-required"
+              label="League Name"
+              fullWidth
+              defaultValue={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <TextField
+              multiline
+              required
+              fullWidth
+              rows={5}
+              id="league-blurb"
+              label="League Blurb"
+              value={blurb || ""}
+              onChange={(e) => setBlurb(e.target.value)}
+            />
+            <div className="manageSwitches">
+              <FormControlLabel control={<Switch checked={Boolean(checked)} onChange={(event) => setChecked(event.target.checked)}/>} label="Accepting New Players" />
+              <FormControlLabel control={<Switch checked={Boolean(checked2)} onChange={(event) => setChecked2(event.target.checked)}/>} label="Off-Season?" />
+              <small>Off-season rounds are added and count towards stats, but don't affect Elo.</small>
+            </div>
+            <Button variant="contained" onClick={() => updateLeagueData()}>Save</Button>
+          </div>
+        </section>
+
+        <section className="manageCard">
+          <LeagueStats league={id} />
+        </section>
+      </div>
+
+      <section className="manageCard">
+        <ManageLeagueRules league={id} />
+      </section>
+
+      <section className="manageCard dangerCard">
+        <div>
+          <h3>Danger Zone</h3>
+          <p>Starting a new season resets everyone's rankings. Deleting the league can't be undone.</p>
         </div>
-      </Paper>
-      <Paper className="paperContent" sx={{marginTop: 1}}>
-        <div className="dangerZone" style={{ width: "75%", margin: "auto", textAlign: "center", padding: 15}}>
-          <FormControl>
-            <h4>Danger Zone</h4>
-            <Button variant='contained' onClick={() => handleNewSeason(id)} style={{ marginBottom: 15 }}>Start a new Season</Button>
-            <Button variant="contained" size="small" color="error" onClick={() => handleDeleteLeague()}>Delete League</Button>
-          </FormControl>
+        <div className="dangerActions">
+          <Button variant="contained" onClick={() => handleNewSeason(id)}>Start a new Season</Button>
+          <Button variant="outlined" color="error" onClick={() => handleDeleteLeague()}>Delete League</Button>
         </div>
-      </Paper>
+      </section>
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}

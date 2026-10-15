@@ -6,29 +6,47 @@ import { weighting, pointPerThrowRef } from "./eloConstants";
 export const calculateElo = async (card, season, league, simulation = false) => {
   const previousElo = await getCurrentElo(league, season)
   const parLocation = card.playerArray.map((e) => { return e.player; }).indexOf("Par")
-  const playerArray = card.playerArray
+  // Copy so callers (e.g. a season rebuild) don't have their data mutated
+  const playerArray = [...card.playerArray]
   parLocation === 0 ? playerArray.shift() : playerArray.splice(0, parLocation)
   const playersInLeague = await getPlayers(league)
   const cardAverage = getCardAverage(playerArray, playersInLeague)
   const strokesPerHole = getStrokesPerHole(playerArray, cardAverage)
-  let averageEloOfPlayers = await getAverageEloOFPlayers(card.playerArray, season, playersInLeague, league, previousElo)
+  let averageEloOfPlayers = await getAverageEloOFPlayers(playerArray, season, playersInLeague, league, previousElo)
 
   const pointsPerThrow = calculatePointsPerThrow(strokesPerHole)
   const cardElo = await calculateCardElo(playerArray, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers)
 
+  // Never write NaN to the database (Firebase throws on it); surface the inputs instead
+  if (![cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, ...Object.values(cardElo)].every(Number.isFinite)) {
+    console.error("Elo calculation produced an invalid value", {
+      course: card.course, date: card.date, cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, cardElo,
+      players: playerArray.map(p => ({ player: p.player, total: p.total, holes: p.holes?.length }))
+    })
+    return false
+  }
+
   // Adds the most recent ELO to the players history
-  if (!simulation) await updateEloHistory(cardElo, season, league)
+  if (!simulation) {
+    if (!(await updateEloHistory(cardElo, season, league))) return false
+  }
 
   const prettyElo = makeEloPretty(card.course, card.layout, cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, cardElo)
-  if (!simulation) await writeEloTracking(league, prettyElo, season)
+  if (!simulation) {
+    const trackingRes = await writeEloTracking(league, prettyElo, season)
+    if (trackingRes.code === "error") return false
+  }
 
 // updates current elo of player
   const currentElo = await updateCurrentElos(league, season, simulation)
+  if (!currentElo) return false
 
   const delta = await calculateDelta(league, season, previousElo, currentElo, simulation)
+  if (!delta) return false
 
-  await graphData(league, season, card.course, card.date, previousElo, currentElo, simulation)
-  
+  const graphRes = await graphData(league, season, card.course, card.date, previousElo, currentElo, simulation)
+  if (!graphRes) return false
+
   if (simulation) {
     return {prettyElo, delta, currentElo}
   } else {
@@ -83,21 +101,23 @@ const getPlayerEloHistory = async (player, season, league) => {
 const updateEloHistory = async (cards, season, league) => {
   for (const person in cards) {
     const res = await getPlayerEloHistory(person, season, league)
+    let apiObj
     if (res === 'null') {
-      const apiObj = {
+      apiObj = {
         player: person,
         elo: [cards[person], 1000]
       }
-      addEloToPlayerV2(league, apiObj, season)
     } else {
       res.unshift(cards[person])
-      const apiObj = {
+      apiObj = {
         player: person,
         elo: res
       }
-      addEloToPlayerV2(league, apiObj, season)
     }
+    const writeRes = await addEloToPlayerV2(league, apiObj, season)
+    if (writeRes.code === "error") return false
   }
+  return true
 }
 
 const getAverageEloOFPlayers = async (players, season, playersInLeague, league, currentElo) => {
@@ -174,7 +194,10 @@ const updateCurrentElos = async (league, season, simulation = false) => {
       elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
     }
   }
-  if (!simulation) updateCurrentEloV2(league, season, elos)
+  if (!simulation) {
+    const writeRes = await updateCurrentEloV2(league, season, elos)
+    if (writeRes.code === "error") return false
+  }
   return elos
 }
 
@@ -190,7 +213,7 @@ const weightedAverage = (nums, weights) => {
   return sum / weightSum;
 };
 
-const calculateDelta = (league, season, previous, updated, simulation = false) => {
+const calculateDelta = async (league, season, previous, updated, simulation = false) => {
   let deltaObject = {}
   for (const player in previous) {
     if (updated[player] === undefined) {
@@ -199,15 +222,22 @@ const calculateDelta = (league, season, previous, updated, simulation = false) =
       deltaObject[player] = updated[player] - previous[player]
     }
   }
-  if (!simulation) setDeltaV2(league, season, deltaObject)
+  if (!simulation) {
+    const writeRes = await setDeltaV2(league, season, deltaObject)
+    if (writeRes.code === "error") return false
+  }
   return deltaObject
 }
 
-const graphData = (league, season, course, date, previous, elos, simulation = false) => {
+const graphData = async (league, season, course, date, previous, elos, simulation = false) => {
   let holderElo = previous
   for (let player in elos) {
     holderElo[player] = elos[player]
   }
 
-  if (!simulation) setEloGraphDataV2(league, season, {course, date, holderElo})
+  if (!simulation) {
+    const writeRes = await setEloGraphDataV2(league, season, {course, date, holderElo})
+    if (writeRes.code === "error") return false
+  }
+  return true
 }

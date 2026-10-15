@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
 import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2, getAllUsers } from '../../firebase'
-import { Table, TableRow, TableBody, TableHead, TableContainer, TableCell, Skeleton, Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, Paper } from '@mui/material'
+import { Skeleton, Button, Chip, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
 
 export default function LeaguePlayersManager(props) {
   const { league } = props
@@ -109,110 +109,78 @@ export default function LeaguePlayersManager(props) {
   const handleMakeActions = player => {
     let availableActions = []
     if (player.membershipStatus === "Pending") {
-      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "approve")}>Approve Membership</Button>)
-      availableActions.push(<Button variant="contained" size="small" color="error" onClick={() => handlePlayer(player, "deny")}>Deny Membership</Button>)
+      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "approve")}>Approve Membership</Button>)
+      availableActions.push(<Button key={availableActions.length} variant="contained" size="small" color="error" onClick={() => handlePlayer(player, "deny")}>Deny Membership</Button>)
     }
 
     if (player.membershipStatus === "Member") {
-      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="info" disabled>Edit User</Button>)
-      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "promote")}>Promote to Admin</Button>)
-      availableActions.push(<Button variant="contained" color="error" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
+      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="info" disabled>Edit User</Button>)
+      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "promote")}>Promote to Admin</Button>)
+      availableActions.push(<Button key={availableActions.length} variant="contained" color="error" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
     }
 
     if (player.membershipStatus === "Admin") {
-      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="error" onClick={() => handlePlayer(player, "demote")}>Remove as Admin</Button>)
-      availableActions.push(<Button variant="contained" color="error" size="small" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
+      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="error" onClick={() => handlePlayer(player, "demote")}>Remove as Admin</Button>)
+      availableActions.push(<Button key={availableActions.length} variant="contained" color="error" size="small" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
     }
 
     if (player.membershipStatus === "Banned from the League") {
-      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "unban")}>Lift Ban</Button>)
+      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "unban")}>Lift Ban</Button>)
     }
 
     if (player.membershipStatus === undefined) {
-      availableActions.push(<Button style={{ marginRight: 15, marginBottom: 5 }} size="small" variant="contained" color="success" onClick={() => handleAddPlayer(player)}>Add Player</Button>)
+      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="success" onClick={() => handleAddPlayer(player)}>Add Player</Button>)
     }
 
     return availableActions
   }
 
+  const statusColor = (status) => {
+    if (status === "Admin") return "success"
+    if (status === "Pending") return "warning"
+    if (status && status.includes("Banned")) return "error"
+    return "default"
+  }
+
   return (
     <div className="playerManager">
-      <h3>Manage League Players</h3>
-      <Paper sx={{padding: 1}}>
-        <TableContainer size="small" className="rankingsTable">
-          <Table aria-label="player table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Player</TableCell>
-                <TableCell>Member Status</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {members.length !== 0 ? (
-                members.map(player => {
-                  let actions = handleMakeActions(player)
-                  return (
-                    <TableRow>
-                      <TableCell>{player.name}</TableCell>
-                      <TableCell>{player.membershipStatus}</TableCell>
-                      <TableCell>{actions}</TableCell>
-                    </TableRow>
-                  )
-                })
-              ) : (
-                <>
-                  <TableRow>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                    <TableCell><Skeleton variant="rounded" animation="wave" height={30} className="individualSkeletor" /></TableCell>
-                  </TableRow>
-                </>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-      <Paper sx={{ padding: 1, marginTop: 2 }}>
+      <section className="manageCard">
+        <h3>League Players</h3>
+        {members.length !== 0 ? (
+          <ul className="manageList">
+            {members.map(player => (
+              <li key={player.id}>
+                <div className="manageListMain">
+                  <strong>{player.name}</strong>
+                  <Chip size="small" label={player.membershipStatus} color={statusColor(player.membershipStatus)} variant={player.membershipStatus === "Member" ? "outlined" : "filled"} />
+                </div>
+                <div className="manageActions">{handleMakeActions(player)}</div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <>
+            <Skeleton variant="rounded" animation="wave" height={40} style={{ marginBottom: 8 }} />
+            <Skeleton variant="rounded" animation="wave" height={40} style={{ marginBottom: 8 }} />
+            <Skeleton variant="rounded" animation="wave" height={40} />
+          </>
+        )}
+      </section>
+      <section className="manageCard">
         <h3>Invite Players</h3>
-        <TableContainer size="small" className="rankingsTable">
-          <Table aria-label="player table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Player</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {usersNotInLeague.length !== 0 ? (
-                usersNotInLeague.map(player => {
-                  let actions = handleMakeActions(player)
-                  return (
-                    <TableRow>
-                      <TableCell>{player.name}</TableCell>
-                      <TableCell>{actions}</TableCell>
-                    </TableRow>
-                  )
-                })
-              ) : (
-                <TableRow>
-                  <i>No Members to Add</i>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+        {usersNotInLeague.length !== 0 ? (
+          <ul className="manageList">
+            {usersNotInLeague.map(player => (
+              <li key={player.uid}>
+                <div className="manageListMain"><strong>{player.name}</strong></div>
+                <div className="manageActions">{handleMakeActions(player)}</div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <i>No Members to Add</i>
+        )}
+      </section>
       {rerender}
       <Dialog
         open={dialogOpen}

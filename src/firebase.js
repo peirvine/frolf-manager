@@ -203,7 +203,7 @@ export function writeEloTracking(league, elo, season) {
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   const date = Date(Date.now()).toString();
-  set(ref(db, league + '/eloTracking/' + season + '/' + elo.course + ' ' + elo.layout + ' ' + date + ' ' + id), {
+  return set(ref(db, league + '/eloTracking/' + season + '/' + elo.course + ' ' + elo.layout + ' ' + date + ' ' + id), {
     Course: elo.course,
     Layout: elo.layout,
     Players: elo.players,
@@ -215,10 +215,11 @@ export function writeEloTracking(league, elo, season) {
     dateAdded: date
   })
   .then(() => {
-    // console.warn('success')
+    return {code: "success", message: ""}
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
+    return {code: "error", message: "Could not write Elo tracking"}
   });
 }
 
@@ -258,12 +259,13 @@ export function addEloToPlayer(league, elo) {
 
 export function addEloToPlayerV2(league, elo, season) {
   const db = getDatabase();
-  set(ref(db, league + '/playerEloHistory/' + season + '/' + elo.player), elo.elo)
+  return set(ref(db, league + '/playerEloHistory/' + season + '/' + elo.player), elo.elo)
   .then(() => {
-    // console.warn('success')
+    return {code: "success", message: ""}
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
+    return {code: "error", message: "Could not update player Elo history"}
   });
 }
 
@@ -804,6 +806,10 @@ export function updateDoinkBalanceV2 (league, player) {
     return {code: "error", message: "Doinkfund expense was not removed"}
   });
   return res
+}
+
+export function logDoinkEvent (params) {
+  logEvent(analytics, 'doink_updated', params)
 }
 
 export function updateDoinkBalanceV3 (league, player, newBalance) {

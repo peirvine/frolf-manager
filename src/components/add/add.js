@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import Papa from "papaparse"
-import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
+import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Backdrop, CircularProgress, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
 import { auth, signInWithGoogle, getUserDataV2, getLeagueNames, getLeagueSettings } from "../../firebase"
@@ -21,6 +21,7 @@ export default function Add() {
   const [league, setLeague] = useState(null)
   const [settings, setSettings] = useState([])
   const [addDisabled, setAddDisabled] = useState(false)
+  const [busy, setBusy] = useState(false)
 
 
   useEffect(() => { 
@@ -53,12 +54,15 @@ export default function Add() {
       setAlertMessage('Please select a league, if none are available your membership is pending')
       return
     }
-    const dumpResult = uDiscDump(udisc, league)
-    dumpResult.then(res => {
+    setBusy(true)
+    uDiscDump(udisc, league).then(res => {
       setUdisc('')
       setVariant(res.code)
       setAlertMessage(res.message)
-    })
+    }).catch(() => {
+      setVariant('error')
+      setAlertMessage('Something went wrong adding the scorecard. Please try again.')
+    }).finally(() => setBusy(false))
   }
 
   const getSettings = async (league) => {
@@ -87,6 +91,13 @@ export default function Add() {
 
   return (
     <div className="addScorecard">
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.modal + 1, flexDirection: 'column', gap: 2 }}
+        open={busy}
+      >
+        <CircularProgress color="inherit" />
+        <p>Adding scorecard and recalculating rankings… please don't close this page.</p>
+      </Backdrop>
       <h1>Add a Scorecard</h1>
       {user ? (
         <>

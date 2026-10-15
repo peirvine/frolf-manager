@@ -1,25 +1,23 @@
-import { TableContainer, Table, TableBody, TableCell, TableRow} from '@mui/material';
+import './leagueHistory.scss'
+
+const round1 = (value) => Math.round(value * 10) / 10
 
 export default function FinalRankings(rankings) {
-  const sortedRankings = Object.entries(rankings.currentElo).sort((a, b) => b[1] - a[1]);
+  const sortedRankings = Object.entries(rankings.currentElo || {}).sort((a, b) => b[1] - a[1])
+  if (sortedRankings.length === 0) return null
 
   return (
-    <div>
+    <div className="historyCard finalRankings">
       <h3>Final Rankings</h3>
-      <TableContainer>
-        <Table>
-          <TableBody>
-            {sortedRankings.map(([key, value]) => {
-              return (
-                <TableRow key={key}>
-                  <TableCell>{key}</TableCell>
-                  <TableCell>{Math.round(value * 10) / 10}</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <ol>
+        {sortedRankings.map(([name, elo], index) => (
+          <li key={name}>
+            <span className={`rankBadge rank${index + 1}`}>{index + 1}</span>
+            <span className="rankName">{name}</span>
+            <span className="rankElo">{round1(elo)}</span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
