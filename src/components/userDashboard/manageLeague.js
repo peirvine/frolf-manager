@@ -1,11 +1,12 @@
 // eslint-disable-next-line no-unused-vars
 import {useState} from 'react'
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import DoinkManager from './doinkManager';
 import RoundManager from './roundManager';
 import LeaguePlayersManager from './leaguePlayersManager'
 import LeagueSettingsManager from './leagueSettingsManager'
 import { Tabs, Tab, Box, Typography } from '@mui/material'
+import './userDashboard.scss'
 import { LeagueHistoryManager } from './leagueHistoryManager';
 import ChooseTournamentHost from './chooseTournamentHost';
 
@@ -45,12 +46,16 @@ export default function ManageLeague() {
     setValue(newValue);
   };
 
+  // Opened directly (e.g. a refresh) there's no league to manage
+  if (!state) return <Navigate to="/dashboard" />
+
   return (
     <div className="manage">
-      <h2>Manage {state.leagueName}</h2>
+      <Link to={`/dashboard`} className="manageBack">← Back to dashboard</Link>
+      <h1>Manage {state.leagueName}</h1>
       <Box sx={{ width: '100%' }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" variant="scrollable" allowScrollButtonsMobile>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: 2 }}>
+          <Tabs value={value} onChange={handleChange} aria-label="league management sections" variant="scrollable" allowScrollButtonsMobile>
             <Tab label="league info" {...a11yProps(0)} />
             <Tab label="history" {...a11yProps(1)} />
             <Tab label="players" {...a11yProps(2)} />
@@ -78,7 +83,6 @@ export default function ManageLeague() {
           <ChooseTournamentHost league={state.leagueId} />
         </CustomTabPanel>
       </Box>
-      <Link to={`/dashboard`}>Back</Link>
     </div>
   )
 }

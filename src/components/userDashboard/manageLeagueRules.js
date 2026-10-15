@@ -58,7 +58,7 @@ export default function ManageLeagueRules ( props ) {
 
   return (
     <div>
-      <h2>Manage League Rules</h2>
+      <h3>League Rules</h3>
       <FormControl fullWidth>
         <TextField
           required

@@ -1,4 +1,5 @@
 import { getLeagueSettings, getScorecards, getELOHistory } from '../firebase';
+import { isOffSeasonCard, normalizeCourse, getCardStrokesPerHole } from './statsUtils';
 
 export const getPlayerStats = async (user, league) => {
   const leagueSettings = await getLeagueSettings(league)
@@ -16,10 +17,13 @@ export const getPlayerStats = async (user, league) => {
     numberOfRounds = getNumberOfRounds(userName, scorecards);
   }
 
+  // Off-season rounds have no Elo record, so their difficulty comes from the scorecard
   const courseStats = await getELOHistory(league, currentSeason)
-    if (courseStats !== undefined){
-      hardestCourse = getHardestCourse(userName, courseStats)
-    }
+  const offSeasonRounds = Object.values(scorecards || {})
+    .filter(card => isOffSeasonCard(card) && (card.Players || []).some(player => player.player === userName))
+    .map(card => ({ Course: card.Course, strokesPerHole: getCardStrokesPerHole(card), Players: { [userName]: true } }))
+    .filter(round => round.strokesPerHole !== null)
+  hardestCourse = getHardestCourse(userName, Object.values(courseStats || {}).concat(offSeasonRounds))
     
   const stats = { season: currentSeason, numberOfRounds, mostPlayedCourse, hardestCourse }
   return stats
@@ -47,7 +51,7 @@ const getCoursePlayedCount = (user, scorecards) => {
 
   // eslint-disable-next-line no-unused-vars
   for (const [key, value] of Object.entries(scorecards)) {
-    const course = value.Course;
+    const course = normalizeCourse(value.Course);
 
     if (value.Players.some(player => player.player === user)) {
       if (courseCount[course]) {
@@ -66,10 +70,8 @@ const getNumberOfRounds = (user, scorecards) => {
 
   // eslint-disable-next-line no-unused-vars
   for (const [key, value] of Object.entries(scorecards)) {
-    if (value.Course && !value.Course.includes("(Off-Season)")) {
-      if (value.Players.some(player => player.player === user)) {
-        numberOfRounds++;
-      }
+    if (value.Players.some(player => player.player === user)) {
+      numberOfRounds++;
     }
   }
 
@@ -81,9 +83,8 @@ const getHardestCourse = (user, scorecards) => {
   let highestStrokesPerHole = 0;
   let hardestCourses = [];
 
-  // eslint-disable-next-line no-unused-vars
-  for (const [key, value] of Object.entries(scorecards)) {
-    const course = value.Course;
+  for (const value of scorecards) {
+    const course = normalizeCourse(value.Course);
     const strokesPerHole = value.strokesPerHole;
     
     if (Object.keys(value.Players).includes(user)) {

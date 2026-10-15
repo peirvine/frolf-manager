@@ -1,5 +1,5 @@
 import {useState, useEffect, useCallback} from 'react'
-import { Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, Dialog, DialogActions,DialogTitle, DialogContent, DialogContentText, TextField, Snackbar, Alert, Backdrop, CircularProgress } from '@mui/material'
+import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, Dialog, DialogActions,DialogTitle, DialogContent, DialogContentText, TextField, Snackbar, Alert, Backdrop, CircularProgress } from '@mui/material'
 import { getScorecards, getLeagueSettings } from '../../firebase'
 import { editRound, deleteRound } from '../../services/editRoundService'
 
@@ -59,7 +59,9 @@ export default function RoundManager(props) {
 
   return (
     <div className="roundManager">
-      <h3>Edit Rounds</h3>
+      <section className="manageCard">
+      <h3>Rounds</h3>
+      <p className="manageIntro">Edit a player's score or delete a round. Season rankings are recalculated afterwards.</p>
       <Snackbar open={alertOpen} autoHideDuration={6000} onClose={(e, reason) => { if (reason !== 'clickaway') setAlertOpen(false) }}>
         <Alert severity={alertSeverity} onClose={() => setAlertOpen(false)}>
           {alertMessage}
@@ -72,9 +74,8 @@ export default function RoundManager(props) {
         <CircularProgress color="inherit" />
         <p>Recalculating rankings… please don't close this page.</p>
       </Backdrop>
-      <Paper sx={{padding: 3}}>
         <TableContainer>
-          <Table>
+          <Table className="manageTable">
             <TableHead>
               <TableRow>
                 <TableCell sx={{ width: 25 }}>Course</TableCell>
@@ -98,7 +99,7 @@ export default function RoundManager(props) {
             </TableBody>
           </Table>
         </TableContainer>
-      </Paper>
+      </section>
       <Dialog open={roundToDelete !== null} onClose={() => setRoundToDelete(null)}>
         <DialogTitle>Delete Round</DialogTitle>
         <DialogContent>

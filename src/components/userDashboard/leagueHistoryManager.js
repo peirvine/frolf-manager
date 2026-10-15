@@ -1,6 +1,6 @@
 /* eslint-disable array-callback-return */
 import { useEffect, useState } from 'react';
-import { Alert, Snackbar, Button, FormControl, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions, OutlinedInput, InputLabel, FormHelperText, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Alert, Snackbar, Button, FormControl, TextField, Dialog, DialogTitle, DialogContent, DialogActions, OutlinedInput, InputLabel, FormHelperText, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { getLeagueStats } from '../../services/leagueStatsService';
 import { Close } from '@mui/icons-material'
 import { getScorecards, setLeagueHistory, getLeagueHistory, updateLeagueHistory, deleteLeagueHistory, getLeagueMembers } from  '../../firebase'
@@ -210,10 +210,10 @@ export function LeagueHistoryManager(props) {
 
   return (
     <div className="leagueHistoryManager">
-      <h3>Manage League History</h3>
-      This form generates a year end summary of the league. You can add awards, tournament rounds, and season notes. Once you are done, click the "Add Season End Stats" button to add the stats to the league history. This will display on the "About the League" page.
-      <Paper className="paperContent">
-          <h4>Add Season</h4>
+      <h3>League History</h3>
+      <p className="manageIntro">This form generates a year end summary of the league. You can add awards, tournament rounds, and season notes. Once you are done, click the "Add Season End Stats" button to add the stats to the league history. This will display on the "About the League" page.</p>
+      <section className="manageCard">
+          <h3>Add Season</h3>
           You can add custom League Awards here. <br />
           {awardHolder}
           <Button className="addButton" variant="outlined" onClick={() => setNumAwards(numAwards + 1)}>Add Award</Button>
@@ -260,21 +260,25 @@ export function LeagueHistoryManager(props) {
             )}
             <Button style={{marginTop: 15}} variant="contained" onClick={handleAddHistory}>Add Season End Stats</Button>
           </FormControl>
-      </Paper>
-      <Paper className="paperContent" style={{marginTop: 15}}>
-        <h4>Past Seasons</h4>
-        {history && (
-          Object.entries(history).map(([id, year], index) => {
-            return (
-              <div key={index}>
-                {year.season} 
-                <Button style={{margin: 15}} variant="outlined" onClick={() => handleEdit(year.season)}>Edit</Button>
-                <Button color="error" variant="outlined" onClick={() => handleDelete(year.season)}>Delete</Button>
-              </div>
-            )
-          })
+      </section>
+      <section className="manageCard">
+        <h3>Past Seasons</h3>
+        {history && Object.keys(history).length > 0 ? (
+          <ul className="manageList">
+            {Object.entries(history).map(([id, year]) => (
+              <li key={id}>
+                <strong>{year.season}</strong>
+                <div className="manageActions">
+                  <Button variant="outlined" onClick={() => handleEdit(year.season)}>Edit</Button>
+                  <Button color="error" variant="outlined" onClick={() => handleDelete(year.season)}>Delete</Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <i>No past seasons yet</i>
         )}
-      </Paper>
+      </section>
       <Dialog open={editOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>Edit {editSeason?.season}</DialogTitle>
         <DialogContent>
