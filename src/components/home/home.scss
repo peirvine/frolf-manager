@@ -1,107 +1,437 @@
 @import '../../globalStyles.scss';
 
-body {
-  background-color: white !important;
-}
+.home {
+  min-height: calc(100vh - 120px);
+  background: #f4f6f9;
+  font-family: Roboto, sans-serif;
 
-img {
-  width: 100%;
-}
-
-
-@media (min-width: $lv) {
-  .home {
+  h1, h2, h3 {
     font-family: Roboto, sans-serif;
-    min-height: calc(100vh - 120px);
+  }
+}
 
-    .hero {
-      background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../images/fullGroup.jpg');
-      background-size: 100%;
-      width: 100%;
-      color: white;
-      height: 505px;
+/****************** Hero (both modes) ******************/
 
-      .homeText {
-        padding-top: 263px;
-        padding-left: 200px;
+.homeHero {
+  position: relative;
+  overflow: hidden;
+  color: white;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.08), transparent 45%),
+    linear-gradient(135deg, $navy, $navy-dark);
 
-        h1 {
-          font-size: 3rem;
-        }
+  &.homeHeroLoading {
+    height: 280px;
+  }
+}
 
-        h6 {
-          font-size: 1rem;
-        }
-      }
+.homeHeroInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 56px 24px;
+}
+
+.homeHeroText {
+  flex: 1 1 380px;
+  max-width: 560px;
+
+  h1 {
+    margin: 4px 0 12px;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  p {
+    margin: 0 0 24px;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+}
+
+.homeEyebrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $gold;
+}
+
+.homeHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .homeHeroPrimary {
+    background: $gold;
+    color: $navy-dark;
+    font-weight: 700;
+
+    &:hover {
+      background: lighten($gold, 6%);
     }
+  }
 
-    .textContent {
-      text-align: center;
-      background-color: #f2f2f2;
-      padding: $padding-lg;
+  .homeHeroSecondary {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.6);
 
-      h2 {
-        font-size: 38px;
-        line-height: 36px;
-        font-weight: 300;
-        
-      }
-
-      p {
-        width: 80%;
-        margin: auto;
-        margin-bottom: 10px;
-      }
-    }
-
-    .aboutContent {
-      text-align: center;
-      background-color: #fff;
-      padding: $padding-lg;
-
-      h2 {
-        font-size: 38px;
-        line-height: 36px;
-        font-weight: 300;
-        font-family: Roboto, sans-serif;
-      }
+    &:hover {
+      border-color: white;
+      background: rgba(255, 255, 255, 0.08);
     }
   }
 }
 
-@media (max-width: $sv) {
-  .home {
-    font-family: Roboto, sans-serif;
-    min-height: calc(100vh - 100px);
+.homeHeroArt {
+  flex: 0 1 400px;
+  width: 100%;
+  max-width: 400px;
 
-    .hero {
-      background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../images/fullGroup.jpg');
-      background-size: 100%;
-      width: 100%;
-      color: white;
+  .heroHill { fill: none; stroke: rgba(255, 255, 255, 0.25); stroke-width: 1.5; }
+  .heroTrees { fill: rgba(255, 255, 255, 0.1); }
+  .heroTee { fill: rgba(255, 255, 255, 0.35); }
 
-      .homeText {
-        padding-top: 15px;
-        padding-left: 20px;
+  .heroFlight {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.55);
+    stroke-width: 2;
+    stroke-dasharray: 2 7;
+    stroke-linecap: round;
+  }
 
-        h1 {
-          font-size: 2.75rem;
-          text-align: center;
-        }
-      }
+  .heroDisc { fill: $gold; }
+
+  .basket { fill: white; }
+
+  .basketChains {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.8);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+
+  .basketBase {
+    fill: none;
+    stroke: white;
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+}
+
+/****************** Logged out ******************/
+
+.homeSection {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 24px 8px;
+
+  > h2 {
+    margin: 0 0 20px;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: $navy;
+  }
+}
+
+.homeFeatures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: 16px;
+}
+
+.homeFeature {
+  padding: 20px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(14, 64, 113, 0.08), 0 8px 24px rgba(14, 64, 113, 0.06);
+
+  h3 {
+    margin: 12px 0 6px;
+    font-size: 1.1rem;
+    color: $navy;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+    opacity: 0.8;
+  }
+}
+
+.homeFeatureIcon {
+  display: inline-flex;
+  padding: 10px;
+  border-radius: 12px;
+  color: $navy;
+  background: rgba($navy, 0.08);
+}
+
+.homeMoreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 20px;
+  font-weight: 600;
+  color: $navy;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.homeAuth {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+  padding-bottom: 56px;
+}
+
+.homeAuthCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 28px;
+  border-radius: 16px;
+  background: white;
+  border-top: 4px solid $navy;
+  box-shadow: 0 1px 3px rgba(14, 64, 113, 0.08), 0 8px 24px rgba(14, 64, 113, 0.06);
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    color: $navy;
+  }
+
+  p {
+    margin: 0 0 20px;
+    line-height: 1.6;
+    opacity: 0.8;
+  }
+
+  .MuiButton-root {
+    margin-top: auto;
+  }
+
+  &.homeAuthSignUp {
+    border-top-color: $gold;
+  }
+}
+
+.homeSteps {
+  margin: 0 0 20px;
+  padding-left: 20px;
+  line-height: 1.6;
+
+  li {
+    margin-bottom: 6px;
+  }
+}
+
+/****************** Logged in ******************/
+
+.homeWelcome .homeHeroInner {
+  padding-top: 40px;
+  padding-bottom: 72px;
+}
+
+.homeLeaguePicker {
+  min-width: 220px;
+
+  .MuiInputBase-root {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .MuiInputLabel-root,
+  .MuiInputLabel-root.Mui-focused,
+  .MuiSvgIcon-root {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .MuiOutlinedInput-notchedOutline,
+  .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline,
+  .Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+// Pulled up over the bottom of the welcome band
+.homeBody {
+  position: relative;
+  max-width: 1120px;
+  margin: -48px auto 0;
+  padding: 0 24px 56px;
+}
+
+.homeNotice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #fff8e6;
+  border: 1px solid rgba($gold, 0.6);
+}
+
+.homeActions {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.homeAction {
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  color: $navy;
+  background: white;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(14, 64, 113, 0.08), 0 8px 24px rgba(14, 64, 113, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(14, 64, 113, 0.12), 0 12px 28px rgba(14, 64, 113, 0.1);
+  }
+
+  .homeActionIcon {
+    flex: none;
+    // CssBaseline makes everything border-box, which would eat the icon's 1em size with this padding
+    box-sizing: content-box;
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba($navy, 0.08);
+  }
+
+  small {
+    display: block;
+    margin-top: 2px;
+    opacity: 0.75;
+  }
+}
+
+.homeActionPrimary {
+  grid-column: span 3;
+  padding: 24px;
+  color: white;
+  background: linear-gradient(135deg, lighten($navy, 6%), $navy);
+
+  strong {
+    font-size: 1.25rem;
+  }
+
+  .homeActionIcon {
+    font-size: 2.2rem;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .homeActionArrow {
+    margin-left: auto;
+    opacity: 0.8;
+  }
+
+  &.homeActionDoink {
+    color: $navy-dark;
+    background: linear-gradient(135deg, lighten($gold, 8%), $gold);
+
+    .homeActionIcon {
+      background: rgba(255, 255, 255, 0.35);
     }
+  }
+}
 
-    .textContent {
-      text-align: center;
-      background-color: #f2f2f2;
-      padding: $padding-lg;
-      margin-top: -30px;
-    }
+.homeSeason {
+  margin-top: 32px;
 
-    .aboutContent {
-      text-align: center;
-      background-color: #fff;
-      padding: $padding-lg;
-    }
+  h2 {
+    margin: 0 0 14px;
+    font-size: 1.4rem;
+    color: $navy;
+  }
+}
+
+.homeTiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 12px;
+}
+
+.homeTile {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(14, 64, 113, 0.08);
+
+  strong {
+    font-size: 2rem;
+    line-height: 1.2;
+    color: $navy;
+
+    &.up { color: #2e7d32; }
+    &.down { color: #c62828; }
+  }
+
+  small {
+    opacity: 0.7;
+  }
+
+  &.homeTileFeature {
+    color: white;
+    background: $navy;
+
+    strong { color: white; }
+    .homeTileLabel { color: $gold; opacity: 1; }
+  }
+}
+
+.homeTileLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+@media (max-width: 700px) {
+  .homeHeroInner {
+    padding: 36px 16px;
+  }
+
+  .homeSection,
+  .homeBody {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .homeActions {
+    gap: 12px;
+  }
+
+  // Primary actions take a full row; the three smaller links share one
+  .homeActionPrimary {
+    grid-column: span 6;
+  }
+
+  .homeAction:not(.homeActionPrimary) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px;
   }
 }

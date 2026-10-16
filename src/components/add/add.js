@@ -99,60 +99,62 @@ export default function Add() {
         <p>Adding scorecard and recalculating rankings… please don't close this page.</p>
       </Backdrop>
       <h1>Add a Scorecard</h1>
-      {user ? (
-        <>
-          <p className="addIntro">Submit a round and the season rankings update automatically.</p>
-          <Collapse in={open}>
-            <Alert severity={variant} onClose={() => setOpen(false)} sx={{ mb: 2 }}>
-              {alertMessage}
-            </Alert>
-          </Collapse>
-          <div className="addGrid">
-            <section className="addCard">
-              <h2>Add Card from UDisc</h2>
-              <span className="addBadge">Preferred</span>
-              <ol className="addSteps">
-                <li>Open your card in the UDisc mobile app</li>
-                <li>Tap the menu, then "Export to CSV"</li>
-                <li>Copy the data and paste it below</li>
-              </ol>
-              <div className="addForm">
-                {optionArray.length > 1 ? (<Autocomplete
-                  disablePortal
-                  disableClearable
-                  id="combo-box-demo"
-                  options={optionArray}
-                  renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
-                  onChange={(event, newValue) => {
-                    setLeague(newValue.id);
-                  }}
-                />) : null}
-                <TextField
-                  required
-                  multiline
-                  minRows={4}
-                  maxRows={8}
-                  id="outlined-basic"
-                  label="UDisc CSV Output"
-                  variant="outlined"
-                  value={udisc}
-                  onInput={e => setUdisc(e.target.value)}
-                />
-                {addDisabled ? (<i>You are not a approved member of any leagues, if this is an error please reach out to your league admin</i>) : null }
-                <div className="addActions">
-                  <Button variant="contained" onClick={() => handleUdisc()} disabled={addDisabled}>Add {settings.isPreseason ? "Off-Season Round" : "Round"}</Button>
-                  <Button variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
+      <div className="pageCard">
+        {user ? (
+          <>
+            <p className="addIntro">Submit a round and the season rankings update automatically.</p>
+            <Collapse in={open}>
+              <Alert severity={variant} onClose={() => setOpen(false)} sx={{ mb: 2 }}>
+                {alertMessage}
+              </Alert>
+            </Collapse>
+            <div className="addGrid">
+              <section className="addCard">
+                <h2>Add Card from UDisc</h2>
+                <span className="addBadge">Preferred</span>
+                <ol className="addSteps">
+                  <li>Open your card in the UDisc mobile app</li>
+                  <li>Tap the menu, then "Export to CSV"</li>
+                  <li>Copy the data and paste it below</li>
+                </ol>
+                <div className="addForm">
+                  {optionArray.length > 1 ? (<Autocomplete
+                    disablePortal
+                    disableClearable
+                    id="combo-box-demo"
+                    options={optionArray}
+                    renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
+                    onChange={(event, newValue) => {
+                      setLeague(newValue.id);
+                    }}
+                  />) : null}
+                  <TextField
+                    required
+                    multiline
+                    minRows={4}
+                    maxRows={8}
+                    id="outlined-basic"
+                    label="UDisc CSV Output"
+                    variant="outlined"
+                    value={udisc}
+                    onInput={e => setUdisc(e.target.value)}
+                  />
+                  {addDisabled ? (<i>You are not a approved member of any leagues, if this is an error please reach out to your league admin</i>) : null }
+                  <div className="addActions">
+                    <Button variant="contained" onClick={() => handleUdisc()} disabled={addDisabled}>Add {settings.isPreseason ? "Off-Season Round" : "Round"}</Button>
+                    <Button variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
+                  </div>
                 </div>
-              </div>
-            </section>
-            <section className="addCard">
-              <LeagueAdd />
-            </section>
-          </div>
-        </>
-        ) : (
-          <p>Please <span style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => signInWithGoogle()}>log in</span> to add a round</p>
-        )}
+              </section>
+              <section className="addCard">
+                <LeagueAdd />
+              </section>
+            </div>
+          </>
+          ) : (
+            <p>Please <span style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => signInWithGoogle()}>log in</span> to add a round</p>
+          )}
+      </div>
     </div>
   )
 }

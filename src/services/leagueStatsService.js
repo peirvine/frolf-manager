@@ -1,6 +1,6 @@
-import { getLeagueSettings, getScorecards, getELOHistory, getCurrentElo, getSeasonStats, getElosOfAllPlayers, getLeagueMembers, getUserDataV2, getDoinkFundPlayers } from '../firebase';
+import { getLeagueSettings, getScorecards, getELOHistory, getCurrentElo, getSeasonStats, getElosOfAllPlayers, getLeagueMembers, getUserDataV2, getDoinkFundPlayers, getHatCounts } from '../firebase';
 import { getEloStats } from './eloService';
-import { isOffSeasonCard, normalizeCourse, getCardStrokesPerHole, pickTop, getPreviousSeason, getAces } from './statsUtils';
+import { isOffSeasonCard, normalizeCourse, getCardStrokesPerHole, pickTop, getPreviousSeason, getAces, leagueHasHats } from './statsUtils';
 
 export const getLeagueStats = async (league) => {
   const leagueSettings = await getLeagueSettings(league)
@@ -22,8 +22,11 @@ export const getLeagueStats = async (league) => {
   if (scorecards !== undefined) {
     mostPlayedCourse = getMostPlayedCourse(scorecards)
     numberOfRounds = Object.keys(scorecards).length;
-    hatCounts = getHatCounts(scorecards)
-    mostHats = getMostHats(hatCounts)
+    // Stored counts, not a tally of the scorecards, so hats an admin entered by hand count too
+    if (leagueHasHats(league)) {
+      hatCounts = await getHatCounts(league)
+      mostHats = getMostHats(hatCounts)
+    }
     aces = getAces(scorecards, await getMemberNames(league))
   
     // In-season rounds come from the Elo records; off-season rounds have none, so they're measured from the scorecards
@@ -46,7 +49,7 @@ export const getLeagueStats = async (league) => {
 
   // Firebase drops empty lists, so any of the saved Elo stats can be missing
   const stats = {
-    season: currentSeason, numberOfRounds, mostPlayedCourse, hardestCourse, mostAveragePlayer, currentElo, hatCounts, mostHats, aces,
+    season: currentSeason, numberOfRounds, mostPlayedCourse, hardestCourse, mostAveragePlayer, currentElo, hats: leagueHasHats(league), hatCounts, mostHats, aces,
     mostImproved: eloStats.mostImproved || [],
     biggestDrop: eloStats.biggestDrop || [],
     mostConsistent: eloStats.mostConsistent || [],
@@ -71,7 +74,7 @@ const getDoinkStats = (players) => {
 
 // UDisc names of league members, used to match them on scorecards. A member's name is kept in two places — their user
 // record (what Elo uses) and the league's player list — which can drift apart if they change it, so both count.
-const getMemberNames = async (league) => {
+export const getMemberNames = async (league) => {
   const members = Object.values((await getLeagueMembers(league)) || {})
   const users = await Promise.all(members.map(member => getUserDataV2({ displayName: member.name, uid: member.id })))
   return [...members.map(member => member.uDiscDisplayName), ...users.map(user => user?.uDiscDisplayName)].filter(Boolean)
@@ -179,17 +182,6 @@ const getMostAverage = currentElo => {
   }
 
   return closestKeys;
-}
-
-// Hats won this season, tallied from the winners saved on each scorecard
-const getHatCounts = scorecards => {
-  const counts = {}
-  for (const card of Object.values(scorecards)) {
-    for (const player of card.hatWinners || []) {
-      counts[player] = (counts[player] || 0) + 1
-    }
-  }
-  return counts
 }
 
 const getMostHats = hatCounts => {

@@ -36,28 +36,30 @@ export default function About () {
     <div className="about">
 
       <h1>League History</h1>
-      {optionArray.length > 1 ? (
-        <Autocomplete
-          disablePortal
-          disableClearable
-          id="combo-box-demo"
-          options={optionArray}
-          sx={{ marginTop: 1 }}
-          renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
-          onChange={(event, newValue) => {
-            setLeague(newValue.id);
-          }}
-        />
-      ) : null}
-      <div className="aboutText">
-        <LeagueBlurb league={league} />
-      </div>
-      <div className="leagueRules">
-        <LeagueRules league={league} />
-      </div>
-      <div className="aboutHistory">
-        <h3>Past Seasons</h3>
-        <LeagueHistoryHolder league={league} />
+      <div className="pageCard">
+        {optionArray.length > 1 ? (
+          <Autocomplete
+            disablePortal
+            disableClearable
+            id="combo-box-demo"
+            options={optionArray}
+            sx={{ marginTop: 1 }}
+            renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
+            onChange={(event, newValue) => {
+              setLeague(newValue.id);
+            }}
+          />
+        ) : null}
+        <div className="aboutText">
+          <LeagueBlurb league={league} />
+        </div>
+        <div className="leagueRules">
+          <LeagueRules league={league} />
+        </div>
+        <div className="aboutHistory">
+          <h3>Past Seasons</h3>
+          <LeagueHistoryHolder league={league} />
+        </div>
       </div>
     </div>
   )

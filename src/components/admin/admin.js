@@ -44,31 +44,33 @@ export default function Admin () {
   return (
     <div className="admin">
       <h1>Such Frolf Control Panel</h1>
-      <Box
-        sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex' }}
-      >
-        <Tabs
-          orientation={width > 1000 ? "vertical" : ""}
-          variant="scrollable"
-          value={value}
-          onChange={handleChange}
-          aria-label="Vertical tabs example"
-          sx={{ borderRight: 1, borderColor: 'divider' }}
+      <div className="pageCard">
+        <Box
+          sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex' }}
         >
-          <Tab label="Edit Scorecards" {...a11yProps(0)} />
-          <Tab label="User Management" {...a11yProps(1)} />
-          <Tab label="Course Management" {...a11yProps(2)} />
-        </Tabs>
-        <TabPanel value={value} index={0}>
-          <ScorecardManager />
-        </TabPanel>
-        <TabPanel value={value} index={1}>
-          <UserManager />
-        </TabPanel>
-        <TabPanel value={value} index={2}>
-          <CourseManager />
-        </TabPanel>
-      </Box>
+          <Tabs
+            orientation={width > 1000 ? "vertical" : ""}
+            variant="scrollable"
+            value={value}
+            onChange={handleChange}
+            aria-label="Vertical tabs example"
+            sx={{ borderRight: 1, borderColor: 'divider' }}
+          >
+            <Tab label="Edit Scorecards" {...a11yProps(0)} />
+            <Tab label="User Management" {...a11yProps(1)} />
+            <Tab label="Course Management" {...a11yProps(2)} />
+          </Tabs>
+          <TabPanel value={value} index={0}>
+            <ScorecardManager />
+          </TabPanel>
+          <TabPanel value={value} index={1}>
+            <UserManager />
+          </TabPanel>
+          <TabPanel value={value} index={2}>
+            <CourseManager />
+          </TabPanel>
+        </Box>
+      </div>
     </div>
   )
 }

@@ -1,3 +1,6 @@
+// The hat (lowest-rated player on the card wins it) is a MAFTB tradition; no other league tracks or shows it
+export const leagueHasHats = (league) => league === "maftb"
+
 const OFF_SEASON_PREFIX = /^\(Off-Season\)\s*/
 
 export const isOffSeasonCard = (card) => Boolean(card.isOffSeason) || OFF_SEASON_PREFIX.test(card.Course || "")

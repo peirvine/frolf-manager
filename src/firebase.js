@@ -402,6 +402,17 @@ export function resetHatCounts(league) {
   });
 }
 
+// Every player's hat count this season ({ uDiscName: count }); the source of truth for hat stats
+export function getHatCounts(league) {
+  const dbRef = ref(getDatabase());
+  return get(child(dbRef, league + '/hatCount')).then((snapshot) => {
+    return snapshot.exists() ? snapshot.val() : {}
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get hat counts', {error: error} );
+    return {}
+  });
+}
+
 export function getHatCount(league, player) {
   const dbRef = ref(getDatabase());
   return get(child(dbRef, league + '/hatCount/' + player)).then((snapshot) => {

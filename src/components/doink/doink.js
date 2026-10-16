@@ -146,7 +146,10 @@ export default function Doink() {
             disablePortal
             disableClearable
             id="combo-box-demo"
+            className="doinkLeaguePicker"
             options={optionArray}
+            value={optionArray.find(option => option.id === league) || null}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ marginTop: 1, marginBottom: 2, maxWidth: 360 }}
             renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
             onChange={(event, newValue) => {

@@ -117,58 +117,60 @@ export default function DiscCharger() {
   return (
     <div className="discCharger">
       <h1>Charge your disc!</h1>
-      <p>Tired of your disc being low on energy and not flying as far as it should? We know that feeling. Do you also not want to vandalize park benches to hopefully improve your game? We know that feeling too. Were you hopeful that UDisc would actually implement their April Fools joke? We were too. But we're here to help! Take a picture of your disc to charge it with energy! Our Disc Charger is 100% guaranteed to do the same magical powers that the old school bench chargers have, but this time with the power of AI! Every charge is run through our Generative AI Machine Learning Big Data Driven model to give you the optimal flight pattern for the hole you are on!</p>
-      <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={open}
-        onClick={handleClose}
-      >
-        <div style={{ textAlign: 'center'}} >
-          <CircularProgress size={60} thickness={4} sx={{color: '#fff'}} variant="determinate" value={progress} />
-          <h2 style={{ color: '#fff', paddingLeft: 20, marginTop: -5 }}>Charging your Disc...</h2>
-        </div>
-      </Backdrop>
-      <div className="chargerView" style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", gap: 10}}>
-        {image && <img style={{ width: '300px', height: '300px', borderRadius: '50%', boxShadow: '0 0 200px goldenrod' }} src={image} alt="captured" className='discImage'/>}
-        {!charging && 
-          <Webcam
-            audio={false}
-            height={300}
-            screenshotFormat="image/jpeg"
-            width={300}
-            videoConstraints={videoConstraints}
-            style={{
-              borderRadius: '50%',
-            }}
-          >
-            {({ getScreenshot }) => (
-              <Button 
-                color="warning"
-                variant="contained"
-                startIcon={<ElectricalServicesIcon />}
-                onClick={() => {
-                  const imageSrc = getScreenshot()
-                  setImage(imageSrc)
-                  setOpen(true)
-                  setProgress(0)
-                  setCharging(true)
-                  generateList()
-                }}
-              >
-                Charge My Disc!
-              </Button>
-            )}
-          </Webcam>
-        }
-        {!open && upgrades && 
-          <div style={{ textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '0px' }}>Your Disc has been charged!</h3>
-            <p style={{margin: 0 }}>We've gifted your disc with some of the following upgrades:</p>
-            {upgrades}
+      <div className="pageCard">
+        <p>Tired of your disc being low on energy and not flying as far as it should? We know that feeling. Do you also not want to vandalize park benches to hopefully improve your game? We know that feeling too. Were you hopeful that UDisc would actually implement their April Fools joke? We were too. But we're here to help! Take a picture of your disc to charge it with energy! Our Disc Charger is 100% guaranteed to do the same magical powers that the old school bench chargers have, but this time with the power of AI! Every charge is run through our Generative AI Machine Learning Big Data Driven model to give you the optimal flight pattern for the hole you are on!</p>
+        <Backdrop
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={open}
+          onClick={handleClose}
+        >
+          <div style={{ textAlign: 'center'}} >
+            <CircularProgress size={60} thickness={4} sx={{color: '#fff'}} variant="determinate" value={progress} />
+            <h2 style={{ color: '#fff', paddingLeft: 20, marginTop: -5 }}>Charging your Disc...</h2>
           </div>
-        }
-        {charging && <Button color="warning" variant="contained" onClick={handleReset} startIcon={<RestartAltIcon />}>Charge Another</Button> }
-        <p><i>No images are saved to our servers.</i></p>
+        </Backdrop>
+        <div className="chargerView" style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", gap: 10}}>
+          {image && <img style={{ width: '300px', height: '300px', borderRadius: '50%', boxShadow: '0 0 200px goldenrod' }} src={image} alt="captured" className='discImage'/>}
+          {!charging && 
+            <Webcam
+              audio={false}
+              height={300}
+              screenshotFormat="image/jpeg"
+              width={300}
+              videoConstraints={videoConstraints}
+              style={{
+                borderRadius: '50%',
+              }}
+            >
+              {({ getScreenshot }) => (
+                <Button 
+                  color="warning"
+                  variant="contained"
+                  startIcon={<ElectricalServicesIcon />}
+                  onClick={() => {
+                    const imageSrc = getScreenshot()
+                    setImage(imageSrc)
+                    setOpen(true)
+                    setProgress(0)
+                    setCharging(true)
+                    generateList()
+                  }}
+                >
+                  Charge My Disc!
+                </Button>
+              )}
+            </Webcam>
+          }
+          {!open && upgrades && 
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ marginBottom: '0px' }}>Your Disc has been charged!</h3>
+              <p style={{margin: 0 }}>We've gifted your disc with some of the following upgrades:</p>
+              {upgrades}
+            </div>
+          }
+          {charging && <Button color="warning" variant="contained" onClick={handleReset} startIcon={<RestartAltIcon />}>Charge Another</Button> }
+          <p><i>No images are saved to our servers.</i></p>
+        </div>
       </div>
     </div>
   );

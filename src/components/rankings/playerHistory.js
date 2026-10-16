@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 
 import { getHatCount } from '../../firebase'
+import { leagueHasHats } from '../../services/statsUtils'
 
 import './rankings.scss'
 
@@ -51,7 +52,7 @@ export default function PlayerHistory ({ player, eloGraph, league, onClose }) {
 
   useEffect(() => {
     setHats(0)
-    if (!player || !league) return
+    if (!player || !leagueHasHats(league)) return
     getHatCount(league, player).then(setHats)
   }, [player, league])
 
@@ -76,7 +77,7 @@ export default function PlayerHistory ({ player, eloGraph, league, onClose }) {
               <div className="phStat"><span>Rating</span><strong>{current}</strong></div>
               <div className="phStat"><span>Peak</span><strong>{peak}</strong></div>
               <div className="phStat"><span>Rounds</span><strong>{history.length}</strong></div>
-              <div className="phStat"><span>Hats</span><strong>{hats}</strong></div>
+              {leagueHasHats(league) && <div className="phStat"><span>Hats</span><strong>{hats}</strong></div>}
             </div>
 
             <div className="phChart">

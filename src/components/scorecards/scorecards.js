@@ -110,33 +110,35 @@ export default function ViewScorecards () {
   return (
     <div className="scorecards">
       <h1>Past Results</h1>
-      {optionArray.length > 1 ? 
-        (
-          <Autocomplete
-            disablePortal
-            disableClearable
-            id="combo-box-demo"
-            options={optionArray}
-            sx={{ marginTop: 1 }}
-            renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
-            onChange={(event, newValue) => {
-              handleChangeLeague(newValue);
-            }}
-          />
-        ) : null
-      }
-      <h3>{allSeasons ? "All Seasons" : "Most Recent Season"}</h3>
-      <Link to="/scorecards/seasons">View every season</Link>
-      {dataV2.length !== 0 ? (
-        <RoundList rounds={dataV2} />
-      ) : (
-        <div className="skeletor">
-          <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
-          <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
-          <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
-        </div>
-      )}
-      {/* <Button onClick={() => getAllCards(league)}>See All Seasons</Button> */}
+      <div className="pageCard">
+        {optionArray.length > 1 ? 
+          (
+            <Autocomplete
+              disablePortal
+              disableClearable
+              id="combo-box-demo"
+              options={optionArray}
+              sx={{ marginTop: 1 }}
+              renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
+              onChange={(event, newValue) => {
+                handleChangeLeague(newValue);
+              }}
+            />
+          ) : null
+        }
+        <h3>{allSeasons ? "All Seasons" : "Most Recent Season"}</h3>
+        <Link to="/scorecards/seasons">View every season</Link>
+        {dataV2.length !== 0 ? (
+          <RoundList rounds={dataV2} />
+        ) : (
+          <div className="skeletor">
+            <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
+            <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
+            <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />
+          </div>
+        )}
+        {/* <Button onClick={() => getAllCards(league)}>See All Seasons</Button> */}
+      </div>
     </div>
   )
 }

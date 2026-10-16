@@ -269,55 +269,57 @@ export default function CurrentRankings () {
     <div className="currentRankings">
       <PlayerHistory player={selectedPlayer} eloGraph={graphData.eloGraph} league={league} onClose={() => setSelectedPlayer(null)} />
       <h1>Current Rankings</h1>
-      {optionArray.length > 1 ? (
-        <Autocomplete
-          disablePortal
-          disableClearable
-          id="combo-box-demo"
-          options={optionArray}
-          sx={{ marginTop: 1, marginBottom: 1 }}
-          renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
-          onChange={(event, newValue) => {
-            handleChangeLeague(newValue);
-          }}
-        />) : null}
-      <div ref={imageRef}>
-        <TableContainer component={Paper} variant="outlined" size="medium" className="rankingsTable">
-          <Table aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell align="center">#</TableCell>
-                <TableCell align="center">Player</TableCell>
-                <TableCell align="center">Rating</TableCell>
-                <TableCell align="center">Change</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rankings && (formatRankings(rankings))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      <div className="pageCard">
+        {optionArray.length > 1 ? (
+          <Autocomplete
+            disablePortal
+            disableClearable
+            id="combo-box-demo"
+            options={optionArray}
+            sx={{ marginTop: 1, marginBottom: 1 }}
+            renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
+            onChange={(event, newValue) => {
+              handleChangeLeague(newValue);
+            }}
+          />) : null}
+        <div ref={imageRef}>
+          <TableContainer component={Paper} variant="outlined" size="medium" className="rankingsTable">
+            <Table aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center">#</TableCell>
+                  <TableCell align="center">Player</TableCell>
+                  <TableCell align="center">Rating</TableCell>
+                  <TableCell align="center">Change</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rankings && (formatRankings(rankings))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+        <div className="moreStats">
+         <Link to={`./detailedRankings`} state={{
+              leagueId: league,
+              season
+            }}>
+            <Button variant="contained" color="primary" style={{ margin: "5px" }}>
+              See Detailed Stats
+            </Button>
+          </Link>
+        </div>
+        <div className="getImg">
+          <Button variant="contained" onClick={() => getImage()}>Share Rankings</Button>
+        </div>
+        {/* todo fix the rendering issue when switching leagues */}
+        <HistoricalRankings {...graphData} />
+        <h3>About our ELO Ranking System</h3>
+        <p>The ELO ranking system is a widely used method for ranking players or teams in games and sports. It was originally developed by Hungarian-American physicist Arpad Elo in the 1960s to rank chess players, but has since been adapted for use in a variety of other competitive activities, including soccer, basketball, and video games.</p>
+        <p>The basic idea behind the ELO ranking system is to assign each player or team a numerical rating based on their performance in previous matches. When two players or teams compete against each other, their ratings are used to calculate the expected outcome of the match, and the actual outcome is compared to the expected outcome to determine how much each player's rating should change.</p>
+        <p>If a player or team performs better than expected, their rating will increase, while if they perform worse than expected, their rating will decrease. The size of the rating change is determined by the difference between the actual outcome and the expected outcome, as well as the difference in ratings between the two players or teams.</p>
+        <p>The ELO ranking system is widely regarded as a fair and accurate way to rank players or teams, as it takes into account not only wins and losses, but also the strength of the opponents faced and the margin of victory or defeat. It is also relatively simple to understand and implement, which makes it appealing for use in a wide range of contexts.</p>
       </div>
-      <div className="moreStats">
-       <Link to={`./detailedRankings`} state={{
-            leagueId: league,
-            season
-          }}>
-          <Button variant="contained" color="primary" style={{ margin: "5px" }}>
-            See Detailed Stats
-          </Button>
-        </Link>
-      </div>
-      <div className="getImg">
-        <Button variant="contained" onClick={() => getImage()}>Share Rankings</Button>
-      </div>
-      {/* todo fix the rendering issue when switching leagues */}
-      <HistoricalRankings {...graphData} />
-      <h3>About our ELO Ranking System</h3>
-      <p>The ELO ranking system is a widely used method for ranking players or teams in games and sports. It was originally developed by Hungarian-American physicist Arpad Elo in the 1960s to rank chess players, but has since been adapted for use in a variety of other competitive activities, including soccer, basketball, and video games.</p>
-      <p>The basic idea behind the ELO ranking system is to assign each player or team a numerical rating based on their performance in previous matches. When two players or teams compete against each other, their ratings are used to calculate the expected outcome of the match, and the actual outcome is compared to the expected outcome to determine how much each player's rating should change.</p>
-      <p>If a player or team performs better than expected, their rating will increase, while if they perform worse than expected, their rating will decrease. The size of the rating change is determined by the difference between the actual outcome and the expected outcome, as well as the difference in ratings between the two players or teams.</p>
-      <p>The ELO ranking system is widely regarded as a fair and accurate way to rank players or teams, as it takes into account not only wins and losses, but also the strength of the opponents faced and the margin of victory or defeat. It is also relatively simple to understand and implement, which makes it appealing for use in a wide range of contexts.</p>
     </div>
   )
 }

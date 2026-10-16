@@ -101,40 +101,42 @@ export default function SimulateRound() {
 
   return (
     <div>
-      <h2>Simulate a round in {state.leagueName}</h2>
-      <p>If you want to see how your performance would affect your Elo, enter a simulated round below. This will not affect your actual Elo, but will show you how your performance would affect your Elo if it were a real round. You do not need to enter a score for every player, in fact if they aren't apart of your simulation leave their score blank. </p>
-      <div>
+      <h1>Simulate a round in {state.leagueName}</h1>
+      <div className="pageCard">
+        <p>If you want to see how your performance would affect your Elo, enter a simulated round below. This will not affect your actual Elo, but will show you how your performance would affect your Elo if it were a real round. You do not need to enter a score for every player, in fact if they aren't apart of your simulation leave their score blank. </p>
         <div>
-          <TextField
-            style={{ margin: 5 }}
-            className="par"
-            id="outlined-required"
-            label={"Course Par"}
-            onChange={e => setPar(e.target.value)}
-            type="number"
-            InputProps={{ inputProps: { min: 1 } }}
-          />
-          <TextField
-            style={{ margin: 5 }}
-            className="par"
-            id="outlined-required"
-            label={"Number of Holes"}
-            onChange={e => setHoles(e.target.value)}
-            type="number"
-            InputProps={{ inputProps: { min: 1 } }}
-          />
+          <div>
+            <TextField
+              style={{ margin: 5 }}
+              className="par"
+              id="outlined-required"
+              label={"Course Par"}
+              onChange={e => setPar(e.target.value)}
+              type="number"
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+            <TextField
+              style={{ margin: 5 }}
+              className="par"
+              id="outlined-required"
+              label={"Number of Holes"}
+              onChange={e => setHoles(e.target.value)}
+              type="number"
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+          </div>
+          {scoreListHolder}
         </div>
-        {scoreListHolder}
+        <Button variant="contained" onClick={handleSimulateRound} style={{ margin: 5 }}>Simulate Round</Button>
+        {!loading ? (     
+          <DisplaySimulatedRankings simData={simData} deltas={deltas} />    
+        ) : (
+          <div style={{ marginTop: 15}}>
+            <LinearProgress  />
+          </div>
+        )}
+        <Link to={`/dashboard`}>Back</Link>
       </div>
-      <Button variant="contained" onClick={handleSimulateRound} style={{ margin: 5 }}>Simulate Round</Button>
-      {!loading ? (     
-        <DisplaySimulatedRankings simData={simData} deltas={deltas} />    
-      ) : (
-        <div style={{ marginTop: 15}}>
-          <LinearProgress  />
-        </div>
-      )}
-      <Link to={`/dashboard`}>Back</Link>
     </div>
   );
 }

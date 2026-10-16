@@ -17,3 +17,153 @@ li {
     text-align: center;
   }
 }
+/****************** Navbar ******************/
+
+.navBar.MuiAppBar-root {
+  background: linear-gradient(90deg, $navy-dark, $navy);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+// Lined up with the content width used on the home and about pages
+.navInner.MuiToolbar-root {
+  gap: 24px;
+  width: 100%;
+  max-width: 1120px;
+  min-height: 64px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.navBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  color: white;
+  text-decoration: none;
+
+  span {
+    font-family: Roboto, sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+}
+
+.navBrandMark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+
+  circle { fill: $gold; }
+  .basket { fill: $navy-dark; }
+
+  .basketChains {
+    fill: none;
+    stroke: $navy-dark;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .basketBase {
+    fill: none;
+    stroke: $navy-dark;
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+}
+
+.navLinks {
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.navLink {
+  position: relative;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: Roboto, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  // Current page gets a gold underline
+  &.active {
+    color: white;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 2px;
+      height: 2px;
+      border-radius: 1px;
+      background: $gold;
+    }
+  }
+}
+
+.navRight {
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.navCta.MuiButton-root {
+  white-space: nowrap;
+  font-weight: 700;
+  color: $navy-dark;
+  background: $gold;
+  box-shadow: none;
+
+  &:hover {
+    background: lighten($gold, 6%);
+    box-shadow: none;
+  }
+}
+
+.navLogin.MuiButton-root {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.6);
+
+  &:hover {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.navAvatar.MuiAvatar-root {
+  width: 36px;
+  height: 36px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: $navy-dark;
+  background: $gold;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.navMenuName.Mui-disabled {
+  opacity: 1 !important;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .navInner.MuiToolbar-root {
+    padding: 0 12px 0 16px;
+  }
+
+  .navBrand span {
+    font-size: 1.05rem;
+  }
+}

@@ -90,11 +90,14 @@ export default function SeasonStats (stats) {
             ))}
           </StatTile>
         )}
-        <StatTile label="Most Hats">
-          {hats.length > 0 ? hats.map(player => (
-            <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
-          )) : <small>None</small>}
-        </StatTile>
+        {/* Hats are MAFTB only; seasons saved before that flag existed only show the tile if someone won one */}
+        {(stats.hats || hats.length > 0) && (
+          <StatTile label="Most Hats">
+            {hats.length > 0 ? hats.map(player => (
+              <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
+            )) : <small>None</small>}
+          </StatTile>
+        )}
         {mostDoinks.length > 0 && (
           <StatTile label="Most Doinks">
             {mostDoinks.map(player => (

@@ -297,7 +297,6 @@ export default function UserDashboard () {
                   {x.isAdmin && (
                     <Button
                       variant="contained"
-                      color="success"
                       component={Link}
                       to="./manageLeague"
                       state={{ leagueId: x.id, leagueName: leagues[x.id] }}
@@ -306,7 +305,7 @@ export default function UserDashboard () {
                     </Button>
                   )}
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     component={Link}
                     to="./simulateRound"
                     state={{ leagueId: x.id, leagueName: leagues[x.id] }}
@@ -345,7 +344,7 @@ export default function UserDashboard () {
                   </div>
                 </div>
                 <div className="leagueCardActions">
-                  <Button variant="outlined" color="info" onClick={() => handleJoinLeague(league, user)}>Join</Button>
+                  <Button variant="outlined" onClick={() => handleJoinLeague(league, user)}>Join</Button>
                 </div>
               </div>
             ))}
@@ -360,7 +359,7 @@ export default function UserDashboard () {
             <h2>Create a new League</h2>
             <p>Want to get in on the fun? Make your own league.</p>
           </div>
-          <Button variant="contained" color="success" onClick={() => setOpen(true)}>Create League</Button>
+          <Button variant="contained" onClick={() => setOpen(true)}>Create League</Button>
         </div>
       </section>
       <Modal

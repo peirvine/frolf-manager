@@ -134,12 +134,14 @@ export default function LeagueStats(props) {
                   <div key={player.player}>{player.player} <small>±{round1(player.spread)} Elo per round</small></div>
                 )) : <small>Needs 3+ rounds</small>}
               </div>
-            <div className="statTile">
-                <span className="statLabel">Most Hats</span>
-                {(stats.mostHats || []).length > 0 ? stats.mostHats.map(player => (
-                  <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
-                )) : <small>None yet</small>}
-              </div>
+              {stats.hats && (
+                <div className="statTile">
+                  <span className="statLabel">Most Hats</span>
+                  {(stats.mostHats || []).length > 0 ? stats.mostHats.map(player => (
+                    <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
+                  )) : <small>None yet</small>}
+                </div>
+              )}
               {stats.doinkFund && (
                 <>
                   <div className="statTile">
@@ -159,13 +161,13 @@ export default function LeagueStats(props) {
             </div>
             <h4>Aces</h4>
             {stats.aces.length > 0 ? <AceAwards aces={stats.aces} /> : <small className="noAces">No aces yet this season</small>}
-            <h4>Rounds played and hats won this season</h4>
+            <h4>{stats.hats ? "Rounds played and hats won this season" : "Rounds played this season"}</h4>
             <ul className="roundsByPlayer">
               {rounds.map(player => (
                 <li key={player.id || player.uDiscDisplayName}>
                   <span>{player.uDiscDisplayName}</span>
                   <strong>{player.stats.numberOfRounds}</strong>
-                  <small>{(stats.hatCounts || {})[player.uDiscDisplayName] || 0} 🎩</small>
+                  {stats.hats && <small>{(stats.hatCounts || {})[player.uDiscDisplayName] || 0} 🎩</small>}
                 </li>
               ))}
             </ul>

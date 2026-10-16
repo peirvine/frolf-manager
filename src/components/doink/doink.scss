@@ -1,24 +1,26 @@
 @import "../../globalStyles.scss";
 
 .doink {
-  max-width: 960px;
-  margin: 0 auto;
 
   h1 {
     margin: 0 0 16px;
   }
 
   .doinkCard {
-    padding: 16px;
+    @include card;
+    padding: 20px;
     margin-bottom: 16px;
-    border: 1px solid rgba(128, 128, 128, 0.3);
-    border-radius: 12px;
-    background: white;
 
     h3 {
       margin: 0 0 12px;
       font-size: 1.2rem;
+      color: $navy;
     }
+  }
+
+  // The league picker sits on the gray page background
+  .doinkLeaguePicker .MuiInputBase-root {
+    background: white;
   }
 
   .doinkJoin {
@@ -46,23 +48,27 @@
   .doinkTile {
     display: flex;
     flex-direction: column;
+    @include card;
     padding: 14px 16px;
-    border-radius: 12px;
-    background: white;
-    border: 1px solid rgba(128, 128, 128, 0.3);
 
     strong {
       font-size: clamp(1.4rem, 5vw, 2rem);
       line-height: 1.2;
+      color: $navy;
     }
 
     small {
       opacity: 0.7;
     }
 
+    // The fund's balance gets the feature treatment, like the Elo tile on the home page
     &.balance {
-      border-color: rgba($tertiary, 0.6);
-      background: rgba($tertiary, 0.1);
+      border-color: $navy;
+      background: $navy;
+      color: white;
+
+      strong { color: white; }
+      .doinkLabel { color: $gold; opacity: 1; }
     }
 
     &.negative {

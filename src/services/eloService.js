@@ -1,7 +1,7 @@
 /* eslint-disable array-callback-return */
 import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2, incrementHatCount, setSeasonStats } from "../firebase";
 import { weighting, pointPerThrowRef } from "./eloConstants";
-import { pickTop } from "./statsUtils";
+import { pickTop, leagueHasHats } from "./statsUtils";
 
 
 export const calculateElo = async (card, season, league, simulation = false) => {
@@ -53,7 +53,7 @@ export const calculateElo = async (card, season, league, simulation = false) => 
     if (statsRes.code === "error") return false
   }
 
-  const hatWinners = getHatWinners(cardElo, currentElo)
+  const hatWinners = leagueHasHats(league) ? getHatWinners(cardElo, currentElo) : []
   if (simulation) {
     return {prettyElo, delta, currentElo, hatWinners}
   } else {
@@ -129,6 +129,7 @@ const standardDeviation = (values) => {
 
 // Moves hats from one set of winners to another (used by submit, edit and delete). Players in both sets are untouched.
 export const changeHatWinners = async (league, oldWinners, newWinners) => {
+  if (!leagueHasHats(league)) return true
   for (const player of oldWinners.filter(p => !newWinners.includes(p))) {
     if ((await incrementHatCount(league, player, -1)).code === "error") return false
   }

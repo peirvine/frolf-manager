@@ -17,6 +17,10 @@
     opacity: 0.7;
   }
 
+  .dashSection h2 {
+    color: $navy;
+  }
+
   .dashSection {
     margin-bottom: 32px;
 
@@ -28,17 +32,15 @@
 
   .leagueGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
     gap: 16px;
   }
 
   .leagueCard,
   .emptyCard,
   .createCard {
-    padding: 16px;
-    border: 1px solid rgba(128, 128, 128, 0.3);
-    border-radius: 12px;
-    background: white;
+    @include card;
+    padding: 20px;
   }
 
   .leagueCard {
@@ -53,9 +55,10 @@
     gap: 12px;
   }
 
-  .leagueAvatar {
-    background: $primary;
+  .leagueAvatar.MuiAvatar-root {
     font-weight: bold;
+    color: $gold;
+    background: $navy;
   }
 
   .leagueCardTitle {
@@ -130,11 +133,9 @@
   }
 
   .manageCard {
-    padding: 16px;
+    @include card;
+    padding: 20px;
     margin-bottom: 16px;
-    border: 1px solid rgba(128, 128, 128, 0.3);
-    border-radius: 12px;
-    background: white;
 
     h3 {
       margin: 0 0 12px;
@@ -210,8 +211,8 @@
       display: flex;
       flex-direction: column;
       padding: 10px 12px;
-      border-radius: 8px;
-      background: rgba(128, 128, 128, 0.12);
+      border-radius: 10px;
+      background: rgba($navy, 0.04);
       overflow-wrap: anywhere;
 
       .statLabel {

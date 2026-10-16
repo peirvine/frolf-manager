@@ -13,10 +13,8 @@
 
   // The part that gets exported as an image by "Share Stats"
   .drCapture {
-    padding: 16px;
-    border: 1px solid rgba(128, 128, 128, 0.3);
-    border-radius: 10px;
-    background: white;
+    @include card;
+    padding: 20px;
 
     header {
       margin-bottom: 12px;

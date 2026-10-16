@@ -20,6 +20,19 @@ function LaurelBranch () {
   )
 }
 
+// A disc golf basket drawn on a 100x100 canvas (pole, chain band, chains, tray, base); also used on the home page
+export function Basket (props) {
+  return (
+    <g className="basket" {...props}>
+      <rect x="48.6" y="22" width="2.8" height="54" rx="1" />
+      <rect x="35" y="25" width="30" height="5" rx="1.5" />
+      <path className="basketChains" d="M37 30 Q41 41 43 51 M42 30 Q44 41 46 51 M47 30 Q48.5 41 48.8 51 M53 30 Q51.5 41 51.2 51 M58 30 Q56 41 54 51 M63 30 Q59 41 57 51" />
+      <path d="M32 50 H68 L64 61 H36 Z" />
+      <path className="basketBase" d="M42 76.5 H58" />
+    </g>
+  )
+}
+
 export function AceLaurel () {
   return (
     <svg className="aceLaurel" viewBox="0 0 100 100" role="img" aria-label="Ace">
@@ -27,13 +40,7 @@ export function AceLaurel () {
       <g transform="translate(100 0) scale(-1 1)">
         <LaurelBranch />
       </g>
-      <g className="basket">
-        <rect x="48.6" y="22" width="2.8" height="54" rx="1" />
-        <rect x="35" y="25" width="30" height="5" rx="1.5" />
-        <path className="basketChains" d="M37 30 Q41 41 43 51 M42 30 Q44 41 46 51 M47 30 Q48.5 41 48.8 51 M53 30 Q51.5 41 51.2 51 M58 30 Q56 41 54 51 M63 30 Q59 41 57 51" />
-        <path d="M32 50 H68 L64 61 H36 Z" />
-        <path className="basketBase" d="M42 76.5 H58" />
-      </g>
+      <Basket />
     </svg>
   )
 }
