@@ -39,7 +39,7 @@ export const calculateElo = async (card, season, league, simulation = false) => 
   }
 
 // updates current elo of player
-  const currentElo = await updateCurrentElos(league, season, simulation)
+  const currentElo = await updateCurrentElos(league, season, simulation, simulation ? cardElo : {})
   if (!currentElo) return false
 
   const delta = await calculateDelta(league, season, previousElo, currentElo, simulation)
@@ -266,18 +266,18 @@ const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerThr
   }
 }
 
-const updateCurrentElos = async (league, season, simulation = false) => {
+// A simulated round isn't saved to the history, so its card ratings are passed in and counted here instead
+const updateCurrentElos = async (league, season, simulation = false, simulatedRound = {}) => {
   let elos = await currentEloAsync(season, league)
   const res = await getElosOfAllPlayers(season, league)
-  if (res === "null") {
-    elos = {}
-    for (const person in res) {
-      elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
-    }
-  } else {
-    for (const person in res) {
-      elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
-    }
+  // "null" means nobody has a history yet
+  const histories = res === "null" ? {} : { ...res }
+  if (res === "null") elos = {}
+  for (const [person, elo] of Object.entries(simulatedRound)) {
+    histories[person] = [elo, ...(histories[person] || [1000])]
+  }
+  for (const person in histories) {
+    elos[person] = weightedAverage(histories[person], weighting.slice(0, histories[person].length))
   }
   if (!simulation) {
     const writeRes = await updateCurrentEloV2(league, season, elos)

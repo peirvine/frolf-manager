@@ -1,141 +1,130 @@
-/* eslint-disable array-callback-return */
-import React, {useState, useEffect } from 'react';
-import { useLocation, Link } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { Navigate, useLocation, Link } from "react-router-dom";
 import { Button, TextField, LinearProgress } from '@mui/material';
+import ScienceIcon from '@mui/icons-material/Science';
 import { getLeagueMembers, getLeagueSettings } from '../../../firebase';
 import DisplaySimulatedRankings from './displaySimulatedRankings';
 import { calculateElo } from '../../../services/eloService';
+import './simulateRound.scss'
 
 export default function SimulateRound() {
-  const location = useLocation()
-  const { state } = location  
+  const { state } = useLocation()
   const [ loading, setLoading ] = useState(false)
-  const [ leagueSettings, setLeagueSettings ] = useState([{}])
-  const [ deltas, setDeltas ] = useState()
-  const [ simData, setSimData ] = useState({})
-  const [ leagueMembers, setLeagueMembers ] = useState([{}])
-  const [ scoreListHolder, setScoreListHolder ] = useState([])
-  const [ scoreList, setScoreList ] = useState([])
-  const [ par, setPar ] = useState(27)
-  const [ holes, setHoles ] = useState(16)
-  
+  const [ leagueSettings, setLeagueSettings ] = useState({})
+  const [ leagueMembers, setLeagueMembers ] = useState([])
+  // { uDiscName: "54" }; players left blank aren't in the round
+  const [ scores, setScores ] = useState({})
+  const [ par, setPar ] = useState("54")
+  const [ holes, setHoles ] = useState("18")
+  const [ result, setResult ] = useState(null)
+  const [ error, setError ] = useState("")
+
   useEffect(() => {
+    if (!state) return
     const getData = async () => {
-      const members = await getLeagueMembers(state.leagueId)
-      setLeagueMembers(members)
-
-      const settings = await getLeagueSettings(state.leagueId)
-      setLeagueSettings(settings)
+      const [members, settings] = await Promise.all([getLeagueMembers(state.leagueId), getLeagueSettings(state.leagueId)])
+      setLeagueMembers(Object.values(members || {}).filter(member => member?.uDiscDisplayName))
+      setLeagueSettings(settings || {})
     }
-
     getData()
   }, [state])
 
-  useEffect(() => {
-    let tempData = []
-    for (let i = 0; i < leagueMembers.length; i++) {
-      const player = leagueMembers[i].uDiscDisplayName
-      tempData.push(
-        <TextField
-          style={{ margin: 5 }}
-          className="playerScore"
-          id="outlined-required"
-          label={player}
-          onChange={e => handleScore(player, e.target.value)}
-          type="number"
-          InputProps={{ inputProps: { min: 1 } }}
-        />
-      )
-    }
-    setScoreListHolder(tempData)
-    
-    const handleScore = (i, value) => {
-      scoreList[i] = value
-      setScoreList(scoreList)
-    }
-  }, [leagueMembers, scoreList])
+  // Opened directly (e.g. a refresh) there's no league to simulate
+  if (!state) return <Navigate to="/dashboard" />
 
-  const formatPlayerArray = () => {
-    let returnObj = []
-    let holesArray = []
-    for (let i = 0; i < holes; i++) {
-      holesArray.push(i)
-    }
+  const enteredScores = Object.entries(scores).filter(([, score]) => score !== "")
 
-    Object.entries(scoreList).map(([key, value]) => {
-      returnObj.push({
-        player: key,
-        total: value,
-        plusMinus: value - par,
-        holes: holesArray
-      })
-    })
-
-    return returnObj
-  }
-  const handleSimulateRound = async () => {
-    setLoading(true)
-    const playerArray = formatPlayerArray()
-    const eloObj ={
+  // calculateElo only looks at each player's total and how many holes there were
+  const buildCard = () => {
+    const holeList = Array.from({ length: Number(holes) }, (_, i) => String(i + 1))
+    return {
       course: "Simulated Course",
       date: "2021-10-10 0000",
       layout: "Simulated Layout",
-      par: par,
-      playerArray: playerArray
+      par,
+      playerArray: [
+        { player: "Par", total: par, plusMinus: "", holes: holeList },
+        ...enteredScores.map(([player, total]) => ({ player, total, plusMinus: Number(total) - Number(par), holes: holeList })),
+      ],
     }
-    
-    if (eloObj.playerArray.length !== 0) {
-      const response = await calculateElo(eloObj, leagueSettings.currentSeason, state.leagueId, true)
-      setDeltas(response.delta)
-      let newData = response.currentElo
-      Object.entries(newData).map(([key, value]) => {
-        if (response.prettyElo.players[key] !== undefined) {
-          newData[key] = response.prettyElo.players[key]
-        }
-      })
-      
-      setSimData(newData)
+  }
+
+  const handleSimulateRound = async () => {
+    if (!(Number(par) > 0) || !(Number(holes) > 0)) {
+      setError("Enter the course par and number of holes.")
+      return
+    }
+    if (enteredScores.length < 2) {
+      setError("Enter scores for at least two players.")
+      return
+    }
+    setError("")
+    setLoading(true)
+    const response = await calculateElo(buildCard(), leagueSettings.currentSeason, state.leagueId, true)
+    if (response) {
+      setResult({ ratings: response.currentElo, deltas: response.delta, roundRatings: response.prettyElo.players })
+    } else {
+      setError("Couldn't simulate that round. Check the scores and try again.")
     }
     setLoading(false)
   }
 
+  const clear = () => {
+    setScores({})
+    setResult(null)
+    setError("")
+  }
+
   return (
-    <div>
-      <h1>Simulate a round in {state.leagueName}</h1>
-      <div className="pageCard">
-        <p>If you want to see how your performance would affect your Elo, enter a simulated round below. This will not affect your actual Elo, but will show you how your performance would affect your Elo if it were a real round. You do not need to enter a score for every player, in fact if they aren't apart of your simulation leave their score blank. </p>
-        <div>
-          <div>
-            <TextField
-              style={{ margin: 5 }}
-              className="par"
-              id="outlined-required"
-              label={"Course Par"}
-              onChange={e => setPar(e.target.value)}
-              type="number"
-              InputProps={{ inputProps: { min: 1 } }}
-            />
-            <TextField
-              style={{ margin: 5 }}
-              className="par"
-              id="outlined-required"
-              label={"Number of Holes"}
-              onChange={e => setHoles(e.target.value)}
-              type="number"
-              InputProps={{ inputProps: { min: 1 } }}
-            />
+    <div className="simulateRound">
+      <Link to="/dashboard" className="simBack">← Back to dashboard</Link>
+      <h1>Simulate a round</h1>
+      <p className="simIntro">
+        See how a round would move the rankings in <strong>{state.leagueName}</strong>. Nothing is saved, and only players you enter a score for are in the round.
+      </p>
+
+      <div className="simLayout">
+        <section className="pageCard simSetup">
+          <h2>Round setup</h2>
+          <div className="simCourse">
+            <TextField label="Course par" type="number" size="small" value={par} onChange={e => setPar(e.target.value)} inputProps={{ min: 1 }} />
+            <TextField label="Holes" type="number" size="small" value={holes} onChange={e => setHoles(e.target.value)} inputProps={{ min: 1 }} />
           </div>
-          {scoreListHolder}
-        </div>
-        <Button variant="contained" onClick={handleSimulateRound} style={{ margin: 5 }}>Simulate Round</Button>
-        {!loading ? (     
-          <DisplaySimulatedRankings simData={simData} deltas={deltas} />    
-        ) : (
-          <div style={{ marginTop: 15}}>
-            <LinearProgress  />
+
+          <h3>Scores</h3>
+          {leagueMembers.length === 0 ? <i>Loading players…</i> : (
+            <div className="simScores">
+              {leagueMembers.map(member => (
+                <TextField
+                  key={member.uDiscDisplayName}
+                  label={member.uDiscDisplayName}
+                  type="number"
+                  size="small"
+                  placeholder="Not playing"
+                  value={scores[member.uDiscDisplayName] || ""}
+                  onChange={e => setScores({ ...scores, [member.uDiscDisplayName]: e.target.value })}
+                  inputProps={{ min: 1 }}
+                  InputLabelProps={{ shrink: true }}
+                />
+              ))}
+            </div>
+          )}
+
+          {error && <p className="simError">{error}</p>}
+          <div className="simActions">
+            <Button variant="contained" startIcon={<ScienceIcon />} onClick={handleSimulateRound} disabled={loading}>Simulate Round</Button>
+            <Button variant="text" onClick={clear} disabled={loading}>Clear</Button>
           </div>
-        )}
-        <Link to={`/dashboard`}>Back</Link>
+        </section>
+
+        <section className="pageCard simResults">
+          <h2>Results</h2>
+          {loading ? <LinearProgress /> : result ? (
+            <DisplaySimulatedRankings {...result} />
+          ) : (
+            <p className="simEmpty">Enter some scores and hit <strong>Simulate Round</strong> to see where everyone would land.</p>
+          )}
+        </section>
       </div>
     </div>
   );
