@@ -31,6 +31,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import Hat from '../../images/hat.png'
 
 import HistoricalRankings from './historicalRankings'
+import HandicapTable from './handicapTable'
 
 // import { getRankingsFromGoogle } from '../../services/googleSheetsService';
 import { auth, getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers, getElosOfAllPlayers } from '../../firebase'
@@ -312,6 +313,7 @@ export default function CurrentRankings () {
         <div className="getImg">
           <Button variant="contained" onClick={() => getImage()}>Share Rankings</Button>
         </div>
+        <HandicapTable league={league} members={members} />
         {/* todo fix the rendering issue when switching leagues */}
         <HistoricalRankings {...graphData} />
         <h3>About our ELO Ranking System</h3>

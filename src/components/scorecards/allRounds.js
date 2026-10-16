@@ -4,6 +4,7 @@ import { Autocomplete, TextField, Accordion, AccordionSummary, AccordionDetails,
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { getLeagueSettings, getScorecards, getUserDataV2, getLeagueNames } from '../../firebase'
 import RoundList from './roundList'
+import useHandicaps from '../../services/useHandicaps'
 
 import './scorecards.scss'
 
@@ -35,6 +36,7 @@ export default function AllRounds () {
   const [roundsBySeason, setRoundsBySeason] = useState({})
   const [loadingSeason, setLoadingSeason] = useState(null)
   const [error, setError] = useState("")
+  const handicaps = useHandicaps(league)
 
   useEffect(() => {
     const loadLeagues = async () => {
@@ -107,7 +109,7 @@ export default function AllRounds () {
               {loadingSeason === season && <CircularProgress size={28} />}
               {roundsBySeason[season] && (
                 roundsBySeason[season].length > 0
-                  ? <RoundList rounds={roundsBySeason[season]} />
+                  ? <RoundList rounds={roundsBySeason[season]} handicaps={handicaps?.byCard} />
                   : <i>No rounds recorded this season</i>
               )}
             </AccordionDetails>

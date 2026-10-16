@@ -5,6 +5,7 @@ import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButto
 import { Close, HelpOutline } from '@mui/icons-material'
 import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
 import { startNewSeason } from '../../services/leagueService'
+import { refreshHandicaps } from '../../services/handicapStore'
 import { Link, Navigate } from 'react-router-dom'
 import LeagueStats from './leagueStats'
 import LeagueAvatar, { LEAGUE_ICONS } from '../leagueIcon/leagueIcon'
@@ -18,6 +19,7 @@ export default function LeagueSettingsManager(props) {
   const [icon, setIcon] = useState("")
   const [checked, setChecked] = useState(true)
   const [checked2, setChecked2] = useState(true)
+  const [handicaps, setHandicaps] = useState(false)
   const [leagueData, setLeagueData] = useState({})
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
@@ -33,6 +35,7 @@ export default function LeagueSettingsManager(props) {
           setLeagueData(res)
           setChecked(res.acceptingPlayers)
           setChecked2(res.isPreseason)
+          setHandicaps(Boolean(res.handicaps))
           setBlurb(res.blurb)
           setIcon(res.icon || "")
         }
@@ -48,10 +51,15 @@ export default function LeagueSettingsManager(props) {
       leagueAcronym: props.league.leagueId,
       leagueName: name,
       isPreseason: checked2,
+      handicaps: handicaps,
       // null removes the setting, which means initials
       icon: icon || null,
     }
-    updateLeagueSettings(props.league.leagueId, infoObject).then(res => {
+    updateLeagueSettings(props.league.leagueId, infoObject).then(async res => {
+      // Saving with handicaps on rebuilds them, which also covers rounds added while they were off
+      if (res.code === "success" && handicaps && (await refreshHandicaps(props.league.leagueId)).code === "error") {
+        res = { code: "error", message: "Settings saved, but handicaps could not be calculated. Try saving again." }
+      }
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
@@ -176,6 +184,8 @@ export default function LeagueSettingsManager(props) {
               <FormControlLabel control={<Switch checked={Boolean(checked)} onChange={(event) => setChecked(event.target.checked)}/>} label="Accepting New Players" />
               <FormControlLabel control={<Switch checked={Boolean(checked2)} onChange={(event) => setChecked2(event.target.checked)}/>} label="Off-Season?" />
               <small>Off-season rounds are added and count towards stats, but don't affect Elo.</small>
+              <FormControlLabel control={<Switch checked={handicaps} onChange={(event) => setHandicaps(event.target.checked)}/>} label="Handicaps" />
+              <small>Shows handicapped results on every round, based on the average of each player's best 8 of their last 20 league rounds (any season). Saving recalculates everyone's handicap.</small>
             </div>
             <Button variant="contained" onClick={() => updateLeagueData()}>Save</Button>
           </div>
