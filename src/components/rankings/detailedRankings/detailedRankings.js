@@ -76,14 +76,13 @@ export default function DetailedRankings() {
   const getImage = async (roundId) => {
       const roundDiv = document.getElementById(roundId);
       const newFile = await toBlob(roundDiv, { cacheBust: true, backgroundColor: '#fff' });
+      // Title/text are left out on purpose: with them, "Copy" on mobile copies the text instead of the image
       const data = {
         files: [
           new File([newFile], "frolfStats.png", {
             type: newFile.type
           })
         ],
-        title: "Frolf Stats",
-        text: "Frolf Stats"
       };
       try {
         if (!navigator.canShare(data)) {

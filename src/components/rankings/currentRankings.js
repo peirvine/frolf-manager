@@ -169,14 +169,13 @@ export default function CurrentRankings () {
   
   const getImage = async () => {
     const newFile = await toBlob(imageRef.current, { cacheBust: true });
+    // Title/text are left out on purpose: with them, "Copy" on mobile copies the text instead of the image
     const data = {
       files: [
         new File([newFile], "frolf.png", {
           type: newFile.type
         })
       ],
-      title: "Frolf",
-      text: "Frolf"
     };
     try {
       if (!navigator.canShare(data)) {
