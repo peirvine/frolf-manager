@@ -369,6 +369,28 @@ export function setCardHatWinners(league, season, key, hatWinners) {
   });
 }
 
+// Season stats worked out as cards are scored (e.g. most improved player)
+export function getSeasonStats(league, season) {
+  const dbRef = ref(getDatabase());
+  return get(child(dbRef, league + '/stats/' + season)).then((snapshot) => {
+    return snapshot.exists() ? snapshot.val() : null
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get season stats', {error: error} );
+    return null
+  });
+}
+
+export function setSeasonStats(league, season, stats) {
+  const db = getDatabase()
+  return set(ref(db, league + '/stats/' + season), stats).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not save season stats', {error: error} );
+    return {code: "error", message: "Could not save season stats"}
+  });
+}
+
 export function resetHatCounts(league) {
   const db = getDatabase()
   return set(ref(db, league + '/hatCount'), null).then(() => {
@@ -715,6 +737,18 @@ export function updateLeagueSettings (league, info) {
     return {code: "error", message: "League Not Updated"}
   });
   return res
+}
+
+// One member's UDisc name on the league's player list (index is their position in that list)
+export function updateLeagueMemberUDiscName(league, index, name) {
+  const db = getDatabase()
+  return set(ref(db, league + '/players/' + index + '/uDiscDisplayName'), name).then(() => {
+    return {code: "success", message: "UDisc name updated"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not update a UDisc name on the league player list', {error: error} );
+    return {code: "error", message: "Could not update the UDisc name"}
+  });
 }
 
 export function updateLeaguePlayers (league, players) {

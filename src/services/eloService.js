@@ -1,6 +1,7 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2, incrementHatCount } from "../firebase";
+import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2, incrementHatCount, setSeasonStats } from "../firebase";
 import { weighting, pointPerThrowRef } from "./eloConstants";
+import { pickTop } from "./statsUtils";
 
 
 export const calculateElo = async (card, season, league, simulation = false) => {
@@ -47,6 +48,11 @@ export const calculateElo = async (card, season, league, simulation = false) => 
   const graphRes = await graphData(league, season, card.course, card.date, previousElo, currentElo, simulation)
   if (!graphRes) return false
 
+  if (!simulation) {
+    const statsRes = await setSeasonStats(league, season, { ...getEloStats(await getElosOfAllPlayers(season, league)), calculatedAt: Date.now() })
+    if (statsRes.code === "error") return false
+  }
+
   const hatWinners = getHatWinners(cardElo, currentElo)
   if (simulation) {
     return {prettyElo, delta, currentElo, hatWinners}
@@ -62,6 +68,63 @@ const getHatWinners = (cardElo, currentElo) => {
   const rating = (name) => currentElo[name] === undefined ? 1000 : currentElo[name]
   const lowest = Math.min(...names.map(rating))
   return names.filter(name => rating(name) === lowest)
+}
+
+// Elo stats saved with the season each time a card is scored. A player's history is their per-round Elo, newest
+// first, ending in the 1000 they were seeded at; the seed isn't a round, so it's left out of all of these.
+//  - mostImproved / biggestDrop: the biggest climb (low → later high) or fall (high → later low) in current Elo
+//  - mostConsistent / leastConsistent: smallest / largest spread (standard deviation) of per-round Elo
+export const getEloStats = (histories) => {
+  const climbs = []
+  const drops = []
+  const spreads = []
+  for (const [player, history] of Object.entries(typeof histories === "object" && histories ? histories : {})) {
+    const timeline = getEloTimeline(history)
+    const climb = getBiggestSwing(player, timeline, 1)
+    if (climb) climbs.push(climb)
+    const drop = getBiggestSwing(player, timeline, -1)
+    if (drop) drops.push(drop)
+
+    const rounds = history.slice(0, -1)
+    if (rounds.length >= MIN_ROUNDS_FOR_CONSISTENCY) {
+      spreads.push({ player, spread: standardDeviation(rounds), rounds: rounds.length })
+    }
+  }
+  return {
+    mostImproved: pickTop(climbs, climb => climb.change),
+    biggestDrop: pickTop(drops, drop => drop.change),
+    mostConsistent: pickTop(spreads, entry => -entry.spread),
+    leastConsistent: pickTop(spreads, entry => entry.spread),
+  }
+}
+
+const MIN_ROUNDS_FOR_CONSISTENCY = 3
+
+// The player's current Elo after each of their rounds, oldest first (replays the weighted average one round at a time)
+const getEloTimeline = (history) => {
+  const oldestFirst = [...history].reverse()
+  const timeline = []
+  for (let n = 2; n <= oldestFirst.length; n++) {
+    timeline.push(weightedAverage(oldestFirst.slice(0, n).reverse(), weighting.slice(0, n)))
+  }
+  return timeline
+}
+
+// Biggest move from one point to a later one: direction 1 finds climbs, -1 finds drops. change is always positive.
+const getBiggestSwing = (player, timeline, direction) => {
+  let from = null
+  let swing = null
+  for (const elo of timeline) {
+    if (from === null || (elo - from) * direction < 0) from = elo
+    const change = (elo - from) * direction
+    if (change > (swing ? swing.change : 0)) swing = { player, from, to: elo, change }
+  }
+  return swing
+}
+
+const standardDeviation = (values) => {
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length
+  return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length)
 }
 
 // Moves hats from one set of winners to another (used by submit, edit and delete). Players in both sets are untouched.

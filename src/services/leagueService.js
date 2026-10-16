@@ -63,6 +63,10 @@ export async function resetCurrentSeason (league, season) {
   const playerEloHistory = await resetPlayerEloHistory(league, season)
   if (playerEloHistory.code === "error") return {code: "error", message: "Could not reset Player Elo History"}
 
+  // Season stats are recalculated as each card is replayed
+  const seasonStats = await resetEloData(league, season, "stats")
+  if (seasonStats.code === "error") return {code: "error", message: "Could not reset Season Stats"}
+
   // Big Success Vibes
   return {code: "success", message: "elo reset!"}
 

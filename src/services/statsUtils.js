@@ -15,3 +15,47 @@ export const getCardStrokesPerHole = (card) => {
   if (holeCount === 0 || totals.length === 0) return null
   return totals.reduce((sum, total) => sum + total, 0) / totals.length / holeCount
 }
+
+// Keeps every entry tied for the highest score (to find the lowest, score with a negative)
+export const pickTop = (entries, score) => entries.reduce((best, entry) => {
+  if (best.length === 0 || score(entry) > score(best[0])) return [entry]
+  if (score(entry) === score(best[0])) return [...best, entry]
+  return best
+}, [])
+
+// "Season 4" -> "Season 3"; null when there's no earlier season to compare with
+export const getPreviousSeason = (season = "") => {
+  const num = season.match(/\d+$/)
+  if (!num || Number(num[0]) <= 1) return null
+  return season.substr(0, num.index) + (Number(num[0]) - 1)
+}
+
+// Every hole-in-one by a league member on this season's cards (off-season included), most recent round first
+export const getAces = (scorecards, memberNames) => Object.values(scorecards || {})
+  .sort((a, b) => timeOf(b.Date) - timeOf(a.Date))
+  .flatMap(card => {
+    const holeNames = getHoleNames(card)
+    return (card.Players || [])
+      .filter(player => memberNames.some(name => sameName(name, player.player)))
+      .flatMap(player => (player.holes || [])
+        .map((score, index) => ({ player: player.player, course: normalizeCourse(card.Course), hole: holeNames[index] || String(index + 1), date: card.Date, score }))
+        .filter(hole => Number(String(hole.score).trim()) === 1)
+        .map(({ score, ...ace }) => ace))
+  })
+
+// UDisc names sometimes carry stray spaces or different capitalization
+const sameName = (a, b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase()
+
+// Hole names come from the header row of the pasted UDisc export (PlayerName,CourseName,...,RoundRating,Hole1,Hole2A,...),
+// which is only kept in rawUDiscCard. Returns [] if it isn't there, so callers fall back to the hole's position.
+export const getHoleNames = (card) => {
+  if (typeof card.rawUDiscCard !== "string") return []
+  const header = card.rawUDiscCard.split(/(?:^|\s)Par,/)[0]
+  if (!header.startsWith("PlayerName")) return []
+  return header.split(",").slice(8).map(name => name.trim().replace(/^Hole\s*/i, ""))
+}
+
+const timeOf = (value) => {
+  const parsed = Date.parse(value)
+  return Number.isNaN(parsed) ? 0 : parsed
+}

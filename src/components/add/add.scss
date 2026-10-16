@@ -1,39 +1,89 @@
 @import "../../globalStyles.scss";
 
-@media (min-width: $lv) {
-  .addScorecard {
-    .MuiFormControl-root {
-      width: 100%;
+.addScorecard {
+  .addIntro {
+    margin: -8px 0 20px;
+    opacity: 0.7;
+  }
 
-      .formItem {
-        margin-top: $margin-md;
-      }
+  .addGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+
+  .addCard {
+    position: relative;
+    padding: 20px;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    border-radius: 12px;
+    background: white;
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.3rem;
     }
 
-    .submitButton {
-      margin-top: $margin-md;
-    }
-
-    .parInput {
-      width: 100px;
-      margin: 5px;
+    h4 {
+      margin: 8px 0 0;
     }
   }
-}
 
+  .addBadge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(46, 125, 50, 0.12);
+    color: #2e7d32;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
 
-@media (max-width: $sv) {
-  .addScorecard {
+  .addSteps {
+    margin: 0 0 16px;
+    padding-left: 20px;
+    opacity: 0.8;
+
+    li {
+      margin-bottom: 4px;
+    }
+  }
+
+  .addHint {
+    margin: -4px 0 16px;
+    opacity: 0.7;
+    font-size: 0.95rem;
+  }
+
+  .addForm {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
     .MuiFormControl-root {
       width: 100%;
-
-      .formItem {
-        margin-top: $margin-md;
-      }
     }
+  }
 
-    .submitButton {
-      margin-top: $margin-md;
-    }
+  .addHoles {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .parGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 10px;
+  }
+
+  .addActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 }

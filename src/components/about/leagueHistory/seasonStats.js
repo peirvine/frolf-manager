@@ -1,4 +1,5 @@
 import './leagueHistory.scss'
+import { AceAwards } from '../../aceAward/aceAward'
 
 const round1 = (value) => Math.round(value * 10) / 10
 
@@ -17,6 +18,12 @@ export default function SeasonStats (stats) {
   const hardest = stats.hardestCourse || []
   const average = stats.mostAveragePlayer || []
   const hats = stats.mostHats || []
+  const improved = stats.mostImproved || []
+  const dropped = stats.biggestDrop || []
+  const consistent = stats.mostConsistent || []
+  const inconsistent = stats.leastConsistent || []
+  const leastChanged = stats.leastChanged || []
+  const aces = stats.aces || []
 
   return (
     <div className="historyCard seasonStatsCard">
@@ -46,12 +53,53 @@ export default function SeasonStats (stats) {
             ))}
           </StatTile>
         )}
+        {improved.length > 0 && (
+          <StatTile label="Most Improved">
+            {improved.map(player => (
+              <div key={player.player}>{player.player} <small>+{round1(player.change)} Elo ({Math.round(player.from)} → {Math.round(player.to)})</small></div>
+            ))}
+          </StatTile>
+        )}
+        {dropped.length > 0 && (
+          <StatTile label="Biggest Drop">
+            {dropped.map(player => (
+              <div key={player.player}>{player.player} <small>-{round1(player.change)} Elo ({Math.round(player.from)} → {Math.round(player.to)})</small></div>
+            ))}
+          </StatTile>
+        )}
+        {consistent.length > 0 && (
+          <StatTile label="Most Consistent">
+            {consistent.map(player => (
+              <div key={player.player}>{player.player} <small>±{round1(player.spread)} Elo per round</small></div>
+            ))}
+          </StatTile>
+        )}
+        {inconsistent.length > 0 && (
+          <StatTile label="Least Consistent">
+            {inconsistent.map(player => (
+              <div key={player.player}>{player.player} <small>±{round1(player.spread)} Elo per round</small></div>
+            ))}
+          </StatTile>
+        )}
+        {leastChanged.length > 0 && (
+          <StatTile label="Least Changed Since Last Season">
+            {leastChanged.map(player => (
+              <div key={player.player}>{player.player} <small>{round1(player.to - player.from) >= 0 ? "+" : ""}{round1(player.to - player.from)} Elo ({Math.round(player.from)} → {Math.round(player.to)})</small></div>
+            ))}
+          </StatTile>
+        )}
         <StatTile label="Most Hats">
           {hats.length > 0 ? hats.map(player => (
             <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
           )) : <small>None</small>}
         </StatTile>
       </div>
+      {aces.length > 0 && (
+        <>
+          <h4>Aces</h4>
+          <AceAwards aces={aces} />
+        </>
+      )}
     </div>
   );
 };

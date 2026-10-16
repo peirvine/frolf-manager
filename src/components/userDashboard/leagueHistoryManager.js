@@ -1,7 +1,7 @@
 /* eslint-disable array-callback-return */
 import { useEffect, useState } from 'react';
 import { Alert, Snackbar, Button, FormControl, TextField, Dialog, DialogTitle, DialogContent, DialogActions, OutlinedInput, InputLabel, FormHelperText, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { getLeagueStats } from '../../services/leagueStatsService';
+import { getSeasonEndStats } from '../../services/leagueStatsService';
 import { Close } from '@mui/icons-material'
 import { getScorecards, setLeagueHistory, getLeagueHistory, updateLeagueHistory, deleteLeagueHistory, getLeagueMembers } from  '../../firebase'
 import './userDashboard.scss'
@@ -33,7 +33,7 @@ export function LeagueHistoryManager(props) {
 
   useEffect(() => { 
     const fetchData = async () => {
-      const leagueStats = await getLeagueStats(props.league);
+      const leagueStats = await getSeasonEndStats(props.league);
       setStats(leagueStats);
       const roundRes = await getScorecards(props.league, leagueStats.season);
       setRounds(roundRes);

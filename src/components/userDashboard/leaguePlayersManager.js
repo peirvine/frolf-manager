@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2, getAllUsers } from '../../firebase'
-import { Skeleton, Button, Chip, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText } from '@mui/material'
+import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2, getAllUsers, updateLeagueMemberUDiscName } from '../../firebase'
+import { Skeleton, Button, Chip, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, TextField } from '@mui/material'
 
 export default function LeaguePlayersManager(props) {
   const { league } = props
@@ -10,6 +10,9 @@ export default function LeaguePlayersManager(props) {
   const [ dialogOpen, setDialogOpen ] = useState(false)
   const [ kickedMember, setKickedMember ] = useState('')
   const [ rerender, setReRender] = useState('')
+  const [ editedMember, setEditedMember ] = useState(null)
+  const [ uDiscName, setUDiscName ] = useState('')
+  const [ editError, setEditError ] = useState('')
 
 
   useEffect(() => {
@@ -99,6 +102,25 @@ export default function LeaguePlayersManager(props) {
     //todo also delete elo data
   }
 
+  const handleEditPlayer = player => {
+    setEditedMember(player)
+    setUDiscName(player.uDiscDisplayName || '')
+    setEditError('')
+  }
+
+  // Saves to this member's entry in the league's player list, which is where their UDisc name is matched against cards
+  const saveUDiscName = async () => {
+    const name = uDiscName.trim()
+    const playerIndex = members.findIndex(obj => obj.id === editedMember.id)
+    const res = await updateLeagueMemberUDiscName(league, playerIndex, name)
+    if (res.code === "error") {
+      setEditError(res.message)
+      return
+    }
+    setMembers(members.map((member, index) => index === playerIndex ? { ...member, uDiscDisplayName: name } : member))
+    setEditedMember(null)
+  }
+
   const handleAddPlayer = async (player) => {
     let temp = members
     temp.push({id: player.uid, name: player.name, membershipStatus: "Member", isAdmin: false, uDiscDisplayName: player.uDiscDisplayName})
@@ -114,12 +136,13 @@ export default function LeaguePlayersManager(props) {
     }
 
     if (player.membershipStatus === "Member") {
-      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="info" disabled>Edit User</Button>)
+      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="info" onClick={() => handleEditPlayer(player)}>Edit User</Button>)
       availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="success" onClick={() => handlePlayer(player, "promote")}>Promote to Admin</Button>)
       availableActions.push(<Button key={availableActions.length} variant="contained" color="error" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
     }
 
     if (player.membershipStatus === "Admin") {
+      availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="info" onClick={() => handleEditPlayer(player)}>Edit User</Button>)
       availableActions.push(<Button key={availableActions.length} size="small" variant="contained" color="error" onClick={() => handlePlayer(player, "demote")}>Remove as Admin</Button>)
       availableActions.push(<Button key={availableActions.length} variant="contained" color="error" size="small" onClick={() => handleKickPlayer(player)}>Remove from League</Button>)
     }
@@ -152,6 +175,7 @@ export default function LeaguePlayersManager(props) {
               <li key={player.id}>
                 <div className="manageListMain">
                   <strong>{player.name}</strong>
+                  <small>UDisc: {player.uDiscDisplayName || <i>not set</i>}</small>
                   <Chip size="small" label={player.membershipStatus} color={statusColor(player.membershipStatus)} variant={player.membershipStatus === "Member" ? "outlined" : "filled"} />
                 </div>
                 <div className="manageActions">{handleMakeActions(player)}</div>
@@ -182,6 +206,28 @@ export default function LeaguePlayersManager(props) {
         )}
       </section>
       {rerender}
+      <Dialog open={Boolean(editedMember)} onClose={() => setEditedMember(null)} fullWidth maxWidth="xs">
+        <DialogTitle>Edit {editedMember?.name}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Enter their UDisc display name exactly as it appears on scorecards.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            fullWidth
+            margin="dense"
+            label="UDisc display name"
+            value={uDiscName}
+            onChange={(e) => setUDiscName(e.target.value)}
+            error={Boolean(editError)}
+            helperText={editError}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" onClick={() => setEditedMember(null)}>Cancel</Button>
+          <Button variant="contained" onClick={saveUDiscName} disabled={uDiscName.trim() === ''}>Save</Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
