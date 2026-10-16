@@ -1,0 +1,73 @@
+// A player's doink row, used on the doink fund page and in Manage League -> doinks
+
+// Blues for the player rows (MUI's primary blue and a darker shade)
+$player-blue: #1976d2;
+$player-blue-dark: #1565c0;
+
+.doinkPlayers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doinkPlayer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+
+  &:first-child {
+    border-top: none;
+  }
+
+  &.isMe {
+    border-radius: 8px;
+    background: rgba($player-blue, 0.08);
+  }
+}
+
+.doinkPlayerInfo {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.doinkYou {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: normal;
+  vertical-align: middle;
+  color: white;
+  background: $player-blue-dark;
+}
+
+.doinkBar {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: rgba($player-blue, 0.15);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    background: $player-blue;
+  }
+}
+
+.doinkStepper {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.doinkCount {
+  min-width: 2ch;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+}

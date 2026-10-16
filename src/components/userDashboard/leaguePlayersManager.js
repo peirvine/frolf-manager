@@ -174,8 +174,10 @@ export default function LeaguePlayersManager(props) {
             {members.map(player => (
               <li key={player.id}>
                 <div className="manageListMain">
-                  <strong>{player.name}</strong>
-                  <small>UDisc: {player.uDiscDisplayName || <i>not set</i>}</small>
+                  <div className="playerNames">
+                    <strong>{player.name}</strong>
+                    <small>UDisc: {player.uDiscDisplayName || <i>not set</i>}</small>
+                  </div>
                   <Chip size="small" label={player.membershipStatus} color={statusColor(player.membershipStatus)} variant={player.membershipStatus === "Member" ? "outlined" : "filled"} />
                 </div>
                 <div className="manageActions">{handleMakeActions(player)}</div>

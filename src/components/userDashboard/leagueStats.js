@@ -140,6 +140,22 @@ export default function LeagueStats(props) {
                   <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
                 )) : <small>None yet</small>}
               </div>
+              {stats.doinkFund && (
+                <>
+                  <div className="statTile">
+                    <span className="statLabel">Most Doinks</span>
+                    {stats.mostDoinks.length > 0 ? stats.mostDoinks.map(player => (
+                      <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "doink" : "doinks"}</small></div>
+                    )) : <small>–</small>}
+                  </div>
+                  <div className="statTile">
+                    <span className="statLabel">Fewest Doinks</span>
+                    {stats.fewestDoinks.length > 0 ? stats.fewestDoinks.map(player => (
+                      <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "doink" : "doinks"}</small></div>
+                    )) : <small>–</small>}
+                  </div>
+                </>
+              )}
             </div>
             <h4>Aces</h4>
             {stats.aces.length > 0 ? <AceAwards aces={stats.aces} /> : <small className="noAces">No aces yet this season</small>}

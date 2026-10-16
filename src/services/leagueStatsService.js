@@ -1,4 +1,4 @@
-import { getLeagueSettings, getScorecards, getELOHistory, getCurrentElo, getSeasonStats, getElosOfAllPlayers, getLeagueMembers, getUserDataV2 } from '../firebase';
+import { getLeagueSettings, getScorecards, getELOHistory, getCurrentElo, getSeasonStats, getElosOfAllPlayers, getLeagueMembers, getUserDataV2, getDoinkFundPlayers } from '../firebase';
 import { getEloStats } from './eloService';
 import { isOffSeasonCard, normalizeCourse, getCardStrokesPerHole, pickTop, getPreviousSeason, getAces } from './statsUtils';
 
@@ -41,6 +41,9 @@ export const getLeagueStats = async (league) => {
   
   
   
+  // Only for leagues running a doink fund; doink counts are for the current season
+  const doinks = leagueSettings.doinkFund ? getDoinkStats(await getDoinkFundPlayers(league)) : {}
+
   // Firebase drops empty lists, so any of the saved Elo stats can be missing
   const stats = {
     season: currentSeason, numberOfRounds, mostPlayedCourse, hardestCourse, mostAveragePlayer, currentElo, hatCounts, mostHats, aces,
@@ -48,9 +51,22 @@ export const getLeagueStats = async (league) => {
     biggestDrop: eloStats.biggestDrop || [],
     mostConsistent: eloStats.mostConsistent || [],
     leastConsistent: eloStats.leastConsistent || [],
+    doinkFund: Boolean(leagueSettings.doinkFund),
+    mostDoinks: doinks.mostDoinks || [],
+    fewestDoinks: doinks.fewestDoinks || [],
   }
 
   return stats
+}
+
+const getDoinkStats = (players) => {
+  const counts = Object.values(players || {})
+    .filter(player => player && Number.isFinite(Number(player.doinks)))
+    .map(player => ({ player: player.name, count: Number(player.doinks) }))
+  return {
+    mostDoinks: pickTop(counts, entry => entry.count),
+    fewestDoinks: pickTop(counts, entry => -entry.count),
+  }
 }
 
 // UDisc names of league members, used to match them on scorecards. A member's name is kept in two places — their user

@@ -293,6 +293,12 @@
       min-width: 0;
       overflow-wrap: anywhere;
 
+      .playerNames {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
       small {
         opacity: 0.7;
       }

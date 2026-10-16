@@ -24,6 +24,8 @@ export default function SeasonStats (stats) {
   const inconsistent = stats.leastConsistent || []
   const leastChanged = stats.leastChanged || []
   const aces = stats.aces || []
+  const mostDoinks = stats.mostDoinks || []
+  const fewestDoinks = stats.fewestDoinks || []
 
   return (
     <div className="historyCard seasonStatsCard">
@@ -93,6 +95,20 @@ export default function SeasonStats (stats) {
             <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
           )) : <small>None</small>}
         </StatTile>
+        {mostDoinks.length > 0 && (
+          <StatTile label="Most Doinks">
+            {mostDoinks.map(player => (
+              <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "doink" : "doinks"}</small></div>
+            ))}
+          </StatTile>
+        )}
+        {fewestDoinks.length > 0 && (
+          <StatTile label="Fewest Doinks">
+            {fewestDoinks.map(player => (
+              <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "doink" : "doinks"}</small></div>
+            ))}
+          </StatTile>
+        )}
       </div>
       {aces.length > 0 && (
         <>

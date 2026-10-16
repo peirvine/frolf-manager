@@ -71,27 +71,7 @@ export default function DoinkManager(props) {
     getDoinkFundPlayers(props.league).then(
       res => {
         if (res) {
-          let returnObj = []
-          for (const [key, value] of Object.entries(res)) {
-            returnObj.push(
-              // <TableRow key={key}>
-              //   <TableCell>{value.name}</TableCell>
-              //   <TableCell>
-              //     <TextField
-              //       required
-              //       margin="normal"
-              //       id="outlined-required"
-              //       defaultValue={value.doinks}
-              //       onChange={(e) => handleDoinkChange(value.name, e.target.value)}
-              //       style={{ marginBottom: 15}}
-              //       type={"number"}
-              //     />
-              //   </TableCell>
-              // </TableRow>
-              <DoinkUser playerKey={key} key={key} player={value} league={props.league} isAdmin={true} />
-            )
-          }
-          setDoinkItems(returnObj)
+          setDoinkItems(Object.entries(res))
         }
       }
     )
@@ -268,19 +248,15 @@ export default function DoinkManager(props) {
           </div>
           <section className="manageCard">
             <h3>Current Doinks</h3>
-            <TableContainer>
-              <Table className="manageTable">
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center">Player</TableCell>
-                    <TableCell align="center">Doinks</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {doinkItems}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            {doinkItems.length > 0 ? (
+              <ul className="doinkPlayers">
+                {doinkItems.map(([key, value]) => (
+                  <DoinkUser playerKey={key} key={key} player={value} league={props.league} maxDoink={Number(maxDoink)} isAdmin={true} />
+                ))}
+              </ul>
+            ) : (
+              <i>No one has joined the doink fund yet</i>
+            )}
           </section>
           <section className="manageCard">
             <h3>Current Expenses</h3>
