@@ -1002,6 +1002,18 @@ export function addLeagueRule (league, rules) {
   return res
 }
 
+export function updateLeagueRule (league, rule, text) {
+  const db = getDatabase();
+  return set(ref(db, league + '/info/leagueRules/' + rule), text)
+  .then(() => {
+    return {code: "success", message: "Rule updated"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update a league rule', {error: error} );
+    return {code: "error", message: "League rule was not updated"}
+  });
+}
+
 export function deleteLeagueRule (league, rule) {
   const db = getDatabase();
   let res = remove(ref(db, league + '/info/leagueRules/' + rule))

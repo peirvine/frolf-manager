@@ -1,93 +1,104 @@
 import { useEffect, useState } from "react";
-import { addLeagueRule, getLeagueRules, deleteLeagueRule } from "../../firebase";
-import { Button, Table, TableHead, TableBody, TableContainer, TableCell, TableRow, TextField, FormControl, Snackbar, Alert, IconButton } from "@mui/material";
+import { addLeagueRule, getLeagueRules, deleteLeagueRule, updateLeagueRule } from "../../firebase";
+import { Button, TextField, Snackbar, Alert, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
 export default function ManageLeagueRules ( props ) {
-  const [rules, setRules] = useState([])
+  const [rules, setRules] = useState({})
   const [newRule, setNewRule] = useState('')
+  // The rule being edited: its key and the draft text
+  const [editing, setEditing] = useState(null)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState('')
-  const [alertLevel, setAlertLevel] = useState('')
+  const [alertLevel, setAlertLevel] = useState('info')
 
-  useEffect(() => {
+  const loadRules = () => {
     getLeagueRules(props.league)?.then(res => {
-      setRules(res || []);
+      setRules(res || {});
     });
-  }, [props.league]);
+  }
+
+  useEffect(loadRules, [props.league]);
+
+  // Reload and report how a change went
+  const afterChange = (res) => {
+    loadRules()
+    setAlertLevel(res.code)
+    setAlertMessage(res.message)
+    setAlertOpen(true)
+  }
 
   const handleAddRule = () => {
-    addLeagueRule(props.league, newRule).then(whoCares => {
-      getLeagueRules(props.league)?.then(res => {
-        setRules(res || []);
-      });
-      setAlertLevel(whoCares.code)
-      setAlertMessage(whoCares.message)
-      setAlertOpen(true)
-    });
+    if (!newRule.trim()) return
+    addLeagueRule(props.league, newRule.trim()).then(afterChange);
     setNewRule('')
   }
 
-  const handleDeleteRule = (rule) => {
-    deleteLeagueRule(props.league, rule).then(whoCares => {
-      getLeagueRules(props.league)?.then(res => {
-        setRules(res || []);
-      });
-      setAlertLevel(whoCares.code)
-      setAlertMessage(whoCares.message)
-      setAlertOpen(true)
+  const handleSaveEdit = () => {
+    if (!editing.text.trim()) return
+    updateLeagueRule(props.league, editing.key, editing.text.trim()).then(res => {
+      afterChange(res)
+      if (res.code === "success") setEditing(null)
     });
   }
 
-  const buildTable = () => {
-    let table = []
-    
-    for (const [key, value] of Object.entries(rules)) {
-      table.push(
-        <TableRow key={key}>
-          <TableCell>{value}</TableCell>
-          <TableCell>
-            <Button color="error" onClick={() => handleDeleteRule(key)}>Delete</Button>
-          </TableCell>
-        </TableRow>
-      )
-    }
-    
-    return table
+  const handleDeleteRule = (key) => {
+    if (!window.confirm("Delete this rule?")) return
+    deleteLeagueRule(props.league, key).then(afterChange);
   }
 
   return (
-    <div>
+    <div className="manageRules">
       <h3>League Rules</h3>
-      <FormControl fullWidth>
+      <p className="manageIntro">House rules on top of the PDGA rules. They show on the League History page.</p>
+      <div className="ruleAdd">
         <TextField
-          required
-          margin="normal"
-          id="outlined-required"
-          label="League Rule"
-          defaultValue={''}
+          fullWidth
+          multiline
+          size="small"
+          label="New rule"
           value={newRule}
           onChange={(e) => setNewRule(e.target.value)}
-          style={{ marginBottom: 15}}
         />
-        <Button variant="contained" size="large" onClick={() => handleAddRule()} style={{marginBottom: 15, marginTop: 15}}>Add League Rule</Button>
-      </FormControl>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell><strong>Rule</strong></TableCell>
-              <TableCell><strong>Action</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {
-              Object.entries(rules).length > 0 && buildTable()
-            }
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <Snackbar open={alertOpen}>
+        <Button variant="contained" onClick={handleAddRule} disabled={!newRule.trim()}>Add Rule</Button>
+      </div>
+
+      {Object.keys(rules).length === 0 ? (
+        <i>No rules yet</i>
+      ) : (
+        <ol className="ruleList">
+          {Object.entries(rules).map(([key, value], index) => (
+            <li key={key}>
+              <span className="ruleNumber">{index + 1}</span>
+              {editing?.key === key ? (
+                <div className="ruleEdit">
+                  <TextField
+                    fullWidth
+                    multiline
+                    size="small"
+                    autoFocus
+                    value={editing.text}
+                    onChange={(e) => setEditing({ key, text: e.target.value })}
+                  />
+                  <div className="manageActions">
+                    <Button variant="contained" size="small" onClick={handleSaveEdit} disabled={!editing.text.trim()}>Save</Button>
+                    <Button size="small" onClick={() => setEditing(null)}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <span className="ruleText">{value}</span>
+                  <div className="manageActions">
+                    <Button size="small" onClick={() => setEditing({ key, text: value })}>Edit</Button>
+                    <Button size="small" color="error" onClick={() => handleDeleteRule(key)}>Delete</Button>
+                  </div>
+                </>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+      <Snackbar open={alertOpen} autoHideDuration={4000} onClose={() => setAlertOpen(false)}>
         <Alert
           action={
             <IconButton

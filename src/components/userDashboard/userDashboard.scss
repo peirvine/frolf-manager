@@ -252,6 +252,66 @@
 }
 
 .manage {
+  .ruleAdd {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+
+    .MuiButton-root {
+      flex: none;
+      height: 40px;
+    }
+  }
+
+  .ruleList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px solid rgba(128, 128, 128, 0.2);
+    }
+
+    .manageActions {
+      flex: none;
+    }
+  }
+
+  .ruleNumber {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: $navy-dark;
+    background: $gold;
+  }
+
+  .ruleText {
+    flex: 1;
+    min-width: 0;
+    padding-top: 3px;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+  }
+
+  .ruleEdit {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
   .iconPicker {
     display: flex;
     flex-direction: column;
