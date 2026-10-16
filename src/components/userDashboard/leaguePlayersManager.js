@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2, getAllUsers, updateLeagueMemberUDiscName } from '../../firebase'
+import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2, getAllUsers } from '../../firebase'
 import { Skeleton, Button, Chip, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, TextField } from '@mui/material'
 
 export default function LeaguePlayersManager(props) {
@@ -108,16 +108,17 @@ export default function LeaguePlayersManager(props) {
     setEditError('')
   }
 
-  // Saves to this member's entry in the league's player list, which is where their UDisc name is matched against cards
+  // Saves to this member's entry in the league's player list, which is where their UDisc name is matched against cards.
+  // The whole list is rewritten (like the other actions here), which also drops any empty leftover entries.
   const saveUDiscName = async () => {
     const name = uDiscName.trim()
-    const playerIndex = members.findIndex(obj => obj.id === editedMember.id)
-    const res = await updateLeagueMemberUDiscName(league, playerIndex, name)
+    const updated = members.map(member => member.id === editedMember.id ? { ...member, uDiscDisplayName: name } : member)
+    const res = await updateLeagueMembers(league, updated)
     if (res.code === "error") {
       setEditError(res.message)
       return
     }
-    setMembers(members.map((member, index) => index === playerIndex ? { ...member, uDiscDisplayName: name } : member))
+    setMembers(updated)
     setEditedMember(null)
   }
 

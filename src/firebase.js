@@ -583,11 +583,12 @@ export const updateUsersUDiscName = async (user, name) => {
   return res
 }
 
+// Only real members: entries deleted by hand (e.g. in the Firebase console) can leave empty slots in the list
 export function getLeagueMembers ( league ) {
   const dbRef = ref(getDatabase());
   let elo = get(child(dbRef, league + `/players/`)).then((snapshot) => {
     if (snapshot.exists()) {
-      return snapshot.val()
+      return Object.values(snapshot.val() || {}).filter(member => member && member.id)
     } else {
       // console.log("No data available");
       logEvent(analytics, 'No league member data available')
@@ -748,18 +749,6 @@ export function updateLeagueSettings (league, info) {
     return {code: "error", message: "League Not Updated"}
   });
   return res
-}
-
-// One member's UDisc name on the league's player list (index is their position in that list)
-export function updateLeagueMemberUDiscName(league, index, name) {
-  const db = getDatabase()
-  return set(ref(db, league + '/players/' + index + '/uDiscDisplayName'), name).then(() => {
-    return {code: "success", message: "UDisc name updated"}
-  })
-  .catch((error) => {
-    logEvent(analytics, 'Could not update a UDisc name on the league player list', {error: error} );
-    return {code: "error", message: "Could not update the UDisc name"}
-  });
 }
 
 export function updateLeaguePlayers (league, players) {

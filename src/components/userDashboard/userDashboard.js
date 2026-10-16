@@ -1,15 +1,15 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useState} from 'react'
 import { auth, getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2, getLeagueSettings } from "../../firebase"
-import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar, Avatar, Chip } from '@mui/material'
+import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar, Chip } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
 import { Link } from "react-router-dom";
 import './userDashboard.scss'
 import FunStats from './funStats';
+import LeagueAvatar from '../leagueIcon/leagueIcon';
 import { useAuthState } from "react-firebase-hooks/auth";
 
 // "Disc Golf Club" -> "DG"
-const initials = (name = "") => name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0].toUpperCase()).join("")
 
 const statusColor = (status) => {
   if (status === "Admin") return "success"
@@ -23,6 +23,8 @@ export default function UserDashboard () {
   const [leagues, setLeauges] = useState({})
   const [leagueMembers, setLeagueMembers] = useState([])
   const [leaguesToJoin, setLeaguesToJoin] = useState([])
+  // { leagueId: icon id } for every league shown on the page
+  const [leagueIcons, setLeagueIcons] = useState({})
   const [open, setOpen] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
@@ -53,6 +55,15 @@ export default function UserDashboard () {
       })
     }
   }, [user])
+
+  useEffect(() => {
+    const ids = [...(userData.leagues || []).map(x => x.id), ...leaguesToJoin].filter(id => id && !(id in leagueIcons))
+    if (ids.length === 0) return
+    Promise.all(ids.map(id => getLeagueSettings(id))).then(settings => {
+      setLeagueIcons(previous => ({ ...previous, ...Object.fromEntries(ids.map((id, i) => [id, settings[i]?.icon || ""])) }))
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData, leaguesToJoin])
 
   useEffect(() => {
     if (userData.leagues) {
@@ -279,7 +290,7 @@ export default function UserDashboard () {
             {userData.leagues.map(x => (
               <div className="leagueCard" key={x.id}>
                 <div className="leagueCardHeader">
-                  <Avatar className="leagueAvatar">{initials(leagues[x.id])}</Avatar>
+                  <LeagueAvatar name={leagues[x.id]} icon={leagueIcons[x.id]} />
                   <div className="leagueCardTitle">
                     <strong>{leagues[x.id]}</strong>
                     <Chip
@@ -338,7 +349,7 @@ export default function UserDashboard () {
             {leaguesToJoin.map(league => (
               <div className="leagueCard joinCard" key={league}>
                 <div className="leagueCardHeader">
-                  <Avatar className="leagueAvatar">{initials(leagues[league])}</Avatar>
+                  <LeagueAvatar name={leagues[league]} icon={leagueIcons[league]} />
                   <div className="leagueCardTitle">
                     <strong>{leagues[league]}</strong>
                   </div>

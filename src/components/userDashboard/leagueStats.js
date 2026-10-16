@@ -23,8 +23,9 @@ export default function LeagueStats(props) {
   useEffect(() => {
     const fetchLeagueMembers = async () => {
       try {
+      // Rounds are matched by UDisc name, so members without one can't be counted
       const leagueMembers = await getLeagueMembers(props.league)
-      setMembers(leagueMembers)
+      setMembers((leagueMembers || []).filter(member => member.uDiscDisplayName))
       } catch (error) {
       console.error('Error fetching league members:', error)
       }
@@ -164,10 +165,10 @@ export default function LeagueStats(props) {
             <h4>{stats.hats ? "Rounds played and hats won this season" : "Rounds played this season"}</h4>
             <ul className="roundsByPlayer">
               {rounds.map(player => (
-                <li key={player.id || player.uDiscDisplayName}>
-                  <span>{player.uDiscDisplayName}</span>
-                  <strong>{player.stats.numberOfRounds}</strong>
-                  {stats.hats && <small>{(stats.hatCounts || {})[player.uDiscDisplayName] || 0} 🎩</small>}
+                <li key={player?.id || player?.uDiscDisplayName}>
+                  <span>{player?.uDiscDisplayName}</span>
+                  <strong>{player?.stats.numberOfRounds}</strong>
+                  {stats?.hats && <small>{(stats?.hatCounts || {})[player?.uDiscDisplayName] || 0} 🎩</small>}
                 </li>
               ))}
             </ul>

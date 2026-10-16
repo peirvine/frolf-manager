@@ -7,12 +7,15 @@ import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMemb
 import { startNewSeason } from '../../services/leagueService'
 import { Link, Navigate } from 'react-router-dom'
 import LeagueStats from './leagueStats'
+import LeagueAvatar, { LEAGUE_ICONS } from '../leagueIcon/leagueIcon'
 import ManageLeagueRules from './manageLeagueRules'
 
 export default function LeagueSettingsManager(props) {
   const [name, setName] = useState(props.league.leagueName)
   const [id, setId] = useState(props.league.leagueId)
   const [blurb, setBlurb] = useState()
+  // The dashboard avatar: an id from LEAGUE_ICONS, or "" for initials
+  const [icon, setIcon] = useState("")
   const [checked, setChecked] = useState(true)
   const [checked2, setChecked2] = useState(true)
   const [leagueData, setLeagueData] = useState({})
@@ -31,6 +34,7 @@ export default function LeagueSettingsManager(props) {
           setChecked(res.acceptingPlayers)
           setChecked2(res.isPreseason)
           setBlurb(res.blurb)
+          setIcon(res.icon || "")
         }
       }
     )
@@ -43,7 +47,9 @@ export default function LeagueSettingsManager(props) {
       doinkFund: leagueData?.doinkFund ? leagueData.doinkFund : false,
       leagueAcronym: props.league.leagueId,
       leagueName: name,
-      isPreseason: checked2
+      isPreseason: checked2,
+      // null removes the setting, which means initials
+      icon: icon || null,
     }
     updateLeagueSettings(props.league.leagueId, infoObject).then(res => {
       setAlertOpen(true)
@@ -148,6 +154,24 @@ export default function LeagueSettingsManager(props) {
               value={blurb || ""}
               onChange={(e) => setBlurb(e.target.value)}
             />
+            <div className="iconPicker">
+              <span className="iconPickerLabel">Dashboard icon</span>
+              <div className="iconOptions" role="radiogroup" aria-label="Dashboard icon">
+                {[{ id: "", label: "Initials" }, ...LEAGUE_ICONS].map(option => (
+                  <button
+                    type="button"
+                    key={option.id || "initials"}
+                    role="radio"
+                    aria-checked={icon === option.id}
+                    className={icon === option.id ? "iconOption selected" : "iconOption"}
+                    onClick={() => setIcon(option.id)}
+                  >
+                    <LeagueAvatar name={name} icon={option.id} className="leagueAvatar iconPreview" />
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="manageSwitches">
               <FormControlLabel control={<Switch checked={Boolean(checked)} onChange={(event) => setChecked(event.target.checked)}/>} label="Accepting New Players" />
               <FormControlLabel control={<Switch checked={Boolean(checked2)} onChange={(event) => setChecked2(event.target.checked)}/>} label="Off-Season?" />

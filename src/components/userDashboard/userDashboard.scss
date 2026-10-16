@@ -252,6 +252,54 @@
 }
 
 .manage {
+  .iconPicker {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .iconPickerLabel {
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+
+  .iconOptions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 8px;
+  }
+
+  .iconOption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 4px 8px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font: inherit;
+    font-size: 0.75rem;
+    color: inherit;
+    background: rgba($navy, 0.04);
+    cursor: pointer;
+
+    &:hover {
+      background: rgba($navy, 0.08);
+    }
+
+    &.selected {
+      border-color: $navy;
+      background: rgba($navy, 0.08);
+      font-weight: 600;
+    }
+  }
+
+  .leagueAvatar.MuiAvatar-root {
+    font-weight: bold;
+    color: $gold;
+    background: $navy;
+  }
+
   .manageIntro {
     margin: -4px 0 12px;
     opacity: 0.7;
