@@ -1,12 +1,30 @@
 import { getScorecards, setSpecificScorecard, deleteSpecificScorecard, setCardHatWinners } from "../firebase"
 import { resetCurrentSeason } from "./leagueService"
 import { calculateElo, changeHatWinners } from "./eloService"
+import { refreshHandicaps } from "./handicapStore"
 
 // Editing or deleting a round changes every later round's Elo (each card builds on the state left by the
 // previous one), so we reset the season's derived data and replay every remaining card in order.
 // Pattern: update the scorecard, rebuild, report. If the rebuild fails the card change is already saved,
 // and running any edit/delete again will redo the whole rebuild.
-export const editRound = async (league, season, scorecardId, updatedRound, roundToEdit) => {
+export const editRound = async (league, season, scorecardId, updatedRound, roundToEdit) => (
+  withHandicaps(league, await editCard(league, season, scorecardId, updatedRound, roundToEdit))
+)
+
+export const deleteRound = async (league, season, scorecardId, round) => (
+  withHandicaps(league, await deleteCard(league, season, scorecardId, round))
+)
+
+// Handicaps use every season's cards (off-season too), so they're rebuilt after any change, even a failed one
+const withHandicaps = async (league, result) => {
+  const handicapRes = await refreshHandicaps(league)
+  if (handicapRes.code === "error" && result.code === "success") {
+    return { code: "error", message: result.message + ", but handicaps could not be updated" }
+  }
+  return result
+}
+
+const editCard = async (league, season, scorecardId, updatedRound, roundToEdit) => {
   const round = JSON.parse(JSON.stringify(roundToEdit.round))
   const updateRes = updateCardTotals(round, updatedRound)
   if (updateRes.code === "error") return updateRes
@@ -23,7 +41,7 @@ export const editRound = async (league, season, scorecardId, updatedRound, round
   return { code: "success", message: "Round Edited Successfully" }
 }
 
-export const deleteRound = async (league, season, scorecardId, round) => {
+const deleteCard = async (league, season, scorecardId, round) => {
   const delRes = await deleteSpecificScorecard(league, season, scorecardId)
   if (delRes.code === "error") return delRes
 

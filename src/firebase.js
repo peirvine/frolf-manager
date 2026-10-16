@@ -189,6 +189,8 @@ export const getAllScorecards = (league) => {
     } else {
       // console.log("No data available");
       logEvent(analytics, 'No data available')
+      // Undefined is left for errors, so callers can tell a league with no rounds from a failed read
+      return {}
     }
   }).catch((error) => {
     logEvent(analytics, 'Could not fetch scorecards', {error: error} );
@@ -197,6 +199,29 @@ export const getAllScorecards = (league) => {
 }
 
 
+
+/****************** Handicaps ******************/
+// The league's handicaps as worked out by handicapService (see handicapStore), so pages don't rebuild them
+export function getStoredHandicaps(league) {
+  const dbRef = ref(getDatabase());
+  return get(child(dbRef, league + '/handicaps')).then((snapshot) => {
+    return snapshot.exists() ? snapshot.val() : null
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get handicaps', {error: error} );
+    return null
+  });
+}
+
+export function setStoredHandicaps(league, handicaps) {
+  const db = getDatabase()
+  return set(ref(db, league + '/handicaps'), handicaps).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not save handicaps', {error: error} );
+    return {code: "error", message: "Could not save handicaps"}
+  });
+}
 
 /****************** ELO ******************/
 export function writeEloTracking(league, elo, season) {

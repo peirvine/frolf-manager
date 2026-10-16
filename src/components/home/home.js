@@ -13,7 +13,8 @@ import GoogleIcon from '@mui/icons-material/Google';
 import { auth, signInWithGoogle, getUserDataV2, getLeagueNames } from '../../firebase'
 import { getHomeStats } from '../../services/homeStatsService'
 import UDiscNameDialog from '../nav/uDiscNameDialog'
-import { Basket } from '../aceAward/aceAward'
+import { Basket, AceAwards } from '../aceAward/aceAward'
+import { formatHandicap } from '../../services/handicapService'
 
 import "./home.scss"
 
@@ -255,6 +256,13 @@ function LoggedInHome ({ user }) {
             )}
           </section>
         )}
+
+        {stats?.aces?.length > 0 && (
+          <section className="homeSeason">
+            <h2>Your aces</h2>
+            <AceAwards aces={stats.aces} />
+          </section>
+        )}
       </div>
     </>
   )
@@ -271,6 +279,13 @@ function SeasonTiles ({ stats }) {
         <strong>{stats.elo !== null && stats.elo !== undefined ? Math.round(stats.elo) : "–"}</strong>
         <small>{stats.rank ? `#${stats.rank} of ${stats.rankedPlayers}` : "Not ranked yet"}</small>
       </div>
+      {stats.handicaps && (
+        <div className="homeTile">
+          <span className="homeTileLabel">Handicap</span>
+          <strong>{stats.handicap ? formatHandicap(stats.handicap.handicap) : "–"}</strong>
+          <small>{stats.handicap ? `18 holes · best ${stats.handicap.best} of ${stats.handicap.rounds}` : "Play a league round to get one"}</small>
+        </div>
+      )}
       <div className="homeTile">
         <span className="homeTileLabel">Last round</span>
         <strong className={change > 0 ? "up" : change < 0 ? "down" : ""}>
@@ -297,11 +312,6 @@ function SeasonTiles ({ stats }) {
           <small>{stats.doinks === null ? "not in the fund" : `$${stats.doinks} to the fund`}</small>
         </div>
       )}
-      <div className="homeTile">
-        <span className="homeTileLabel">Aces</span>
-        <strong>{stats.aces ?? 0}</strong>
-        <small>this season</small>
-      </div>
     </div>
   )
 }

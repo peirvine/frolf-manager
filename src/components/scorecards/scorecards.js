@@ -4,6 +4,7 @@ import React, {useState, useEffect} from "react"
 import { getLeagueSettings, getScorecards, getUserDataV2, getLeagueNames, getAllScorecards } from "../../firebase"
 import { useOutletContext, Link } from 'react-router-dom'
 import RoundList from "./roundList";
+import useHandicaps from "../../services/useHandicaps";
 import { Autocomplete, TextField, Skeleton } from '@mui/material'
 
 import './scorecards.scss'
@@ -17,6 +18,7 @@ export default function ViewScorecards () {
   const [optionArray, setOptionArray] = useState([])
   const [league, setLeague] = useState()
   const [allSeasons, setAllSeasons] = useState(false)
+  const handicaps = useHandicaps(league)
 
   useEffect(() => { 
     buildOptions().then(res => {
@@ -47,7 +49,7 @@ export default function ViewScorecards () {
       setLeague(userData.leagues[0].id)
       return optionsArray
     } else {
-      setLeague(userData.leagues[0])
+      setLeague(userData.leagues[0].id)
       return userData.leagues[0]
     }
   }
@@ -88,7 +90,7 @@ export default function ViewScorecards () {
     }
 
     for (const [key, value] of Object.entries(data)) {
-      res.push(value)
+      res.push({ ...value, id: value.id || key })
     }
     
     res.sort((a, b) =>  (a.Date < b.Date) ? 1 : ((b.Date < a.Date) ? -1 : 0))
@@ -129,7 +131,7 @@ export default function ViewScorecards () {
         <h3>{allSeasons ? "All Seasons" : "Most Recent Season"}</h3>
         <Link to="/scorecards/seasons">View every season</Link>
         {dataV2.length !== 0 ? (
-          <RoundList rounds={dataV2} />
+          <RoundList rounds={dataV2} handicaps={handicaps?.byCard} />
         ) : (
           <div className="skeletor">
             <Skeleton variant="rounded" animation="wave" height={60} className="individualSkeletor" />

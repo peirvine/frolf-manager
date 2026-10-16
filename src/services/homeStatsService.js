@@ -1,19 +1,23 @@
-import { getLeagueSettings, getCurrentElo, getDelta, getScorecards, getHatCount, getDoinkFundPlayers } from '../firebase';
+import { getLeagueSettings, getCurrentElo, getDelta, getScorecards, getAllScorecards, getHatCount, getDoinkFundPlayers } from '../firebase';
 import { getMemberNames } from './leagueStatsService';
 import { getAces, leagueHasHats } from './statsUtils';
+import { loadHandicaps } from './handicapStore';
+import { currentHandicapFor } from './handicapService';
 
 // The signed-in player's season at a glance for the home page. Rounds are matched by UDisc name, like everywhere else.
 export const getHomeStats = async (user, uDiscName, league) => {
   const settings = await getLeagueSettings(league)
   const season = settings.currentSeason
 
-  const [currentElo, deltas, scorecards, hats, doinkPlayers, memberNames] = await Promise.all([
+  const [currentElo, deltas, scorecards, hats, doinkPlayers, memberNames, handicaps, allScorecards] = await Promise.all([
     getCurrentElo(league, season),
     getDelta(league, season),
     getScorecards(league, season),
     uDiscName && leagueHasHats(league) ? getHatCount(league, uDiscName) : null,
     settings.doinkFund ? getDoinkFundPlayers(league) : null,
     getMemberNames(league),
+    settings.handicaps ? loadHandicaps(league) : null,
+    uDiscName ? getAllScorecards(league) : null,
   ])
 
   // Ranked among league members only, the same as the rankings page
@@ -35,6 +39,10 @@ export const getHomeStats = async (user, uDiscName, league) => {
     hats: leagueHasHats(league) ? hats || 0 : null,
     doinkFund: Boolean(settings.doinkFund),
     doinks: doinkEntry ? Number(doinkEntry.doinks) || 0 : null,
-    aces: uDiscName ? getAces(scorecards, [uDiscName]).length : 0,
+    // Every ace from every season, newest first
+    aces: uDiscName ? getAces(Object.values(allScorecards || {}).flatMap(season => Object.values(season || {})), [uDiscName]) : [],
+    handicaps: Boolean(settings.handicaps),
+    // { handicap (18 holes), rounds, best }, or null before their first league round
+    handicap: currentHandicapFor(handicaps, uDiscName),
   }
 }

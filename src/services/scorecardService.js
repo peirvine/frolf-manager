@@ -1,6 +1,7 @@
 // import { addScorecardToGoogle } from './googleSheetsService'
 import { getLeagueSettings, writeScorecardToDatabase, setCardHatWinners } from '../firebase'
 import { calculateElo, changeHatWinners } from './eloService'
+import { refreshHandicaps } from './handicapStore'
 
 export async function uDiscDump (card, league, simulation = false) {
   const settings = await getLeagueSettings(league)
@@ -59,6 +60,7 @@ export async function uDiscDump (card, league, simulation = false) {
     let response = {code: "success", message: "Card Validated."}
     if (!simulation) {
       response = await writeScorecardToDatabase(league, returnValue, season)
+      const cardSaved = response.code === "success"
       if (!settings.isPreseason) {
         const res = await calculateElo(returnValue, season, league)
         if (res) {
@@ -72,6 +74,10 @@ export async function uDiscDump (card, league, simulation = false) {
         } else {
           response = {code: "error", message: "Error, card added, elo not added."}
         }
+      }
+      // Rebuilt even if Elo failed: the card is saved, so the stored handicaps would otherwise be out of date
+      if (cardSaved && (await refreshHandicaps(league, settings)).code === "error" && response.code === "success") {
+        response = {code: "error", message: response.message + " Handicaps could not be updated."}
       }
     } else {
       const elo = await calculateElo(returnValue, season, league, true)
