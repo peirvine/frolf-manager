@@ -1,10 +1,11 @@
 import {useState, useEffect} from 'react'
 
-import { IconButton, TableCell, TableRow, Alert, Snackbar } from '@mui/material'
+import { IconButton, Alert, Snackbar } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
 import { getDoinkFundPlayers, updateDoinkBalanceV3, logDoinkEvent } from '../../firebase'
+import './doinkUser.scss'
 
 
 export default function DoinkUser(props) {
@@ -53,25 +54,32 @@ export default function DoinkUser(props) {
       setDoinkHolder(newBalance)
   }
 
+  const isMe = player.uid === props.user
+  const capPercent = maxDoink ? Math.min(100, (doinkHolder / maxDoink) * 100) : 0
+
   return (
-    <TableRow>
-      <TableCell align="center">
-        <Snackbar open={open} autoHideDuration={6000} onClose={() => setOpen(false)}>
-          <Alert onClose={() => setOpen(false)} severity={variant} sx={{ width: '100%' }}>
-            {alertMessage}
-          </Alert>
-        </Snackbar>
-        {player.name}
-      </TableCell>
-      <TableCell align="center"> 
-        <IconButton aria-label="delete" size="medium" onClick={() => reportDoink("down")} variant="filled" disabled={!isUser || doinkHolder === 0}>
+    <li className={isMe ? "doinkPlayer isMe" : "doinkPlayer"}>
+      <Snackbar open={open} autoHideDuration={6000} onClose={() => setOpen(false)}>
+        <Alert onClose={() => setOpen(false)} severity={variant} sx={{ width: '100%' }}>
+          {alertMessage}
+        </Alert>
+      </Snackbar>
+      <div className="doinkPlayerInfo">
+        <strong>{player.name}{isMe && <span className="doinkYou">You</span>}</strong>
+        {/* How close they are to the season cap */}
+        <div className="doinkBar" title={`${doinkHolder} of ${maxDoink}`}>
+          <span style={{ width: `${capPercent}%` }} />
+        </div>
+      </div>
+      <div className="doinkStepper">
+        <IconButton aria-label={`remove a doink from ${player.name}`} size="small" onClick={() => reportDoink("down")} disabled={!isUser || doinkHolder === 0}>
           <RemoveIcon fontSize="inherit" />
         </IconButton>
-        {doinkHolder}
-        <IconButton aria-label="delete" size="medium"  onClick={() => reportDoink("up")} variant="filled" disabled={!isUser || doinkHolder >= maxDoink}>
+        <span className="doinkCount">{doinkHolder}</span>
+        <IconButton aria-label={`add a doink for ${player.name}`} size="small" onClick={() => reportDoink("up")} disabled={!isUser || doinkHolder >= maxDoink}>
           <AddIcon fontSize="inherit" />
         </IconButton>
-      </TableCell>
-    </TableRow>
+      </div>
+    </li>
   )
 }

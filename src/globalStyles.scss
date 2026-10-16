@@ -6,6 +6,28 @@ $secondary: #9C914F;
 $tertiary: #748E54;
 $fourth: #B1F8F2;
 
+// MUI theme primary (App.js) and the accents used with it on the home and about pages
+$navy: #0e4071;
+$navy-dark: #072a4c;
+$gold: #f2b84b;
+
+// The white card every page section sits in
+@mixin card {
+  background: white;
+  border: 1px solid rgba($navy, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba($navy, 0.06);
+}
+
+// A page's main heading
+@mixin pageTitle {
+  margin: 0 0 16px;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: $navy;
+}
+
 $text-primary: white;
 $text-secondary: grey;
 $text-link: #61dafb;

@@ -14,13 +14,15 @@ export default function EditRound() {
   const [ rerender, setReRender] = useState('')
   return (
     <div className="playerManager">
-      <h3>Edit Rounds</h3>
-      <Paper sx={{padding: 3}}>
-        Round Editor
-        <h3>{round.Course}</h3>
-        <h4>{round.Layout}</h4>
-      </Paper>
-      {rerender}
+      <h1>Edit Rounds</h1>
+      <div className="pageCard">
+        <Paper sx={{padding: 3}}>
+          Round Editor
+          <h3>{round.Course}</h3>
+          <h4>{round.Layout}</h4>
+        </Paper>
+        {rerender}
+      </div>
     </div>
   )
 }

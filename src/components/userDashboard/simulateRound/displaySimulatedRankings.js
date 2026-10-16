@@ -1,4 +1,3 @@
-/* eslint-disable array-callback-return */
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import SwitchAccessShortcutIcon from '@mui/icons-material/SwitchAccessShortcut';
@@ -6,77 +5,58 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import { Chip, TableCell, TableRow, TableBody, TableContainer, TableHead, Table, Paper } from '@mui/material';
+import { Chip, TableCell, TableRow, TableBody, TableContainer, TableHead, Table } from '@mui/material';
 
-function DisplaySimulatedRankings(props) {
-  const { simData, deltas } = props
+const round1 = (value) => Math.round(value * 10) / 10
 
+// Same arrows as the rankings page, by how far the rating moved
+const getIcon = value => {
+  const rounded = round1(value || 0)
+  if (rounded <= 1 && rounded >= -1) return <Chip icon={<UnfoldMoreIcon />} label={rounded} color="primary" variant="outlined" size="small" />
+  if (rounded > 1 && rounded < 10) return <Chip icon={<KeyboardArrowUpIcon />} label={`+${rounded}`} color="success" variant="outlined" size="small" />
+  if (rounded >= 10 && rounded < 15) return <Chip icon={<KeyboardDoubleArrowUpIcon />} label={`+${rounded}`} color="success" variant="outlined" size="small" />
+  if (rounded >= 15) return <Chip icon={<SwitchAccessShortcutIcon />} label={`+${rounded}`} color="success" variant="outlined" size="small" />
+  if (rounded < -1 && rounded > -10) return <Chip icon={<KeyboardArrowDownIcon />} label={rounded} color="error" variant="outlined" size="small" />
+  if (rounded <= -10 && rounded > -15) return <Chip icon={<KeyboardDoubleArrowDownIcon />} label={rounded} color="error" variant="outlined" size="small" />
+  return <Chip icon={<TrendingDownIcon />} label={rounded} color="error" variant="outlined" size="small" />
+}
 
-  const getIcon = value => {
-    const roundedValue = Math.round(value * 10) / 10
-    if (roundedValue <= 1 && roundedValue >= -1) {
-      return <Chip icon={<UnfoldMoreIcon className="changeIcon"/>} label={roundedValue} color="primary" variant="outlined" />
-    } else if (roundedValue > 1 && roundedValue < 10 ) {
-      return  <Chip icon={<KeyboardArrowUpIcon className="changeIcon" />} label={roundedValue} color="success" variant="outlined" />
-    } else if (roundedValue >= 10 && roundedValue < 15 ) {
-      return  <Chip icon={<KeyboardDoubleArrowUpIcon className="changeIcon" />} label={roundedValue} color="success" variant="outlined" />
-    } else if (roundedValue >= 15) {
-      return  <Chip icon={<SwitchAccessShortcutIcon className="changeIcon" />} label={roundedValue} color="success" variant="outlined" />
-    } else if (roundedValue < -1 && roundedValue > -10 ) {
-      return  <Chip icon={<KeyboardArrowDownIcon className="changeIcon" />} label={roundedValue} color="error" variant="outlined" />
-    } else if (roundedValue <= -10 && roundedValue > -15 ) {
-      return  <Chip icon={<KeyboardDoubleArrowDownIcon className="changeIcon" />} label={roundedValue} color="error" variant="outlined" />
-    } else if (roundedValue <= -15) {
-      return  <Chip icon={<TrendingDownIcon className="changeIcon" />} label={roundedValue} color="error" variant="outlined" />
-    }
-  }
-
-  const formatRankings = (passedRankings) => {
-    let sorted = Object.entries(passedRankings).sort((a,b) => b[1]-a[1]).map(el=>el[0])
-    let playerRankings = []
-    let qualified = true
-    sorted.map(x => {
-      let numRounds = 0
-      if (simData[x] !== undefined) {
-        numRounds = simData[x].length
-      }
-      if (numRounds < 8) {
-        qualified = false
-      }
-      playerRankings.push(
-        <TableRow
-          key={x}
-          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-          // onClick={() => handleShowStats(player[0])}
-        >
-          <TableCell align="center">
-            {x} {qualified ? null : " - Not Qualified"}
-          </TableCell>
-          <TableCell align="center">{Math.round(passedRankings[x] * 10) /10}</TableCell>
-          {deltas && (<TableCell align="center">{getIcon(deltas[x])}</TableCell>)}
-        </TableRow>
-      )
-    })
-    return playerRankings
-  }
-
+// ratings: everyone's rating after the simulated round; deltas: how much each moved; roundRatings: the rating each
+// player in the round earned for that round alone
+export default function DisplaySimulatedRankings({ ratings = {}, deltas = {}, roundRatings = {} }) {
+  const ranked = Object.entries(ratings)
+    .filter(([, rating]) => Number.isFinite(rating))
+    .sort(([, a], [, b]) => b - a)
 
   return (
-    <TableContainer component={Paper} size="medium" className="rankingsTable">
-      <Table aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell align="center">Player</TableCell>
-              <TableCell align="center">Rating</TableCell>
-              <TableCell align="center">Rating Change</TableCell>
-            </TableRow>
-          </TableHead>
+    <TableContainer className="simTable">
+      <Table size="small" aria-label="simulated rankings">
+        <TableHead>
+          <TableRow>
+            <TableCell align="center">#</TableCell>
+            <TableCell>Player</TableCell>
+            <TableCell align="center">Rating</TableCell>
+            <TableCell align="center">Change</TableCell>
+            <TableCell align="center">This round</TableCell>
+          </TableRow>
+        </TableHead>
         <TableBody>
-          {simData && (formatRankings(simData))}
+          {ranked.map(([player, rating], index) => {
+            const played = roundRatings[player] !== undefined
+            return (
+              <TableRow key={player} className={played ? "simPlayed" : ""}>
+                <TableCell align="center">
+                  <span className={`simRank simRank${index + 1}`}>{index + 1}</span>
+                </TableCell>
+                <TableCell className="simPlayer">{player}</TableCell>
+                <TableCell align="center" className="simRating">{round1(rating)}</TableCell>
+                <TableCell align="center">{getIcon(deltas[player])}</TableCell>
+                <TableCell align="center">{played ? round1(roundRatings[player]) : <span className="simMuted">–</span>}</TableCell>
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
     </TableContainer>
   );
 }
-
-export default DisplaySimulatedRankings;

@@ -4,7 +4,6 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { auth } from "./firebase"
 import { useAuthState } from "react-firebase-hooks/auth";
-import Paper from '@mui/material/Paper';
 import Nav from './components/nav/nav'
 import Home from './components/home/home'
 import Footer from './components/footer/footer';
@@ -22,7 +21,7 @@ const theme = createTheme({
       main: '#f50057',
     },
     background: {
-      default: '#fafafa',
+      default: '#f4f6f9',
     },
   },
 });
@@ -40,11 +39,10 @@ function App() {
             <Nav />
         </header>
         {pathname === "/" ? <Home /> : (
-          <div className="content">
-            <Paper className="paperContent">
-              <Outlet context={[user]} />
-            </Paper>
-          </div>
+          // Pages lay themselves out on the gray background: title on top, content in white cards
+          <main className="content">
+            <Outlet context={[user]} />
+          </main>
         )}
         <Footer />
       </div>

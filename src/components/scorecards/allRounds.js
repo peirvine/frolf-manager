@@ -78,40 +78,42 @@ export default function AllRounds () {
   return (
     <div className="scorecards">
       <h1>All Rounds</h1>
-      <Link to="/scorecards">Back to most recent season</Link>
-      {leagueOptions.length > 1 && (
-        <Autocomplete
-          disablePortal
-          disableClearable
-          options={leagueOptions}
-          value={leagueOptions.find(x => x.id === league) || null}
-          sx={{ marginTop: 1, marginBottom: 1 }}
-          renderInput={(params) => <TextField {...params} label="Choose League" />}
-          onChange={(event, newValue) => setLeague(newValue.id)}
-        />
-      )}
-      {error && <p>{error}</p>}
-      {league !== null && seasons.length === 0 && !error && (
-        <Skeleton variant="rounded" animation="wave" height={60} />
-      )}
-      {league === null && leagueOptions.length === 0 && (
-        <p><i>You are not an approved member of any leagues.</i></p>
-      )}
-      {seasons.map(season => (
-        <Accordion key={season} expanded={expanded === season} onChange={handleSeason(season)}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls={`${season}-content`} id={`${season}-header`}>
-            <strong>{season}</strong>{season === currentSeason && <span>&nbsp;(current)</span>}
-          </AccordionSummary>
-          <AccordionDetails>
-            {loadingSeason === season && <CircularProgress size={28} />}
-            {roundsBySeason[season] && (
-              roundsBySeason[season].length > 0
-                ? <RoundList rounds={roundsBySeason[season]} />
-                : <i>No rounds recorded this season</i>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      ))}
+      <div className="pageCard">
+        <Link to="/scorecards">Back to most recent season</Link>
+        {leagueOptions.length > 1 && (
+          <Autocomplete
+            disablePortal
+            disableClearable
+            options={leagueOptions}
+            value={leagueOptions.find(x => x.id === league) || null}
+            sx={{ marginTop: 1, marginBottom: 1 }}
+            renderInput={(params) => <TextField {...params} label="Choose League" />}
+            onChange={(event, newValue) => setLeague(newValue.id)}
+          />
+        )}
+        {error && <p>{error}</p>}
+        {league !== null && seasons.length === 0 && !error && (
+          <Skeleton variant="rounded" animation="wave" height={60} />
+        )}
+        {league === null && leagueOptions.length === 0 && (
+          <p><i>You are not an approved member of any leagues.</i></p>
+        )}
+        {seasons.map(season => (
+          <Accordion key={season} expanded={expanded === season} onChange={handleSeason(season)}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls={`${season}-content`} id={`${season}-header`}>
+              <strong>{season}</strong>{season === currentSeason && <span>&nbsp;(current)</span>}
+            </AccordionSummary>
+            <AccordionDetails>
+              {loadingSeason === season && <CircularProgress size={28} />}
+              {roundsBySeason[season] && (
+                roundsBySeason[season].length > 0
+                  ? <RoundList rounds={roundsBySeason[season]} />
+                  : <i>No rounds recorded this season</i>
+              )}
+            </AccordionDetails>
+          </Accordion>
+        ))}
+      </div>
     </div>
   )
 }

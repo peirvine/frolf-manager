@@ -1,0 +1,119 @@
+@import '../../../globalStyles.scss';
+
+.simulateRound {
+  .simBack {
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+
+  .simIntro {
+    margin: -8px 0 20px;
+    font-size: 1rem;
+    opacity: 0.8;
+  }
+
+  h2 {
+    margin: 0 0 16px;
+    font-size: 1.2rem;
+    color: $navy;
+  }
+
+  h3 {
+    margin: 20px 0 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba($navy, 0.7);
+  }
+}
+
+.simLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.simCourse {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.simScores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+  gap: 14px 12px;
+}
+
+.simError {
+  margin: 16px 0 0;
+  color: #c62828;
+}
+
+.simActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.simEmpty {
+  margin: 0;
+  padding: 32px 16px;
+  border-radius: 12px;
+  text-align: center;
+  opacity: 0.75;
+  background: rgba($navy, 0.04);
+}
+
+.simTable {
+  th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba($navy, 0.7);
+  }
+
+  // Players in the simulated round stand out
+  .simPlayed td {
+    background: rgba($gold, 0.12);
+  }
+
+  .simPlayer {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .simRating {
+    font-weight: 700;
+    color: $navy;
+  }
+
+  .simMuted {
+    opacity: 0.4;
+  }
+}
+
+.simRank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba($navy, 0.08);
+
+  &.simRank1 { color: white; background: darken(gold, 8%); }
+  &.simRank2 { color: white; background: silver; }
+  &.simRank3 { color: white; background: #cd7f32; }
+}
+
+@media (max-width: 900px) {
+  .simLayout {
+    grid-template-columns: 1fr;
+  }
+}

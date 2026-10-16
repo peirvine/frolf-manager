@@ -1,6 +1,6 @@
-import { getScorecards, setSpecificScorecard, deleteSpecificScorecard } from "../firebase"
+import { getScorecards, setSpecificScorecard, deleteSpecificScorecard, setCardHatWinners } from "../firebase"
 import { resetCurrentSeason } from "./leagueService"
-import { calculateElo } from "./eloService"
+import { calculateElo, changeHatWinners } from "./eloService"
 
 // Editing or deleting a round changes every later round's Elo (each card builds on the state left by the
 // previous one), so we reset the season's derived data and replay every remaining card in order.
@@ -29,10 +29,14 @@ export const deleteRound = async (league, season, scorecardId, round) => {
 
   if (round?.isOffSeason) return { code: "success", message: "Round Deleted Successfully" }
 
+  // Take the hat back from this round's winners; the rebuild below re-awards hats on the remaining rounds
+  const hatsOk = await changeHatWinners(league, round?.hatWinners || [], [])
+
   const rebuildRes = await rebuildSeason(league, season)
   if (rebuildRes.code === "error") {
     return { code: "error", message: "Round deleted, but rankings could not be recalculated: " + rebuildRes.message }
   }
+  if (!hatsOk) return { code: "error", message: "Round deleted and rankings recalculated, but the hat count could not be updated." }
   return { code: "success", message: "Round Deleted Successfully" }
 }
 
@@ -52,6 +56,11 @@ export const rebuildSeason = async (league, season) => {
   for (const [key, card] of ordered) {
     const res = await calculateElo(cardFromStored(card), season, league)
     if (!res) return { code: "error", message: `Error calculating Elo for ${card.Course} (${key})` }
+
+    // Ratings changed, so the lowest-rated player on this card may have too
+    const hatsOk = await changeHatWinners(league, card.hatWinners || [], res.hatWinners)
+      && (await setCardHatWinners(league, season, key, res.hatWinners)).code !== "error"
+    if (!hatsOk) return { code: "error", message: `Error updating the hat count for ${card.Course} (${key})` }
   }
 
   return { code: "success", message: "Season recalculated" }

@@ -99,122 +99,62 @@ export default function Add() {
         <p>Adding scorecard and recalculating rankings… please don't close this page.</p>
       </Backdrop>
       <h1>Add a Scorecard</h1>
-      {user ? (
-        <>
-          <Collapse in={open}>
-            <Alert severity={variant} onClose={() => setOpen(false)}>
-              {alertMessage}
-            </Alert>
-          </Collapse>
-          <Box sx={{ width: '100%', flexGrow: 1 }}>
-            <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-              <Grid item md={6} xs={12}>
+      <div className="pageCard">
+        {user ? (
+          <>
+            <p className="addIntro">Submit a round and the season rankings update automatically.</p>
+            <Collapse in={open}>
+              <Alert severity={variant} onClose={() => setOpen(false)} sx={{ mb: 2 }}>
+                {alertMessage}
+              </Alert>
+            </Collapse>
+            <div className="addGrid">
+              <section className="addCard">
                 <h2>Add Card from UDisc</h2>
-                <p>To do this go to your card in UDisc on the mobile app, click the Hamburger Menu, click "Export to CSV", then copy the data and paste it into the field below. This is the preferred way to import data.</p>
-                <FormControl>
-                  <TextField
-                    required
-                    id="outlined-basic"
-                    label="Udisc CSV Output"
-                    variant="outlined"
-                    value={udisc}
-                    onInput={e => setUdisc(e.target.value)}
-                  />
+                <span className="addBadge">Preferred</span>
+                <ol className="addSteps">
+                  <li>Open your card in the UDisc mobile app</li>
+                  <li>Tap the menu, then "Export to CSV"</li>
+                  <li>Copy the data and paste it below</li>
+                </ol>
+                <div className="addForm">
                   {optionArray.length > 1 ? (<Autocomplete
                     disablePortal
                     disableClearable
                     id="combo-box-demo"
                     options={optionArray}
-                    sx={{ marginTop: 1 }}
                     renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
                     onChange={(event, newValue) => {
                       setLeague(newValue.id);
                     }}
                   />) : null}
-                  <Button className="submitButton" variant="contained" onClick={() => handleUdisc()} disabled={addDisabled}>Add {settings.isPreseason ? "Off-Season Round" : "Round"}</Button>
-                  {addDisabled ? (<i>You are not a approved member of any leagues, if this is an error please reach out to your league admin</i>) : null }
-                  <Button className="submitButton" variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
-                </FormControl>
-              </Grid>
-              <Grid item md={6} xs={12}>
-                <LeagueAdd />
-              </Grid>
-              <Grid item md={6} xs={12}>
-                <h2>Manual Add</h2>
-                <p><i>This feature is in development</i></p>
-                {/* <p>This is for rounds not done on UDisc, this will limit the amount of data/stats that players will have for the round</p>
-                <FormControl>
-                  <Autocomplete
-                    disablePortal
-                    freeSolo
-                    required
-                    onChange={(event, newValue) => {
-                      setLayouts(newValue.layouts)
-                      setChosenCourse(newValue.label)
-                    }}
-                    id="frolfCourse"
-                    options={frolfCourses}
-                    value={chosenCourse}
-                    renderInput={(params) => <TextField {...params} label="Course" />}
-                  />
-                  <Autocomplete
-                    className="formItem"
-                    disablePortal
-                    freeSolo
-                    required
-                    // eslint-disable-next-line no-unused-vars
-                    onChange={(event, newValue) => {
-                      setChosenLayout(newValue)
-                    }}
-                    id="frolfLayout"
-                    options={layouts}
-                    value={chosenLayout}
-                    renderInput={(params) => <TextField {...params} label="Layout" />}
-                  />
                   <TextField
-                    className="formItem"
-                    id="outlined-basic"
-                    label="Par"
                     required
+                    multiline
+                    minRows={4}
+                    maxRows={8}
+                    id="outlined-basic"
+                    label="UDisc CSV Output"
                     variant="outlined"
-                    value={par}
-                    onInput={e => setPar(e.target.value)}
+                    value={udisc}
+                    onInput={e => setUdisc(e.target.value)}
                   />
-                  <Accordion className="formItem">
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel1a-content"
-                      id="panel1a-header"
-                    >
-                      Players
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <div className="players">
-                        Enter the players score
-                        {players.map(player => (
-                          <TextField
-                            key={player}
-                            className="formItem"
-                            id="outlined-basic"
-                            label={player}
-                            variant="outlined"
-                            onInput={e => handleManualAdd(e.target.value, player)}
-                          />
-                        ))}
-                      </div>
-                    </AccordionDetails>
-                  </Accordion>
-                  <Button className="submitButton" variant="contained" onClick={() => handleSubmit()}>Add Scorecard</Button>
-                </FormControl> */}
-              </Grid>
-            </Grid>
-          </Box>
-        </>
-        ) : (
-          <>
-            <p>Please <span style={{ textDecoration: "underline" }}onClick={() => signInWithGoogle()}>log in</span> to add a round</p>
+                  {addDisabled ? (<i>You are not a approved member of any leagues, if this is an error please reach out to your league admin</i>) : null }
+                  <div className="addActions">
+                    <Button variant="contained" onClick={() => handleUdisc()} disabled={addDisabled}>Add {settings.isPreseason ? "Off-Season Round" : "Round"}</Button>
+                    <Button variant="outlined" component={ NavLink } to={"/rankings"}>View Rankings</Button>
+                  </div>
+                </div>
+              </section>
+              <section className="addCard">
+                <LeagueAdd />
+              </section>
+            </div>
           </>
-        )}
+          ) : (
+            <p>Please <span style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => signInWithGoogle()}>log in</span> to add a round</p>
+          )}
+      </div>
     </div>
   )
 }

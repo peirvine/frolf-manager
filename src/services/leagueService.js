@@ -1,4 +1,4 @@
-import { getLeagueMembers, getLeagueSettings, getUserDataV2, setDeltaV2, updateCurrentEloV2, updateLeagueSettings, resetEloData } from "../firebase";
+import { getLeagueMembers, getLeagueSettings, getUserDataV2, setDeltaV2, updateCurrentEloV2, updateLeagueSettings, resetEloData, resetHatCounts } from "../firebase";
 
 // Pattern: Update the database, check for error, then move on. This way if you click the button again it'll just overwrite the failed update. Updating the season is last.
 export async function startNewSeason ( league ) {
@@ -25,6 +25,10 @@ export async function startNewSeason ( league ) {
   // Elo Delta
   const eloDelta = await newEloDelta(league, newSeason, players)
   if (!eloDelta) return {code: "error", message: "Could not create a new season in Elo Deltas"}
+
+  // Hat counts start over each season
+  const hats = await resetHatCounts(league)
+  if (hats.code === "error") return {code: "error", message: "Could not reset hat counts"}
 
   // Season, Last Update
   const season = await updateSeason(league, newSeason)
@@ -58,6 +62,10 @@ export async function resetCurrentSeason (league, season) {
   // playerEloHistory
   const playerEloHistory = await resetPlayerEloHistory(league, season)
   if (playerEloHistory.code === "error") return {code: "error", message: "Could not reset Player Elo History"}
+
+  // Season stats are recalculated as each card is replayed
+  const seasonStats = await resetEloData(league, season, "stats")
+  if (seasonStats.code === "error") return {code: "error", message: "Could not reset Season Stats"}
 
   // Big Success Vibes
   return {code: "success", message: "elo reset!"}

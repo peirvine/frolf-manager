@@ -21,7 +21,7 @@ import {
   addDoc,
   setDoc,
 } from "firebase/firestore"
-import { getDatabase, ref, set, child, get, update, push, remove } from "firebase/database";
+import { getDatabase, ref, set, child, get, update, push, remove, runTransaction } from "firebase/database";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
@@ -115,7 +115,7 @@ export function writeScorecardToDatabase(league, card, season) {
     isOffSeason: card.isOffSeason
   })
   .then(() => {
-    return {code: "success", message: "Scorecard added successfully."}
+    return {code: "success", message: "Scorecard added successfully.", key: newId}
   })
   .catch((error) => {
     logEvent(analytics, 'A user was unable to add a scorecard', {error: error} );
@@ -358,6 +358,82 @@ export function updateCurrentEloV2(league, season, eloArray) {
   });
 }
 
+export function setCardHatWinners(league, season, key, hatWinners) {
+  const db = getDatabase()
+  return set(ref(db, league + '/scorecards/' + season + "/" + key + '/hatWinners'), hatWinners.length ? hatWinners : null).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not save hat winners', {error: error} );
+    return {code: "error", message: "Could not save hat winners"}
+  });
+}
+
+// Season stats worked out as cards are scored (e.g. most improved player)
+export function getSeasonStats(league, season) {
+  const dbRef = ref(getDatabase());
+  return get(child(dbRef, league + '/stats/' + season)).then((snapshot) => {
+    return snapshot.exists() ? snapshot.val() : null
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get season stats', {error: error} );
+    return null
+  });
+}
+
+export function setSeasonStats(league, season, stats) {
+  const db = getDatabase()
+  return set(ref(db, league + '/stats/' + season), stats).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not save season stats', {error: error} );
+    return {code: "error", message: "Could not save season stats"}
+  });
+}
+
+export function resetHatCounts(league) {
+  const db = getDatabase()
+  return set(ref(db, league + '/hatCount'), null).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not reset hat counts', {error: error} );
+    return {code: "error", message: "Could not reset hat counts"}
+  });
+}
+
+// Every player's hat count this season ({ uDiscName: count }); the source of truth for hat stats
+export function getHatCounts(league) {
+  const dbRef = ref(getDatabase());
+  return get(child(dbRef, league + '/hatCount')).then((snapshot) => {
+    return snapshot.exists() ? snapshot.val() : {}
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get hat counts', {error: error} );
+    return {}
+  });
+}
+
+export function getHatCount(league, player) {
+  const dbRef = ref(getDatabase());
+  return get(child(dbRef, league + '/hatCount/' + player)).then((snapshot) => {
+    return snapshot.exists() ? snapshot.val() : 0
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get hat count', {error: error} );
+    return 0
+  });
+}
+
+export function incrementHatCount(league, player, change = 1) {
+  const db = getDatabase()
+  return runTransaction(ref(db, league + '/hatCount/' + player), (count) => Math.max(0, (count || 0) + change)).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not increment hat count', {error: error} );
+    return {code: "error", message: "Could not update hat count"}
+  });
+}
+
 export function getDelta (league, season) {
   const year = new Date().getFullYear();
   const dbRef = ref(getDatabase());
@@ -507,11 +583,12 @@ export const updateUsersUDiscName = async (user, name) => {
   return res
 }
 
+// Only real members: entries deleted by hand (e.g. in the Firebase console) can leave empty slots in the list
 export function getLeagueMembers ( league ) {
   const dbRef = ref(getDatabase());
   let elo = get(child(dbRef, league + `/players/`)).then((snapshot) => {
     if (snapshot.exists()) {
-      return snapshot.val()
+      return Object.values(snapshot.val() || {}).filter(member => member && member.id)
     } else {
       // console.log("No data available");
       logEvent(analytics, 'No league member data available')
@@ -923,6 +1000,18 @@ export function addLeagueRule (league, rules) {
   });
 
   return res
+}
+
+export function updateLeagueRule (league, rule, text) {
+  const db = getDatabase();
+  return set(ref(db, league + '/info/leagueRules/' + rule), text)
+  .then(() => {
+    return {code: "success", message: "Rule updated"}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'The system failed to update a league rule', {error: error} );
+    return {code: "error", message: "League rule was not updated"}
+  });
 }
 
 export function deleteLeagueRule (league, rule) {

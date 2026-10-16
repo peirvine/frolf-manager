@@ -1,6 +1,7 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2 } from "../firebase";
+import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2, incrementHatCount, setSeasonStats } from "../firebase";
 import { weighting, pointPerThrowRef } from "./eloConstants";
+import { pickTop, leagueHasHats } from "./statsUtils";
 
 
 export const calculateElo = async (card, season, league, simulation = false) => {
@@ -38,7 +39,7 @@ export const calculateElo = async (card, season, league, simulation = false) => 
   }
 
 // updates current elo of player
-  const currentElo = await updateCurrentElos(league, season, simulation)
+  const currentElo = await updateCurrentElos(league, season, simulation, simulation ? cardElo : {})
   if (!currentElo) return false
 
   const delta = await calculateDelta(league, season, previousElo, currentElo, simulation)
@@ -47,11 +48,95 @@ export const calculateElo = async (card, season, league, simulation = false) => 
   const graphRes = await graphData(league, season, card.course, card.date, previousElo, currentElo, simulation)
   if (!graphRes) return false
 
-  if (simulation) {
-    return {prettyElo, delta, currentElo}
-  } else {
-    return true
+  if (!simulation) {
+    const statsRes = await setSeasonStats(league, season, { ...getEloStats(await getElosOfAllPlayers(season, league)), calculatedAt: Date.now() })
+    if (statsRes.code === "error") return false
   }
+
+  const hatWinners = leagueHasHats(league) ? getHatWinners(cardElo, currentElo) : []
+  if (simulation) {
+    return {prettyElo, delta, currentElo, hatWinners}
+  } else {
+    return {hatWinners}
+  }
+}
+
+// The hat goes to the lowest-rated player on the card, using ratings after the card is counted (ties share it)
+const getHatWinners = (cardElo, currentElo) => {
+  const names = Object.keys(cardElo)
+  if (names.length === 0) return []
+  const rating = (name) => currentElo[name] === undefined ? 1000 : currentElo[name]
+  const lowest = Math.min(...names.map(rating))
+  return names.filter(name => rating(name) === lowest)
+}
+
+// Elo stats saved with the season each time a card is scored. A player's history is their per-round Elo, newest
+// first, ending in the 1000 they were seeded at; the seed isn't a round, so it's left out of all of these.
+//  - mostImproved / biggestDrop: the biggest climb (low → later high) or fall (high → later low) in current Elo
+//  - mostConsistent / leastConsistent: smallest / largest spread (standard deviation) of per-round Elo
+export const getEloStats = (histories) => {
+  const climbs = []
+  const drops = []
+  const spreads = []
+  for (const [player, history] of Object.entries(typeof histories === "object" && histories ? histories : {})) {
+    const timeline = getEloTimeline(history)
+    const climb = getBiggestSwing(player, timeline, 1)
+    if (climb) climbs.push(climb)
+    const drop = getBiggestSwing(player, timeline, -1)
+    if (drop) drops.push(drop)
+
+    const rounds = history.slice(0, -1)
+    if (rounds.length >= MIN_ROUNDS_FOR_CONSISTENCY) {
+      spreads.push({ player, spread: standardDeviation(rounds), rounds: rounds.length })
+    }
+  }
+  return {
+    mostImproved: pickTop(climbs, climb => climb.change),
+    biggestDrop: pickTop(drops, drop => drop.change),
+    mostConsistent: pickTop(spreads, entry => -entry.spread),
+    leastConsistent: pickTop(spreads, entry => entry.spread),
+  }
+}
+
+const MIN_ROUNDS_FOR_CONSISTENCY = 3
+
+// The player's current Elo after each of their rounds, oldest first (replays the weighted average one round at a time)
+const getEloTimeline = (history) => {
+  const oldestFirst = [...history].reverse()
+  const timeline = []
+  for (let n = 2; n <= oldestFirst.length; n++) {
+    timeline.push(weightedAverage(oldestFirst.slice(0, n).reverse(), weighting.slice(0, n)))
+  }
+  return timeline
+}
+
+// Biggest move from one point to a later one: direction 1 finds climbs, -1 finds drops. change is always positive.
+const getBiggestSwing = (player, timeline, direction) => {
+  let from = null
+  let swing = null
+  for (const elo of timeline) {
+    if (from === null || (elo - from) * direction < 0) from = elo
+    const change = (elo - from) * direction
+    if (change > (swing ? swing.change : 0)) swing = { player, from, to: elo, change }
+  }
+  return swing
+}
+
+const standardDeviation = (values) => {
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length
+  return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length)
+}
+
+// Moves hats from one set of winners to another (used by submit, edit and delete). Players in both sets are untouched.
+export const changeHatWinners = async (league, oldWinners, newWinners) => {
+  if (!leagueHasHats(league)) return true
+  for (const player of oldWinners.filter(p => !newWinners.includes(p))) {
+    if ((await incrementHatCount(league, player, -1)).code === "error") return false
+  }
+  for (const player of newWinners.filter(p => !oldWinners.includes(p))) {
+    if ((await incrementHatCount(league, player, 1)).code === "error") return false
+  }
+  return true
 }
 
 async function getPlayers (league) {
@@ -181,18 +266,18 @@ const makeEloPretty = (course, layout, cardAverage, strokesPerHole, pointsPerThr
   }
 }
 
-const updateCurrentElos = async (league, season, simulation = false) => {
+// A simulated round isn't saved to the history, so its card ratings are passed in and counted here instead
+const updateCurrentElos = async (league, season, simulation = false, simulatedRound = {}) => {
   let elos = await currentEloAsync(season, league)
   const res = await getElosOfAllPlayers(season, league)
-  if (res === "null") {
-    elos = {}
-    for (const person in res) {
-      elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
-    }
-  } else {
-    for (const person in res) {
-      elos[person] = weightedAverage(res[person], weighting.slice(0, res[person].length))
-    }
+  // "null" means nobody has a history yet
+  const histories = res === "null" ? {} : { ...res }
+  if (res === "null") elos = {}
+  for (const [person, elo] of Object.entries(simulatedRound)) {
+    histories[person] = [elo, ...(histories[person] || [1000])]
+  }
+  for (const person in histories) {
+    elos[person] = weightedAverage(histories[person], weighting.slice(0, histories[person].length))
   }
   if (!simulation) {
     const writeRes = await updateCurrentEloV2(league, season, elos)

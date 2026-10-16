@@ -1,15 +1,146 @@
 @import "../../globalStyles.scss";
 
-@media (min-width: $lv) {
-  .doinkTable {
-    width: 300px !important;
-    margin: 0 auto;
+.doink {
+
+  h1 {
+    margin: 0 0 16px;
+  }
+
+  .doinkCard {
+    @include card;
+    padding: 20px;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+      color: $navy;
+    }
+  }
+
+  // The league picker sits on the gray page background
+  .doinkLeaguePicker .MuiInputBase-root {
+    background: white;
+  }
+
+  .doinkJoin {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-color: rgba($primary, 0.5);
+    background: rgba($primary, 0.06);
+
+    small {
+      display: block;
+      opacity: 0.7;
+    }
+  }
+
+  .doinkTiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .doinkTile {
+    display: flex;
+    flex-direction: column;
+    @include card;
+    padding: 14px 16px;
+
+    strong {
+      font-size: clamp(1.4rem, 5vw, 2rem);
+      line-height: 1.2;
+      color: $navy;
+    }
+
+    small {
+      opacity: 0.7;
+    }
+
+    // The fund's balance gets the feature treatment, like the Elo tile on the home page
+    &.balance {
+      border-color: $navy;
+      background: $navy;
+      color: white;
+
+      strong { color: white; }
+      .doinkLabel { color: $gold; opacity: 1; }
+    }
+
+    &.negative {
+      border-color: rgba(211, 47, 47, 0.5);
+      background: rgba(211, 47, 47, 0.08);
+    }
+  }
+
+  .doinkLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+  }
+
+  .doinkGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+
+    .doinkCard {
+      margin-bottom: 0;
+    }
+  }
+
+  .doinkCap {
+    display: block;
+    margin: -6px 0 8px;
+    opacity: 0.7;
+  }
+
+  .doinkDebits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .doinkDebits li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(128, 128, 128, 0.2);
+
+    &:first-child {
+      border-top: none;
+    }
+
+    span {
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
+  }
+
+  .doinkDebitsTotal {
+    font-weight: bold;
+    border-top: 2px solid rgba(128, 128, 128, 0.4) !important;
+  }
+
+  .aboutDoinks {
+    line-height: 1.5;
+
+    h3:not(:first-child) {
+      margin-top: 20px;
+    }
   }
 }
 
-@media (max-width: $sv) {
-  .doinkTable {
-    width: 90%;
-    margin: 0 auto;
+@media (max-width: 500px) {
+  .doink .doinkTile {
+    padding: 10px 12px;
   }
 }

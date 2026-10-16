@@ -83,89 +83,83 @@ export default function LeagueAdd() {
   return (
     <div className="leagueAddWrapper">
       <Collapse in={open}>
-        <Alert severity={variant} onClose={() => setOpen(false)}>
+        <Alert severity={variant} onClose={() => setOpen(false)} sx={{ mb: 2 }}>
           {alertMessage}
         </Alert>
       </Collapse>
       <h2>League CSV Add</h2>
-      <p>If you are adding a league match, click Export to CSV on the Scoring tab and then upload the CSV file into the box below. Because UDisc does not give much data about the scorecard, you will need to manually input the Course, Layout, and Pars for each hole.</p>
-      <div>
+      <p className="addHint">For league matches: click Export to CSV on the Scoring tab and upload the file here. UDisc doesn't include the course details, so enter the Course, Layout and each hole's par yourself.</p>
+      <div className="addForm">
         <TextField
           required
-          id="outlined-required"
+          id="league-course"
           label={"Course"}
-          style={{marginBottom: 15}}
           onChange={(e) => setCourse(e.target.value)}
         />
         <TextField
           required
-          id="outlined-required"
+          id="league-layout"
           label={"Layout"}
-          style={{marginBottom: 15}}
           onChange={(e) => setLayout(e.target.value)}
         />
-        <TextField
-          required
-          id="outlined-required"
-          label={"Number of Holes"}
-          disabled={parRow.length > 0}
-          type="number"
-          defaultValue={numHoles}
-          style={{marginBottom: 15}}
-          onChange={(e) => setNumHoles(e.target.value)}
-        />
-        <Button
-          onClick={handleReset}
-          variation="outlined"
-          color="info"
-        >
-          Unlock Number of Holes
-        </Button>
-        <p>Hole Pars</p>
-        {parRowHolder}
-        <br />
-        {!fileUploaded ? (
+        <div className="addHoles">
+          <TextField
+            required
+            id="league-holes"
+            label={"Number of Holes"}
+            disabled={parRow.length > 0}
+            type="number"
+            defaultValue={numHoles}
+            onChange={(e) => setNumHoles(e.target.value)}
+          />
+          <Button
+            onClick={handleReset}
+            variant="outlined"
+            color="info"
+          >
+            Unlock Number of Holes
+          </Button>
+        </div>
+        <h4>Hole Pars</h4>
+        <div className="parGrid">{parRowHolder}</div>
+        <div className="addActions">
+          {!fileUploaded ? (
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<CloudUploadIcon />}
+            >
+              Upload CSV File
+              <input
+                type="file"
+                accept=".csv"
+                hidden
+                onChange={handleCSVUpload}
+              />
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              component="label"
+              color="success"
+              startIcon={<CheckCircleIcon />}
+            >
+              File Uploaded
+              <input
+                type="file"
+                accept=".csv"
+                hidden
+                onChange={handleCSVUpload}
+              />
+            </Button>
+          )}
           <Button
             variant="contained"
-            component="label"
-            style={{marginTop: 15}}
-            startIcon={<CloudUploadIcon />}
+            onClick={handleLeagueSubmit}
           >
-            Upload CSV File
-            <input
-              type="file"
-              accept=".csv"
-              hidden
-              onChange={handleCSVUpload}
-            />
+            Submit Round
           </Button>
-        ) : (
-          <Button
-            variant="outlined"
-            component="label"
-            color="success"
-            style={{marginTop: 15}}
-            startIcon={<CheckCircleIcon />}
-          >
-            File Uploaded
-            <input
-              type="file"
-              accept=".csv"
-              hidden
-              onChange={handleCSVUpload}
-            />
-          </Button>
-        )}
-        <br />
-        <Button
-          variant="contained"
-          component="label"
-          color="success"
-          style={{marginTop: 15}}
-          onClick={handleLeagueSubmit}
-        >
-          Submit Round
-        </Button>
+        </div>
       </div>
     </div>
   )

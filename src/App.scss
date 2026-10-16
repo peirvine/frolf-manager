@@ -1,34 +1,40 @@
 @import './globalStyles.scss';
 
-@media (min-width: $lv) {
-  .frolfLeague {
-    .content {
-      width: 65%;
-      margin-top: $margin-lg;
-      margin-right: auto;
-      margin-left: auto;
-      min-height: calc(100vh - 135px);
-  
-      .paperContent {
-        padding: $padding-md;
-      }
+// Every page but home: a column lined up with the navbar. Each page puts its title (and any back link) on the
+// gray background and its content in white cards below; pages without cards of their own use .pageCard.
+.frolfLeague {
+  .content {
+    width: 100%;
+    max-width: 1120px;
+    min-height: calc(100vh - 120px);
+    margin: 0 auto;
+    padding: 24px 24px 48px;
+
+    > * > h1 {
+      @include pageTitle;
     }
+
+    // Plain text links (not MUI buttons rendered as links) in the theme navy, never visited-purple
+    a:not(.MuiButtonBase-root) {
+      color: $navy;
+      font-weight: 500;
+    }
+  }
+
+  .pageCard {
+    @include card;
+    padding: 24px;
   }
 }
 
-
-@media (max-width: $sv) {
+@media (max-width: 700px) {
   .frolfLeague {
     .content {
-      width: 90%;
-      margin-top: $margin-lg;
-      margin-right: auto;
-      margin-left: auto;
-      min-height: calc(100vh - 120px);
-  
-      .paperContent {
-        padding: $padding-md;
-      }
+      padding: 16px 12px 32px;
+    }
+
+    .pageCard {
+      padding: 16px;
     }
   }
 }

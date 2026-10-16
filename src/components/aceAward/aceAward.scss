@@ -1,0 +1,87 @@
+// The award box shown for every hole-in-one (league stats and season end stats)
+.aceAwards {
+  container-type: inline-size;
+  display: grid;
+  // Never wider than the container, so a narrow column (e.g. the season sidebar) stacks the boxes instead of overflowing
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 10px;
+}
+
+.aceAward {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e3c35a;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fffaeb, #fdecb4);
+  min-width: 0;
+  color: #3d3215;
+  overflow-wrap: break-word;
+
+  .aceInfo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .aceLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9a7410;
+    font-weight: 700;
+  }
+
+  small {
+    opacity: 0.75;
+  }
+}
+
+.aceLaurel {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+
+  .laurelBranch {
+    fill: #c9a227;
+  }
+
+  .laurelStem {
+    fill: none;
+    stroke: #a8861c;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+
+  .basket {
+    fill: #3d3215;
+  }
+
+  .basketChains {
+    fill: none;
+    stroke: #6b5a2a;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+
+  .basketBase {
+    fill: none;
+    stroke: #3d3215;
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+}
+
+// In a narrow column (e.g. the season sidebar) there's no room beside the laurel, so the text goes underneath
+@container (max-width: 260px) {
+  .aceAward {
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+
+    .aceInfo {
+      align-items: center;
+    }
+  }
+}
