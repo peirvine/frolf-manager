@@ -72,27 +72,34 @@ export default function LeagueStats(props) {
               <span className="statLabel">Most Played Course</span>
               {stats.mostPlayedCourse.length > 0 ? stats.mostPlayedCourse.map(course => (
                 <div key={course.course}>{course.course} <small>{course.count} rounds</small></div>
-              )) : <small>–</small>}
+              )) : <small>â€“</small>}
             </div>
             <div className="statTile">
               <span className="statLabel">Hardest Course</span>
               {stats.hardestCourse.length > 0 ? stats.hardestCourse.map(course => (
                 <div key={course.course}>{course.course} <small>{round1(course.highestStrokesPerHole)} strokes/hole</small></div>
-              )) : <small>–</small>}
+              )) : <small>â€“</small>}
             </div>
             <div className="statTile">
               <span className="statLabel">Most Average Player</span>
               {stats.mostAveragePlayer.length > 0 ? stats.mostAveragePlayer.map(player => (
                 <div key={player.player}>{player.player} <small>{round1(player.elo)} Elo</small></div>
-              )) : <small>–</small>}
+              )) : <small>â€“</small>}
+            </div>
+            <div className="statTile">
+              <span className="statLabel">Most Hats</span>
+              {(stats.mostHats || []).length > 0 ? stats.mostHats.map(player => (
+                <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
+              )) : <small>None yet</small>}
             </div>
           </div>
-          <h4>Rounds played by player</h4>
+          <h4>Rounds played and hats won this season</h4>
           <ul className="roundsByPlayer">
             {rounds.map(player => (
               <li key={player.id || player.uDiscDisplayName}>
                 <span>{player.uDiscDisplayName}</span>
                 <strong>{player.stats.numberOfRounds}</strong>
+                <small>{(stats.hatCounts || {})[player.uDiscDisplayName] || 0} ðŸŽ©</small>
               </li>
             ))}
           </ul>

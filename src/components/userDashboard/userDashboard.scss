@@ -231,7 +231,10 @@
         display: flex;
         justify-content: space-between;
         padding: 6px 0;
+        gap: 12px;
         border-top: 1px solid rgba(128, 128, 128, 0.2);
+
+        span { flex: 1; }
       }
     }
   }

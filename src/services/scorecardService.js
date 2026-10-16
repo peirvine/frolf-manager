@@ -1,6 +1,6 @@
 // import { addScorecardToGoogle } from './googleSheetsService'
-import { getLeagueSettings, writeScorecardToDatabase } from '../firebase'
-import { calculateElo } from './eloService'
+import { getLeagueSettings, writeScorecardToDatabase, setCardHatWinners } from '../firebase'
+import { calculateElo, changeHatWinners } from './eloService'
 
 export async function uDiscDump (card, league, simulation = false) {
   const settings = await getLeagueSettings(league)
@@ -62,7 +62,13 @@ export async function uDiscDump (card, league, simulation = false) {
       if (!settings.isPreseason) {
         const res = await calculateElo(returnValue, season, league)
         if (res) {
-          response = {code: "success", message: "Card and Elo added successfully."}
+          // Hat winners are saved on the card so an edit or delete can move the hat later
+          const hatRes = response.key
+            && (await changeHatWinners(league, [], res.hatWinners))
+            && (await setCardHatWinners(league, season, response.key, res.hatWinners)).code !== "error"
+          response = hatRes
+            ? {code: "success", message: "Card and Elo added successfully."}
+            : {code: "error", message: "Card and Elo added, but the hat count could not be updated."}
         } else {
           response = {code: "error", message: "Error, card added, elo not added."}
         }

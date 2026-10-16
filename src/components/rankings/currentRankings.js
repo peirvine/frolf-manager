@@ -57,6 +57,19 @@ export default function CurrentRankings () {
   // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  // The shared image is drawn from the DOM, which drops images it can't inline; embed the hat as a data URL up front
+  useEffect(() => {
+    fetch(Hat)
+      .then(res => res.blob())
+      .then(blob => new Promise(resolve => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result)
+        reader.readAsDataURL(blob)
+      }))
+      .then(setHatDataUrl)
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (user) {
       buildOptions().then(res => {
@@ -183,7 +196,7 @@ export default function CurrentRankings () {
 
   const getIcon = (value, isMaxDropPlayer) => {
     if (isMaxDropPlayer && league === "maftb") {
-      return  <Chip avatar={<Avatar alt="hat" src={Hat} sx={{ width: 24, height: 24 }} className="changeIcon"/>} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
+      return  <Chip avatar={<img alt="hat" src={hatDataUrl || Hat} width={24} height={24} className="changeIcon" />} label={Math.round(value * 10) / 10} color="error" variant="outlined" />
     }
     const roundedValue = Math.round(value * 10) / 10
     if (roundedValue <= 1 && roundedValue >= -1) {
@@ -255,7 +268,7 @@ export default function CurrentRankings () {
 
   return (
     <div className="currentRankings">
-      <PlayerHistory player={selectedPlayer} eloGraph={graphData.eloGraph} onClose={() => setSelectedPlayer(null)} />
+      <PlayerHistory player={selectedPlayer} eloGraph={graphData.eloGraph} league={league} onClose={() => setSelectedPlayer(null)} />
       <h1>Current Rankings</h1>
       {optionArray.length > 1 ? (
         <Autocomplete

@@ -1,5 +1,5 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2 } from "../firebase";
+import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2, incrementHatCount } from "../firebase";
 import { weighting, pointPerThrowRef } from "./eloConstants";
 
 
@@ -47,11 +47,32 @@ export const calculateElo = async (card, season, league, simulation = false) => 
   const graphRes = await graphData(league, season, card.course, card.date, previousElo, currentElo, simulation)
   if (!graphRes) return false
 
+  const hatWinners = getHatWinners(cardElo, currentElo)
   if (simulation) {
-    return {prettyElo, delta, currentElo}
+    return {prettyElo, delta, currentElo, hatWinners}
   } else {
-    return true
+    return {hatWinners}
   }
+}
+
+// The hat goes to the lowest-rated player on the card, using ratings after the card is counted (ties share it)
+const getHatWinners = (cardElo, currentElo) => {
+  const names = Object.keys(cardElo)
+  if (names.length === 0) return []
+  const rating = (name) => currentElo[name] === undefined ? 1000 : currentElo[name]
+  const lowest = Math.min(...names.map(rating))
+  return names.filter(name => rating(name) === lowest)
+}
+
+// Moves hats from one set of winners to another (used by submit, edit and delete). Players in both sets are untouched.
+export const changeHatWinners = async (league, oldWinners, newWinners) => {
+  for (const player of oldWinners.filter(p => !newWinners.includes(p))) {
+    if ((await incrementHatCount(league, player, -1)).code === "error") return false
+  }
+  for (const player of newWinners.filter(p => !oldWinners.includes(p))) {
+    if ((await incrementHatCount(league, player, 1)).code === "error") return false
+  }
+  return true
 }
 
 async function getPlayers (league) {

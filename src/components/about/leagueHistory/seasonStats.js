@@ -16,6 +16,7 @@ export default function SeasonStats (stats) {
   const mostPlayed = stats.mostPlayedCourse || []
   const hardest = stats.hardestCourse || []
   const average = stats.mostAveragePlayer || []
+  const hats = stats.mostHats || []
 
   return (
     <div className="historyCard seasonStatsCard">
@@ -45,6 +46,11 @@ export default function SeasonStats (stats) {
             ))}
           </StatTile>
         )}
+        <StatTile label="Most Hats">
+          {hats.length > 0 ? hats.map(player => (
+            <div key={player.player}>{player.player} <small>{player.count} {player.count === 1 ? "hat" : "hats"}</small></div>
+          )) : <small>None</small>}
+        </StatTile>
       </div>
     </div>
   );

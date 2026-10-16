@@ -12,11 +12,15 @@ export const getLeagueStats = async (league) => {
   
   let currentElo = []
   let mostAveragePlayer = []
+  let hatCounts = {}
+  let mostHats = []
   
   const scorecards = await getScorecards(league, currentSeason)
   if (scorecards !== undefined) {
     mostPlayedCourse = getMostPlayedCourse(scorecards)
     numberOfRounds = Object.keys(scorecards).length;
+    hatCounts = getHatCounts(scorecards)
+    mostHats = getMostHats(hatCounts)
   
     // In-season rounds come from the Elo records; off-season rounds have none, so they're measured from the scorecards
     const courseStats = await getELOHistory(league, currentSeason)
@@ -29,7 +33,7 @@ export const getLeagueStats = async (league) => {
   
   
   
-  const stats = { season: currentSeason, numberOfRounds, mostPlayedCourse, hardestCourse, mostAveragePlayer, currentElo }
+  const stats = { season: currentSeason, numberOfRounds, mostPlayedCourse, hardestCourse, mostAveragePlayer, currentElo, hatCounts, mostHats }
 
   return stats
 }
@@ -110,4 +114,21 @@ const getMostAverage = currentElo => {
   }
 
   return closestKeys;
+}
+
+// Hats won this season, tallied from the winners saved on each scorecard
+const getHatCounts = scorecards => {
+  const counts = {}
+  for (const card of Object.values(scorecards)) {
+    for (const player of card.hatWinners || []) {
+      counts[player] = (counts[player] || 0) + 1
+    }
+  }
+  return counts
+}
+
+const getMostHats = hatCounts => {
+  const most = Math.max(0, ...Object.values(hatCounts))
+  if (most === 0) return []
+  return Object.entries(hatCounts).filter(([, count]) => count === most).map(([player, count]) => ({ player, count }))
 }

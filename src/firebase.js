@@ -21,7 +21,7 @@ import {
   addDoc,
   setDoc,
 } from "firebase/firestore"
-import { getDatabase, ref, set, child, get, update, push, remove } from "firebase/database";
+import { getDatabase, ref, set, child, get, update, push, remove, runTransaction } from "firebase/database";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
@@ -115,7 +115,7 @@ export function writeScorecardToDatabase(league, card, season) {
     isOffSeason: card.isOffSeason
   })
   .then(() => {
-    return {code: "success", message: "Scorecard added successfully."}
+    return {code: "success", message: "Scorecard added successfully.", key: newId}
   })
   .catch((error) => {
     logEvent(analytics, 'A user was unable to add a scorecard', {error: error} );
@@ -355,6 +355,49 @@ export function updateCurrentEloV2(league, season, eloArray) {
   .catch((error) => {
     logEvent(analytics, 'Could write to current ELO', {error: error} );
     return {code: "error", message: "Could not create a new season in Current Elo"}
+  });
+}
+
+export function setCardHatWinners(league, season, key, hatWinners) {
+  const db = getDatabase()
+  return set(ref(db, league + '/scorecards/' + season + "/" + key + '/hatWinners'), hatWinners.length ? hatWinners : null).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not save hat winners', {error: error} );
+    return {code: "error", message: "Could not save hat winners"}
+  });
+}
+
+export function resetHatCounts(league) {
+  const db = getDatabase()
+  return set(ref(db, league + '/hatCount'), null).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not reset hat counts', {error: error} );
+    return {code: "error", message: "Could not reset hat counts"}
+  });
+}
+
+export function getHatCount(league, player) {
+  const dbRef = ref(getDatabase());
+  return get(child(dbRef, league + '/hatCount/' + player)).then((snapshot) => {
+    return snapshot.exists() ? snapshot.val() : 0
+  }).catch((error) => {
+    logEvent(analytics, 'Could not get hat count', {error: error} );
+    return 0
+  });
+}
+
+export function incrementHatCount(league, player, change = 1) {
+  const db = getDatabase()
+  return runTransaction(ref(db, league + '/hatCount/' + player), (count) => Math.max(0, (count || 0) + change)).then(() => {
+    return {code: "success", message: ""}
+  })
+  .catch((error) => {
+    logEvent(analytics, 'Could not increment hat count', {error: error} );
+    return {code: "error", message: "Could not update hat count"}
   });
 }
 
