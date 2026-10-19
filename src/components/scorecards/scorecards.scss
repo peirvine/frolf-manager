@@ -137,6 +137,16 @@
     text-align: center;
   }
 
+  // Rounds added with "Handicap applied": Total, Handicap and Adjusted Total end the row
+  &.withHandicaps .sbRow {
+    grid-template-columns: 28px minmax(80px, 140px) 3rem 1fr 3rem 4.5rem 4.5rem;
+  }
+
+  .sbHeaderLabel {
+    font-size: 0.65rem;
+    line-height: 1.2;
+  }
+
   // Wraps between front/back nine groups
   .sbHoles {
     display: flex;
@@ -271,10 +281,17 @@
     }
   }
 
-  .mTotal {
+  .mTotal,
+  .mHandicap {
     min-width: 2em;
     text-align: right;
     opacity: 0.7;
+  }
+
+  .mAdjusted {
+    min-width: 2em;
+    text-align: right;
+    font-size: $font-md;
   }
 
   .mChevron {
@@ -339,12 +356,12 @@
   }
 }
 
-// Handicapped standings shown above a round's scorecard when the league uses handicaps
+// Handicapped standings shown below a round's scorecard when the league uses handicaps
 .handicapBoard {
   border: 1px solid rgba(128, 128, 128, 0.3);
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-top: 16px;
 
   .hbRow {
     display: grid;

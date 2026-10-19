@@ -8,6 +8,8 @@ import './userDashboard.scss'
 import FunStats from './funStats';
 import LeagueAvatar from '../leagueIcon/leagueIcon';
 import { useAuthState } from "react-firebase-hooks/auth";
+import UDiscNameDialog from '../nav/uDiscNameDialog';
+import { UDISC_ALIAS_TYPES } from '../../services/uDiscNames';
 
 // "Disc Golf Club" -> "DG"
 
@@ -31,6 +33,7 @@ export default function UserDashboard () {
   const [alertLevel, setAlertLevel] = useState("info")
   const [doink, setDoink] = useState(false)
   const [leagueName, setLeagueName] = useState("")
+  const [nameDialogOpen, setNameDialogOpen] = useState(false)
 
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
@@ -283,6 +286,33 @@ export default function UserDashboard () {
           </Alert>
         </Snackbar>
       </Box>
+      <section className="dashSection">
+        <h2>UDisc Names</h2>
+        <div className="createCard namesCard">
+          <dl className="uDiscNames">
+            <dt>Normal round</dt>
+            <dd>{userData.uDiscDisplayName || <i>not set</i>}</dd>
+            {UDISC_ALIAS_TYPES.map(({ key, label }) => (
+              <react.Fragment key={key}>
+                <dt>{label.replace(" name", "")}</dt>
+                <dd>{userData.uDiscAliases?.[key] || <i>same as normal</i>}</dd>
+              </react.Fragment>
+            ))}
+          </dl>
+          <Button variant="outlined" onClick={() => setNameDialogOpen(true)}>Edit</Button>
+        </div>
+        <UDiscNameDialog
+          open={nameDialogOpen}
+          user={user}
+          currentName={userData.uDiscDisplayName || ""}
+          currentAliases={userData.uDiscAliases || {}}
+          onCancel={() => setNameDialogOpen(false)}
+          onSaved={() => {
+            setNameDialogOpen(false)
+            getUserDataV2(user).then(res => setUserData(res || {}))
+          }}
+        />
+      </section>
       <section className="dashSection">
         <h2>My Leagues</h2>
         {userData.leagues && userData.leagues.length > 0 ? (

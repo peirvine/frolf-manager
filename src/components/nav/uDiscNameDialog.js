@@ -6,10 +6,11 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { updateUsersUDiscName } from "../../firebase"
+import { UDISC_ALIAS_TYPES } from "../../services/uDiscNames"
 
-// Asked of new users right after their first sign in (no way out), and editable later from the nav (onCancel given).
-// Rounds are matched to players by this name.
-export default function UDiscNameDialog({ open, user, onSaved, onCancel, currentName = "" }) {
+// Asked of new users right after their first sign in (no way out), and editable later from the dashboard (onCancel
+// given). Rounds are matched to players by the main name, or by the league and event round names UDisc sometimes uses.
+export default function UDiscNameDialog({ open, user, onSaved, onCancel, currentName = "", currentAliases = {} }) {
   return (
     <Dialog
       open={open}
@@ -19,7 +20,8 @@ export default function UDiscNameDialog({ open, user, onSaved, onCancel, current
         onSubmit: (event) => {
           event.preventDefault();
           const formData = new FormData(event.currentTarget);
-          updateUsersUDiscName(user, formData.get('name')).then(res => {
+          const aliases = Object.fromEntries(UDISC_ALIAS_TYPES.map(({ key }) => [key, formData.get(key).trim()]))
+          updateUsersUDiscName(user, formData.get('name').trim(), aliases).then(res => {
             if (res.code === "success") {
               onSaved();
             }
@@ -27,7 +29,7 @@ export default function UDiscNameDialog({ open, user, onSaved, onCancel, current
         },
       }}
     >
-      <DialogTitle>Add Udisc Display Name</DialogTitle>
+      <DialogTitle>{currentName ? "Your UDisc Names" : "Add Udisc Display Name"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           To have your rounds fully counted, you will need to enter your UDisc display name exactly as it appears in the card.
@@ -45,6 +47,22 @@ export default function UDiscNameDialog({ open, user, onSaved, onCancel, current
           defaultValue={currentName}
           key={currentName}
         />
+        <DialogContentText sx={{ mt: 2 }}>
+          If a league round or event exports you under a different name, add it here so those rounds count too.
+        </DialogContentText>
+        {UDISC_ALIAS_TYPES.map(({ key, label }) => (
+          <TextField
+            key={key + (currentAliases[key] || "")}
+            margin="dense"
+            id={key}
+            name={key}
+            label={label}
+            placeholder="Same as above"
+            fullWidth
+            variant="standard"
+            defaultValue={currentAliases[key] || ""}
+          />
+        ))}
       </DialogContent>
       <DialogActions>
         {onCancel && <Button onClick={onCancel}>Cancel</Button>}

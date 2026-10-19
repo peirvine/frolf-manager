@@ -2,6 +2,7 @@
 import {useState, useEffect} from 'react'
 import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2, getAllUsers } from '../../firebase'
 import { Skeleton, Button, Chip, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, TextField } from '@mui/material'
+import { UDISC_ALIAS_TYPES } from '../../services/uDiscNames'
 
 export default function LeaguePlayersManager(props) {
   const { league } = props
@@ -12,6 +13,8 @@ export default function LeaguePlayersManager(props) {
   const [ rerender, setReRender] = useState('')
   const [ editedMember, setEditedMember ] = useState(null)
   const [ uDiscName, setUDiscName ] = useState('')
+  // { league, event }: the other names UDisc exports for the member being edited
+  const [ uDiscAliases, setUDiscAliases ] = useState({})
   const [ editError, setEditError ] = useState('')
 
 
@@ -105,14 +108,16 @@ export default function LeaguePlayersManager(props) {
   const handleEditPlayer = player => {
     setEditedMember(player)
     setUDiscName(player.uDiscDisplayName || '')
+    setUDiscAliases(player.uDiscAliases || {})
     setEditError('')
   }
 
-  // Saves to this member's entry in the league's player list, which is where their UDisc name is matched against cards.
+  // Saves to this member's entry in the league's player list, which is where their UDisc names are matched against cards.
   // The whole list is rewritten (like the other actions here), which also drops any empty leftover entries.
   const saveUDiscName = async () => {
     const name = uDiscName.trim()
-    const updated = members.map(member => member.id === editedMember.id ? { ...member, uDiscDisplayName: name } : member)
+    const aliases = Object.fromEntries(UDISC_ALIAS_TYPES.map(({ key }) => [key, (uDiscAliases[key] || '').trim()]))
+    const updated = members.map(member => member.id === editedMember.id ? { ...member, uDiscDisplayName: name, uDiscAliases: aliases } : member)
     const res = await updateLeagueMembers(league, updated)
     if (res.code === "error") {
       setEditError(res.message)
@@ -178,6 +183,9 @@ export default function LeaguePlayersManager(props) {
                   <div className="playerNames">
                     <strong>{player.name}</strong>
                     <small>UDisc: {player.uDiscDisplayName || <i>not set</i>}</small>
+                    {UDISC_ALIAS_TYPES.filter(({ key }) => player.uDiscAliases?.[key]).map(({ key, label }) => (
+                      <small key={key}>{label.replace(" name", "")}: {player.uDiscAliases[key]}</small>
+                    ))}
                   </div>
                   <Chip size="small" label={player.membershipStatus} color={statusColor(player.membershipStatus)} variant={player.membershipStatus === "Member" ? "outlined" : "filled"} />
                 </div>
@@ -213,7 +221,8 @@ export default function LeaguePlayersManager(props) {
         <DialogTitle>Edit {editedMember?.name}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter their UDisc display name exactly as it appears on scorecards.
+            Enter their UDisc display name exactly as it appears on scorecards, plus any different name a league round or
+            event exports them under.
           </DialogContentText>
           <TextField
             autoFocus
@@ -225,6 +234,17 @@ export default function LeaguePlayersManager(props) {
             error={Boolean(editError)}
             helperText={editError}
           />
+          {UDISC_ALIAS_TYPES.map(({ key, label }) => (
+            <TextField
+              key={key}
+              fullWidth
+              margin="dense"
+              label={label}
+              placeholder="Same as above"
+              value={uDiscAliases[key] || ''}
+              onChange={(e) => setUDiscAliases({ ...uDiscAliases, [key]: e.target.value })}
+            />
+          ))}
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={() => setEditedMember(null)}>Cancel</Button>
