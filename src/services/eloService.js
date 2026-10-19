@@ -11,12 +11,13 @@ export const calculateElo = async (card, season, league, simulation = false) => 
   const playerArray = [...card.playerArray]
   parLocation === 0 ? playerArray.shift() : playerArray.splice(0, parLocation)
   const playersInLeague = await getPlayers(league)
-  const cardAverage = getCardAverage(playerArray, playersInLeague)
-  const strokesPerHole = getStrokesPerHole(playerArray, cardAverage)
-  let averageEloOfPlayers = await getAverageEloOFPlayers(playerArray, season, playersInLeague, league, previousElo)
+  const cardHoles = getCardHoles(playerArray)
+  const cardAverage = getCardAverage(playerArray, playersInLeague, cardHoles)
+  const strokesPerHole = getStrokesPerHole(cardHoles, cardAverage)
+  let averageEloOfPlayers = await getAverageEloOFPlayers(playerArray, season, playersInLeague, league, previousElo, cardHoles)
 
   const pointsPerThrow = calculatePointsPerThrow(strokesPerHole)
-  const cardElo = await calculateCardElo(playerArray, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers)
+  const cardElo = await calculateCardElo(playerArray, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers, cardHoles)
 
   // Never write NaN to the database (Firebase throws on it); surface the inputs instead
   if (![cardAverage, strokesPerHole, pointsPerThrow, averageEloOfPlayers, ...Object.values(cardElo)].every(Number.isFinite)) {
@@ -156,11 +157,19 @@ async function getPlayers (league) {
   return players
 }
 
-const getCardAverage = (card, playersInLeague) => {
+const holesPlayed = (player) => (player.holes || []).filter(hole => Number(hole) > 0).length
+
+// Holes the card was played over: the most anyone played, so a hole everyone skipped doesn't count against them
+const getCardHoles = (players) => Math.max(0, ...players.filter(player => player.player !== "Par").map(holesPlayed))
+
+// A player who left early played fewer holes than the card, so their total isn't comparable with a full round
+const finishedRound = (player, cardHoles) => holesPlayed(player) === cardHoles
+
+const getCardAverage = (card, playersInLeague, cardHoles) => {
   let scores = 0
   let numPlayers = card.length
   card.map(player => {
-    if (playersInLeague.includes(player.player) && !player.holes.includes(',0')) {
+    if (playersInLeague.includes(player.player) && finishedRound(player, cardHoles)) {
       scores += parseInt(player.total)
     } else {
       numPlayers--
@@ -170,8 +179,8 @@ const getCardAverage = (card, playersInLeague) => {
   return average
 }
 
-const getStrokesPerHole = (card, average) => {
-  return average / card[0].holes.length
+const getStrokesPerHole = (cardHoles, average) => {
+  return average / cardHoles
 }
 
 const currentEloAsync = (season, league) => {
@@ -205,14 +214,14 @@ const updateEloHistory = async (cards, season, league) => {
   return true
 }
 
-const getAverageEloOFPlayers = async (players, season, playersInLeague, league, currentElo) => {
+const getAverageEloOFPlayers = async (players, season, playersInLeague, league, currentElo, cardHoles) => {
   const elos = currentElo
   if (elos.length === 0) {
     return 1000
   } else {
     let presentPlayers = []
     players.map(player => {
-      if (playersInLeague.includes(player.player) && !player.holes.includes(',0')) {
+      if (playersInLeague.includes(player.player) && finishedRound(player, cardHoles)) {
         presentPlayers.push(player.player)
       }
     })
@@ -243,10 +252,10 @@ const calculatePlayerElo = (groupAverage, playerScore, pointsPerThrow, averageEl
   return ((groupAverage - playerScore) * pointsPerThrow) + averageEloOfPlayers
 }
 
-const calculateCardElo = (players, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers) => {
+const calculateCardElo = (players, playersInLeague, pointsPerThrow, cardAverage, averageEloOfPlayers, cardHoles) => {
   let eloArray = []
   players.map(player => {
-    if (player.player !== null && playersInLeague.includes(player.player) && !player.holes.includes(',0')) {
+    if (player.player !== null && playersInLeague.includes(player.player) && finishedRound(player, cardHoles)) {
       const prettyPlayer = player.player
       eloArray[prettyPlayer] = calculatePlayerElo(cardAverage, player.total, pointsPerThrow, averageEloOfPlayers)
     }

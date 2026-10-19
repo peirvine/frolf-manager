@@ -46,6 +46,24 @@ describe("calculateElo", () => {
     expect(db.read(`maftb/stats/${SEASON}`).calculatedAt).toEqual(expect.any(Number))
   })
 
+  test("leaves out players who didn't finish the round", async () => {
+    startSeason("maftb", ["Alice", "Bob", "Carol"])
+    const partial = parsedCard({ scores: { Alice: 0, Bob: 6, Carol: -20 } })
+    const carol = partial.playerArray.find(p => p.player === "Carol")
+    carol.holes = carol.holes.map((hole, i) => (i < 9 ? hole : "0"))
+    await calculateElo(partial, SEASON, "maftb")
+    expect(Object.keys(db.read(`maftb/playerEloHistory/${SEASON}`))).toEqual(["Alice", "Bob"])
+    expect(Object.values(db.read(`maftb/eloTracking/${SEASON}`))[0].cardAverage).toBe(57)
+  })
+
+  test("counts a card where everyone skipped the same hole", async () => {
+    startSeason("maftb", ["Alice", "Bob"])
+    const skipped = parsedCard({ scores: { Alice: 0, Bob: 6 } })
+    skipped.playerArray.filter(p => p.player !== "Par").forEach(p => { p.holes[17] = "0" })
+    await calculateElo(skipped, SEASON, "maftb")
+    expect(Object.keys(db.read(`maftb/playerEloHistory/${SEASON}`))).toEqual(["Alice", "Bob"])
+  })
+
   test("builds on each player's history", async () => {
     await calculateElo(card, SEASON, "maftb")
     await calculateElo(card, SEASON, "maftb")
