@@ -8,8 +8,8 @@ import { timeOf } from "./statsUtils"
 // previous one), so we reset the season's derived data and replay every remaining card in order.
 // Pattern: update the scorecard, rebuild, report. If the rebuild fails the card change is already saved,
 // and running any edit/delete again will redo the whole rebuild.
-export const editRound = async (league, season, scorecardId, updatedRound, roundToEdit) => (
-  withHandicaps(league, await editCard(league, season, scorecardId, updatedRound, roundToEdit))
+export const editRound = async (league, season, scorecardId, updatedRound, roundToEdit, names = {}) => (
+  withHandicaps(league, await editCard(league, season, scorecardId, updatedRound, roundToEdit, names))
 )
 
 export const deleteRound = async (league, season, scorecardId, round) => (
@@ -25,8 +25,10 @@ const withHandicaps = async (league, result) => {
   return result
 }
 
-const editCard = async (league, season, scorecardId, updatedRound, roundToEdit) => {
+const editCard = async (league, season, scorecardId, updatedRound, roundToEdit, names) => {
   const round = JSON.parse(JSON.stringify(roundToEdit.round))
+  const renameRes = renameCard(round, names)
+  if (renameRes.code === "error") return renameRes
   const updateRes = updateCardTotals(round, updatedRound)
   if (updateRes.code === "error") return updateRes
 
@@ -105,6 +107,17 @@ const cardFromStored = (card) => {
     playerArray: JSON.parse(JSON.stringify(card.Players)),
     isOffSeason: card.isOffSeason
   }
+}
+
+// Course and layout are optional; a blank or missing name leaves the stored one alone
+const renameCard = (card, { course, layout } = {}) => {
+  for (const [field, name] of [["Course", course], ["Layout", layout]]) {
+    if (name === undefined) continue
+    const trimmed = name.trim()
+    if (trimmed === "") return { code: "error", message: `${field} name can't be blank` }
+    card[field] = trimmed
+  }
+  return { code: "success" }
 }
 
 const updateCardTotals = (card, updatedTotals) => {
