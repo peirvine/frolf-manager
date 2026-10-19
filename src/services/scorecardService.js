@@ -5,7 +5,9 @@ import { refreshHandicaps } from './handicapStore'
 import { parseUDiscCsv } from './uDiscCsv'
 import { getUDiscNameLookup, toMainUDiscName } from './uDiscNames'
 
-export async function uDiscDump (card, league, simulation = false) {
+// `handicapsApplied`: the export's scores already include the league's handicaps, so the card is saved with that flag
+// and the scorecards page doesn't add its own handicapped standings
+export async function uDiscDump (card, league, simulation = false, { handicapsApplied = false } = {}) {
   const settings = await getLeagueSettings(league)
   if (settings === "error") return {code: "error", message: "Error, league not found."}
   const season = settings.currentSeason
@@ -27,7 +29,8 @@ export async function uDiscDump (card, league, simulation = false) {
       date: parRow.startDate,
       playerArray,
       rawUDiscCard: card,
-      isOffSeason: settings.isPreseason
+      isOffSeason: settings.isPreseason,
+      handicapsApplied: Boolean(handicapsApplied)
     }
   } catch (err) {
     return {code: "error", message: "Error, card input not valid." }

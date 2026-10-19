@@ -35,7 +35,7 @@ function HoleGrid ({ holes, parHoles }) {
   )
 }
 
-function PlayerRow ({ player, rank, parHoles }) {
+function PlayerRow ({ player, rank, parHoles, handicapColumns }) {
   const [open, setOpen] = useState(false)
   const plusMinus = formatPlusMinus(player.plusMinus)
 
@@ -46,6 +46,8 @@ function PlayerRow ({ player, rank, parHoles }) {
         <span className="mName">{player.player}</span>
         <span className={`mPlusMinus ${Number(player.plusMinus) < 0 ? "under" : ""}`}>{plusMinus}</span>
         <span className="mTotal">{player.total}</span>
+        {handicapColumns && <span className="mHandicap" title="Handicap">{player.handicap}</span>}
+        {handicapColumns && <strong className="mAdjusted" title="Adjusted total">{player.adjustedTotal}</strong>}
         <span className="mChevron" aria-hidden="true">{open ? "▲" : "▼"}</span>
       </button>
       {open && <HoleGrid holes={player.holes || []} parHoles={parHoles} />}
@@ -55,18 +57,21 @@ function PlayerRow ({ player, rank, parHoles }) {
 
 // Mobile-friendly round display: a leaderboard where each player expands into a hole-by-hole grid.
 // `players` must already be sorted best score first and exclude the Par row.
-export default function MobileRound ({ players, coursePar, parTotal }) {
+// `handicapColumns` adds each player's handicap and adjusted total (set by RoundDetails) and ranks by it.
+export default function MobileRound ({ players, coursePar, parTotal, handicapColumns = false }) {
   const parHoles = coursePar?.holes || []
+  const score = player => handicapColumns ? player.adjustedTotal : Number(player.total)
 
   return (
     <div className="mobileRound">
       <div className="mRoundHeader">
         <span>{parHoles.length} holes</span>
         <span>Par {parTotal}</span>
+        {handicapColumns && <span>Total · Handicap · Adjusted</span>}
       </div>
       {players.map(player => {
-        const rank = 1 + players.filter(p => Number(p.total) < Number(player.total)).length
-        return <PlayerRow key={player.player} player={player} rank={rank} parHoles={parHoles} />
+        const rank = 1 + players.filter(p => score(p) < score(player)).length
+        return <PlayerRow key={player.player} player={player} rank={rank} parHoles={parHoles} handicapColumns={handicapColumns} />
       })}
     </div>
   )

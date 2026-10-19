@@ -11,11 +11,13 @@ const formatPlusMinus = (value) => {
 // Wide-screen round display: a card with a hole/par header and one row per player.
 // Holes are grouped by nine (with an Out/In subtotal), so narrower screens wrap between nines, never mid-nine.
 // `players` must already be sorted best score first and exclude the Par row.
-export default function RoundScoreboard ({ players, coursePar, parTotal }) {
+// `handicapColumns` adds each player's handicap and adjusted total (set by RoundDetails) after the total, and ranks by it.
+export default function RoundScoreboard ({ players, coursePar, parTotal, handicapColumns = false }) {
   const parHoles = coursePar?.holes || []
+  const score = player => handicapColumns ? player.adjustedTotal : Number(player.total)
 
   return (
-    <div className="scoreboard">
+    <div className={`scoreboard ${handicapColumns ? "withHandicaps" : ""}`}>
       <div className="sbRow sbHeader">
         <span />
         <span>Player</span>
@@ -36,10 +38,13 @@ export default function RoundScoreboard ({ players, coursePar, parTotal }) {
             </div>
           ))}
         </div>
-        <span className="sbTotal">{parTotal}</span>
+        {/* Labeled like the handicap columns beside it; the par total is still in the last subtotal */}
+        {handicapColumns ? <span className="sbTotal sbHeaderLabel">Total</span> : <span className="sbTotal">{parTotal}</span>}
+        {handicapColumns && <span className="sbTotal sbHeaderLabel">Handicap</span>}
+        {handicapColumns && <span className="sbTotal sbHeaderLabel">Adjusted Total</span>}
       </div>
       {players.map(player => {
-        const rank = 1 + players.filter(p => Number(p.total) < Number(player.total)).length
+        const rank = 1 + players.filter(p => score(p) < score(player)).length
         const holes = player.holes || []
         return (
           <div className="sbRow" key={player.player}>
@@ -56,7 +61,9 @@ export default function RoundScoreboard ({ players, coursePar, parTotal }) {
                 </div>
               ))}
             </div>
-            <strong className="sbTotal">{player.total}</strong>
+            {handicapColumns ? <span className="sbTotal">{player.total}</span> : <strong className="sbTotal">{player.total}</strong>}
+            {handicapColumns && <span className="sbTotal">{player.handicap}</span>}
+            {handicapColumns && <strong className="sbTotal">{player.adjustedTotal}</strong>}
           </div>
         )
       })}

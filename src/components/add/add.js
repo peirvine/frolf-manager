@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import Papa from "papaparse"
-import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Backdrop, CircularProgress, Box, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
+import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Backdrop, CircularProgress, Box, Grid, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, FormHelperText } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
 import { auth, signInWithGoogle, getUserDataV2, getLeagueNames, getLeagueSettings } from "../../firebase"
@@ -14,6 +14,7 @@ import './add.scss'
 export default function Add() {
   const [user] = useAuthState(auth);
   const [udisc, setUdisc] = useState("")
+  const [handicapsApplied, setHandicapsApplied] = useState(false)
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
@@ -55,8 +56,9 @@ export default function Add() {
       return
     }
     setBusy(true)
-    uDiscDump(udisc, league).then(res => {
+    uDiscDump(udisc, league, false, { handicapsApplied }).then(res => {
       setUdisc('')
+      setHandicapsApplied(false)
       setVariant(res.code)
       setAlertMessage(res.message)
     }).catch(() => {
@@ -139,6 +141,13 @@ export default function Add() {
                     value={udisc}
                     onInput={e => setUdisc(e.target.value)}
                   />
+                  <div>
+                    <FormControlLabel
+                      control={<Checkbox checked={handicapsApplied} onChange={e => setHandicapsApplied(e.target.checked)} />}
+                      label="Handicap applied"
+                    />
+                    <FormHelperText sx={{ mt: 0 }}>Check this box if the scorecard already has the handicaps applied</FormHelperText>
+                  </div>
                   {addDisabled ? (<i>You are not a approved member of any leagues, if this is an error please reach out to your league admin</i>) : null }
                   <div className="addActions">
                     <Button variant="contained" onClick={() => handleUdisc()} disabled={addDisabled}>Add {settings.isPreseason ? "Off-Season Round" : "Round"}</Button>

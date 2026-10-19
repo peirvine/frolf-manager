@@ -71,6 +71,7 @@ export const writeScorecardToDatabase = (league, card, season) => {
   write(`${league}/scorecards/${season}/${key}`, {
     Course: card.course, Layout: card.layout, Players: card.playerArray, Date: card.date, Par: card.par, id,
     dateAdded: new Date(2026, 0, id).toString(), rawUDiscCard: card.rawUDiscCard, isOffSeason: card.isOffSeason,
+    handicapsApplied: Boolean(card.handicapsApplied),
   })
   return Promise.resolve({ code: "success", message: "Scorecard added successfully.", key })
 }

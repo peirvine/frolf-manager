@@ -112,7 +112,8 @@ export function writeScorecardToDatabase(league, card, season) {
     id: id,
     dateAdded: Date(Date.now()).toString(),
     rawUDiscCard: card.rawUDiscCard,
-    isOffSeason: card.isOffSeason
+    isOffSeason: card.isOffSeason,
+    handicapsApplied: Boolean(card.handicapsApplied)
   })
   .then(() => {
     return {code: "success", message: "Scorecard added successfully.", key: newId}

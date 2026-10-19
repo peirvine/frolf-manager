@@ -40,6 +40,13 @@ describe("uDiscDump", () => {
     expect(Object.keys(db.read(`maftb/playerEloHistory/${SEASON}`))).toEqual(["Alice", "Bob"])
   })
 
+  test("marks cards whose scores already have the handicaps applied", async () => {
+    seed()
+    await uDiscDump(uDiscCsv({ scores: { Alice: 0 } }), "maftb", false, { handicapsApplied: true })
+    await uDiscDump(uDiscCsv({ date: "2026-05-02 1800", scores: { Alice: 0 } }), "maftb")
+    expect(savedCards().map(card => card.handicapsApplied)).toEqual([true, false])
+  })
+
   test("saves off-season rounds without touching Elo", async () => {
     seed("maftb", { isPreseason: true })
     expect(await uDiscDump(uDiscCsv({ course: "Bryant", scores: { Alice: 0 } }), "maftb")).toMatchObject({
