@@ -5,13 +5,13 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import useHandicaps from '../../services/useHandicaps'
+import { useHandicaps } from '../../context/leagueData'
 import { BEST_ROUNDS, RECENT_ROUNDS, formatHandicap, nameKey } from '../../services/handicapService'
 
 // Each league member's current handicap for an 18 hole round. Only shown for leagues with handicaps turned on.
 // `members` is the members' UDisc names; anyone else who has played on a league card is left out.
-export default function HandicapTable ({ league, members = [] }) {
-  const handicaps = useHandicaps(league)
+export default function HandicapTable ({ members = [] }) {
+  const handicaps = useHandicaps()
   if (!handicaps) return null
 
   const memberKeys = members.filter(Boolean).map(nameKey)

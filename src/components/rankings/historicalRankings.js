@@ -44,7 +44,7 @@ export default function HistoricalRankings (props) {
     <div className="graph">
       <h3>Season ELO Ratings</h3>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={graph} margin={{ top: 5, right: 10, left: -15, bottom: 30 }}>
+        <LineChart data={graph} margin={{ top: 5, right: 10, left: 0, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="index"

@@ -1,16 +1,10 @@
-import { useState, useEffect } from 'react';
-import { getLeagueRules } from '../../firebase';
+import { useLeague } from '../../context/leagueContext';
 
 import './leagueHistory/leagueHistory.scss'
 
-export default function LeagueRules(props) {
-  const [rules, setRules] = useState([]);
-
-  useEffect(() => {
-    getLeagueRules(props.league)?.then(res => {
-      setRules(res || []);
-    });
-  }, [props.league]);
+export default function LeagueRules() {
+  const { settings } = useLeague()
+  const rules = settings?.leagueRules || []
 
   if (Object.keys(rules).length === 0) return null
 

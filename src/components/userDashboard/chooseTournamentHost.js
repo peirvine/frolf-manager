@@ -40,8 +40,6 @@ export default function ChooseTournamentHost(props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings])
 
-  console.warn('ELO', elo)
-
   const selectHost = () => {
     if (!elo) {
       console.error('ELO data is not available.')

@@ -1,4 +1,4 @@
-import { startNewSeason, resetCurrentSeason } from './leagueService'
+import { startNewSeason, resetCurrentSeason, syncMemberUDiscNames, nameNumberedSeason } from './leagueService'
 import * as db from './testUtils/fakeFirebase'
 import { leagueData } from './testUtils/fixtures'
 
@@ -18,6 +18,28 @@ describe("startNewSeason", () => {
     expect(db.read("maftb/hatCount")).toBeUndefined()
     // Old seasons' rounds stay, which is what handicaps rely on
     expect(db.read("maftb/scorecards/Season 3/card")).toEqual({ Course: "Bryant" })
+  })
+
+  test("names a first season saved as the number 1 before moving on from it", async () => {
+    const data = leagueData("dgm", ["Alice"], { currentSeason: 1 })
+    data.dgm.scorecards = { 1: { card: { Course: "Bryant" } } }
+    data.dgm.currentElo = { 1: { Alice: 1010 } }
+    db.reset(data)
+
+    expect(await startNewSeason("dgm")).toEqual({ code: "success", message: "Season 2 started!" })
+    expect(db.read("dgm/info/currentSeason")).toBe("Season 2")
+    // The first season's data now lives under its new name
+    expect(db.read("dgm/scorecards/Season 1/card")).toEqual({ Course: "Bryant" })
+    expect(db.read("dgm/currentElo/Season 1")).toEqual({ Alice: 1010 })
+    expect(db.read("dgm/scorecards/1")).toBeUndefined()
+    expect(db.read("dgm/currentElo/Season 2")).toEqual({ Alice: 1000 })
+  })
+
+  test("stops if the numbered season can't be renamed", async () => {
+    db.reset(leagueData("dgm", ["Alice"], { currentSeason: 1 }))
+    db.fail("renameSeasonData")
+    expect((await startNewSeason("dgm")).code).toBe("error")
+    expect(db.read("dgm/info/currentSeason")).toBe(1)
   })
 
   test("starts at Season 1", async () => {
@@ -76,5 +98,62 @@ describe("resetCurrentSeason", () => {
   test("reports which step failed", async () => {
     db.fail("resetEloData")
     expect(await resetCurrentSeason("maftb", season)).toEqual({ code: "error", message: "Could not reset Elo Graph Data" })
+  })
+})
+
+describe("syncMemberUDiscNames", () => {
+  test("copies each member's current name from their account", async () => {
+    const data = leagueData("maftb", ["Alice", "Bob"])
+    data.users["Bob Google uid1"].uDiscDisplayName = "Bobby"
+    db.reset(data)
+
+    expect(await syncMemberUDiscNames("maftb")).toEqual({ code: "success", message: "Updated 1 UDisc name" })
+    expect(db.read("maftb/players").map(member => member.uDiscDisplayName)).toEqual(["Alice", "Bobby"])
+  })
+
+  test("leaves the list alone when the names already match", async () => {
+    db.reset(leagueData("maftb", ["Alice"]))
+    db.fail("updateLeagueMembers")
+    expect(await syncMemberUDiscNames("maftb")).toEqual({ code: "success", message: "UDisc names are already up to date" })
+  })
+
+  test("keeps a member's name when their account has none", async () => {
+    const data = leagueData("maftb", ["Alice"])
+    delete data.users["Alice Google uid0"].uDiscDisplayName
+    db.reset(data)
+    await syncMemberUDiscNames("maftb")
+    expect(db.read("maftb/players/0/uDiscDisplayName")).toBe("Alice")
+  })
+
+  test("reports a list that couldn't be saved", async () => {
+    const data = leagueData("maftb", ["Alice"])
+    data.users["Alice Google uid0"].uDiscDisplayName = "Ali"
+    db.reset(data)
+    db.fail("updateLeagueMembers")
+    expect((await syncMemberUDiscNames("maftb")).code).toBe("error")
+  })
+
+  test("fails if the members can't be read", async () => {
+    db.reset(leagueData("maftb", ["Alice"]))
+    db.fail("getLeagueMembers")
+    expect((await syncMemberUDiscNames("maftb")).code).toBe("error")
+  })
+})
+
+describe("nameNumberedSeason", () => {
+  test("leaves a named season alone", async () => {
+    db.reset(leagueData("dgm", ["Alice"], { currentSeason: "Season 3" }))
+    expect(await nameNumberedSeason("dgm")).toMatchObject({ code: "success", season: "Season 3" })
+    expect(db.read("dgm/info/currentSeason")).toBe("Season 3")
+  })
+
+  test("renames a season that's just a number, wherever its data is", async () => {
+    const data = leagueData("dgm", ["Alice"], { currentSeason: "4" })
+    data.dgm.stats = { 4: { calculatedAt: 1 } }
+    db.reset(data)
+    expect(await nameNumberedSeason("dgm")).toMatchObject({ code: "success", season: "Season 4" })
+    expect(db.read("dgm/info/currentSeason")).toBe("Season 4")
+    expect(db.read("dgm/stats/Season 4")).toEqual({ calculatedAt: 1 })
+    expect(db.read("dgm/stats/4")).toBeUndefined()
   })
 })

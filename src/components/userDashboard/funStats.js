@@ -4,7 +4,6 @@ import { getPlayerStats } from '../../services/playerStatsService'
 import { Table, TableBody, TableCell, TableContainer, TableRow, Paper, Skeleton } from '@mui/material';
 
 export default function FunStats(props) {
-  console.warn('props', props)
   const [stats, setStats] = useState([])
   const [loading, setLoading] = useState(true)
   
@@ -13,7 +12,6 @@ export default function FunStats(props) {
     let user = props.user || {}
     if (user && leagues.length > 0 && props.leagueNames.length > 0) {
       leagues.forEach(league => {
-        console.warn('league', league)
         getPlayerStats(user, league.id).then(stats => setStats(stats))
       })
       setLoading(false)

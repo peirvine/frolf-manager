@@ -1,122 +1,25 @@
-/* eslint-disable array-callback-return */
-/* eslint-disable no-unused-vars */
-import { useState, useEffect } from 'react'
-import { Collapse, Alert, Autocomplete, TextField, Button } from '@mui/material'
+import { useState, useMemo } from 'react'
+import { Collapse, Alert, Button } from '@mui/material'
 import DoinkUser from './doinkUser'
-import { auth, joinDoinkFund, getDoinkFundPlayers, getLeagueNames, getLeagueSettings, getDoinkExpenses, getDoinkSettings, joinDoinkFundV2 } from '../../firebase'
-import { getUserLeagues } from "../../services/userLeagues"
-import NoLeague from "../noLeague/noLeague"
-import { useAuthState } from "react-firebase-hooks/auth";
+import { joinDoinkFundV2 } from '../../firebase'
+import { useLeague } from '../../context/leagueContext'
+import { useDoinkFund } from '../../context/leagueData'
+import LeagueGate from '../../context/LeagueGate'
 
 import './doink.scss'
 
 export default function Doink() {
-  const [data, setData] = useState()
-  const [userRegistered, setUserRegistered] = useState()
+  const { user, leagueId: league, settings, isLeagueAdmin } = useLeague()
+  const { players: data, expenses, maxDoink } = useDoinkFund()
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
-  const [sumDoink, setSumDoink] = useState(0)
-  const [optionArray, setOptionArray] = useState([])
-  const [noLeague, setNoLeague] = useState(false)
-  const [league, setLeague] = useState()
-  const [expenses, setExpenses] = useState({})
-  const [expenseTotal, setExpenseTotal] = useState(0)
   const [disabled, setDisabled] = useState(false)
-  const [maxDoink, setMaxDoink] = useState(50)
-  const [joinDisabled, setJoinDisabled] = useState(false)
-  const [userLeagues, setUserLeagues] = useState([])
-  const [user] = useAuthState(auth);
-  // Admins can edit every player's doinks in the league they're viewing
-  const isLeagueAdmin = userLeagues.some(x => x.id === league && x.isAdmin)
 
-  const fetchData = async (id) => {
-    const settings = await getLeagueSettings(id);
-    if (!settings.doinkFund) return;
-  
-    const [players, expenses, maxDoink] = await Promise.all([
-      getDoinkFundPlayers(id),
-      getDoinkExpenses(id),
-      getDoinkSettings(id),
-    ]);
-  
-    let holder = 0;
-    if (players) {
-      Object.values(players).forEach(x => {
-        holder += x.doinks;
-        x.uid === user.uid && setUserRegistered(true);
-      });
-      setData(players)
-    } else {
-      setData([]);
-    }
-
-    setSumDoink(holder);
-  
-    if (expenses !== undefined) {
-      setExpenses(expenses);
-      let sum = 0;
-      Object.entries(expenses).map(([key, value]) => {
-        // Amounts are saved from a text field, so they can be strings ("60"); adding those would concatenate
-        sum += Number(value.amount) || 0;
-      });
-      setExpenseTotal(sum);
-    } else {
-      setExpenses([]);
-      setExpenseTotal(0);
-    }
-  
-    setMaxDoink(maxDoink);
-  };
-  
-  useEffect(() => {
-    const fetchOptionsAndData = async () => {
-      const res = await buildOptions();
-      if (res) {
-        if (res.length > 1) {
-          fetchData(res[0].id);
-        } else {
-          fetchData(res.id);
-        }
-      }
-    };
-  
-    fetchOptionsAndData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const buildOptions = async () => {
-    if (user !== null) {
-      const userLeaguesList = await getUserLeagues(user)
-      setUserLeagues(userLeaguesList)
-      if (userLeaguesList.length === 0) {
-        setNoLeague(true)
-        return null
-      }
-      setNoLeague(false)
-      const leagues = (await getLeagueNames()) || {}
-      if (userLeaguesList.length > 1) {
-        let optionsArray = []
-        userLeaguesList.forEach(x => {
-          if (x.membershipStatus !== "Pending") {
-            optionsArray.push({ label: leagues[x.id], id: x.id });
-          }
-        });
-        if (optionsArray.length === 0) setJoinDisabled(true)
-        setOptionArray(optionsArray)
-        setLeague(userLeaguesList[0].id)
-        return optionsArray
-      } else {
-        setLeague(userLeaguesList[0].id)
-        return userLeaguesList[0]
-      }
-    }
-  }
-
-  const handleChangeLeague = async league => {
-    setLeague(league.id)
-    fetchData(league.id)
-  }
+  const userRegistered = Object.values(data).some(player => player?.uid === user?.uid)
+  // Amounts are saved from a text field, so they can be strings ("60"); adding those would concatenate
+  const sumDoink = useMemo(() => Object.values(data).reduce((sum, player) => sum + (Number(player.doinks) || 0), 0), [data])
+  const expenseTotal = useMemo(() => Object.values(expenses).reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0), [expenses])
 
   const registerDoinkerV3 = (user) => {
     if (!league) return
@@ -131,12 +34,7 @@ export default function Doink() {
       setVariant(res.variant)
       setOpen(true)
       setDisabled(true)
-      fetchData(league)
     })
-  }
-
-  const handleUpdateSumDoink = (doinks) => {
-    setSumDoink(sumDoink + doinks)
   }
 
   const balance = sumDoink - expenseTotal
@@ -144,31 +42,15 @@ export default function Doink() {
   return (
     <div className="doink">
       <h1>Doink Fund</h1>
-      {noLeague && <NoLeague />}
+      <LeagueGate>
       <Collapse in={open}>
         <Alert severity={variant} onClose={() => setOpen(false)}>
           {alertMessage}
         </Alert>
       </Collapse>
-      {optionArray.length > 1 ? 
-        (
-          <Autocomplete
-            disablePortal
-            disableClearable
-            id="combo-box-demo"
-            className="doinkLeaguePicker"
-            options={optionArray}
-            value={optionArray.find(option => option.id === league) || null}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            sx={{ marginTop: 1, marginBottom: 2, maxWidth: 360 }}
-            renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
-            onChange={(event, newValue) => {
-              handleChangeLeague(newValue);
-            }}
-          />
-        ) : null
-      }
-      {noLeague ? null : user ? (
+      {!settings?.doinkFund ? (
+        <section className="doinkCard">This league doesn't use a doink fund.</section>
+      ) : (
         <>
           {!userRegistered && (
             <section className="doinkCard doinkJoin">
@@ -176,7 +58,7 @@ export default function Doink() {
                 <strong>You're not in the doink fund yet</strong>
                 <small>Join to track your own doinks for this league.</small>
               </div>
-              <Button variant="contained" disabled={disabled || joinDisabled} onClick={() => registerDoinkerV3(user)}>Join the Doink Fund</Button>
+              <Button variant="contained" disabled={disabled} onClick={() => registerDoinkerV3(user)}>Join the Doink Fund</Button>
             </section>
           )}
           <div className="doinkTiles">
@@ -203,7 +85,7 @@ export default function Doink() {
               {data && Object.keys(data).length > 0 ? (
                 <ul className="doinkPlayers">
                   {Object.entries(data).map(([key, value]) => (
-                    <DoinkUser key={key} player={value} user={user.uid} league={league} maxDoink={maxDoink} isAdmin={isLeagueAdmin} playerKey={key} handleUpdateSumDoink={handleUpdateSumDoink} />
+                    <DoinkUser key={key} player={value} user={user.uid} league={league} maxDoink={maxDoink} isAdmin={isLeagueAdmin} playerKey={key} />
                   ))}
                 </ul>
               ) : (
@@ -231,10 +113,7 @@ export default function Doink() {
             </section>
           </div>
         </>
-      ) : (
-        <section className="doinkCard">Please log in to see the doink fund.</section>
       )}
-      {!noLeague && (
       <section className="doinkCard aboutDoinks">
         <h3>Doink Fund Rules</h3>
         <p>In a disc golf game, if a player's throw hits a tree and goes backwards, landing behind the middle of the tree parallel to the tee box, it is considered a "doink". The throw must originate from a tee box or fairway, and the disc must hit the trunk or major limb of the tree, which is predominantly vertical in nature. It's important to note that if the disc hits the ground first and then hits a tree, it does not count as a doink. The sound of the disc hitting the tree is a crucial factor in determining whether it's a doink or not.</p>
@@ -244,7 +123,7 @@ export default function Doink() {
         <h3>What do we do with the Doink Fund?</h3>
         <p>Funds will go to the Couples BBQ first, then to a slush fund to pay for Pay-To-Play courses and potentially beer. Players will settle up their current balances before the Couples Tournament and before the end of the season.</p>
       </section>
-      )}
+      </LeagueGate>
     </div>
   )
 }

@@ -33,7 +33,6 @@ export async function updateCourse ( course ) {
 }
 
 export async function deleteCourse ( course ) {
-  // console.log(course)
   // const modelToDelete = await DataStore.query(Courses, 123456789);
   // DataStore.delete(modelToDelete);
 }

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from "react-router-dom";
+import { useMemo } from 'react';
+import { Link } from "react-router-dom";
 import { Button, Skeleton } from '@mui/material';
 import { toBlob } from 'html-to-image';
 
-import { getELOHistory } from '../../../firebase'
+import { useEloTracking } from '../../../context/leagueData'
+import LeagueGate from '../../../context/LeagueGate'
 
 import './detailedRankings.scss'
 
@@ -59,19 +60,7 @@ function RoundCard ({ round, onShare }) {
 }
 
 export default function DetailedRankings() {
-  const location = useLocation()
-  const { state } = location
-  const [data, setData] = useState()
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    async function fetchData() {
-      const res = await getELOHistory(state.leagueId, state.season)
-      setData(res || {})
-      setLoaded(true)
-    }
-    fetchData()
-  }, [state.leagueId, state.season])
+  const { value: data, loaded } = useEloTracking()
 
   const getImage = async (roundId) => {
       const roundDiv = document.getElementById(roundId);
@@ -90,13 +79,13 @@ export default function DetailedRankings() {
         }
         await navigator.share(data);
       } catch (err) {
-        // console.log(err);
+        // Sharing was cancelled or isn't available; nothing to do
       }
     }
 
-  const rounds = Object.entries(data || {})
+  const rounds = useMemo(() => Object.entries(data || {})
     .sort(([, a], [, b]) => new Date(b.dateAdded) - new Date(a.dateAdded))
-    .map(([key, value]) => ({ ...value, id: value.id || key }))
+    .map(([key, value]) => ({ ...value, id: value.id || key })), [data])
 
   return (
     <div className="detailedRankings">
@@ -105,6 +94,7 @@ export default function DetailedRankings() {
       <p className="drIntro">
         How the Elo was calculated for each round this season. The Elo listed is the player's Elo for that round, not their current Elo.
       </p>
+      <LeagueGate>
       {!loaded && (
         <>
           <Skeleton variant="rounded" animation="wave" height={220} />
@@ -113,6 +103,7 @@ export default function DetailedRankings() {
       )}
       {loaded && rounds.length === 0 && <i>No rounds have been calculated this season yet.</i>}
       {rounds.map(round => <RoundCard key={round.id} round={round} onShare={getImage} />)}
+      </LeagueGate>
     </div>
   );
 }

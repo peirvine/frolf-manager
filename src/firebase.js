@@ -23,7 +23,7 @@ import {
   setDoc,
   connectFirestoreEmulator,
 } from "firebase/firestore"
-import { getDatabase, connectDatabaseEmulator, ref, set, child, get, update, push, remove, runTransaction } from "firebase/database";
+import { getDatabase, connectDatabaseEmulator, ref, set, child, get, update, push, remove, runTransaction, onValue } from "firebase/database";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
@@ -48,8 +48,6 @@ const database = getDatabase(app);
 const useEmulator =
   process.env.NODE_ENV === "development" &&
   process.env.REACT_APP_USE_EMULATOR !== "false";
-
-console.log("[firebase] using emulators:", useEmulator, { databaseURL: firebaseConfig.databaseURL, projectId: firebaseConfig.projectId });
 
 if (useEmulator) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
@@ -100,12 +98,10 @@ export const signInWithGoogle = async () => {
         return {message: "needUdisc", user: user}
       })
       .catch((error) => {
-        // console.warn('error 1')
         logEvent(analytics, 'A user was unable sign up for a league', {error: error} );
       });
     }
   } catch (err) {
-    // console.warn('err', err)
     logEvent(analytics, 'A user had an error signing in', {error: err} );
   }
   return res2
@@ -158,7 +154,6 @@ export const getScorecards = (league, season) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
       logEvent(analytics, 'No data available')
       return []
     }
@@ -218,7 +213,6 @@ export const getAllScorecards = (league) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
       logEvent(analytics, 'No data available')
       // Undefined is left for errors, so callers can tell a league with no rounds from a failed read
       return {}
@@ -297,7 +291,6 @@ export function writeEloTrackingV2(league, elo, season) {
     dateAdded: Date(Date.now()).toString()
   })
   .then(() => {
-    // console.warn('success')
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
@@ -310,7 +303,6 @@ export function addEloToPlayer(league, elo) {
   const year = new Date().getFullYear();
   set(ref(db, league + '/playerEloHistory/' + year + '/' + elo.player), elo.elo)
   .then(() => {
-    // console.warn('success')
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the ELOs', {error: error} );
@@ -382,7 +374,6 @@ export function getELOHistory (league, season) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
       logEvent(analytics, 'No elo history data available')
     }
   }).catch((error) => {
@@ -397,7 +388,6 @@ export function getCurrentElo (league, season) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
       logEvent(analytics, 'no current elo data available')
       return ([])
     }
@@ -507,7 +497,6 @@ export function getDelta (league, season) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No delta data available");
       logEvent(analytics, 'no delta data available')
     }
   }).catch((error) => {
@@ -522,7 +511,6 @@ export function setDeltaV2(league, season, deltaObject) {
   const year = new Date().getFullYear();
   return set(ref(db, league + '/eloDelta/' + season ), deltaObject)
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: ""}
   })
   .catch((error) => {
@@ -539,7 +527,6 @@ export function setEloGraphDataV2(league, season, graphObj) {
   return set(ref(db, league + '/eloGraphData/' + season + '/' + graphObj.course + ' ' + now + ' ' + randomInt), graphObj)
   .then(() => {
     return {code: "success", message: ""}
-    // console.warn('success')
   })
   .catch((error) => {
     logEvent(analytics, 'The system failed to update the ELO graph', {error: error} );
@@ -554,7 +541,6 @@ export function getEloGraphData(league, season) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No elo graph data available");
       logEvent(analytics, 'no elo graph data available')
     }
   }).catch((error) => {
@@ -563,6 +549,31 @@ export function getEloGraphData(league, season) {
   return eloGraph
 }
 
+
+// Everything a league keeps per season, under {league}/{node}/{season}
+const SEASON_NODES = ['scorecards', 'eloTracking', 'playerEloHistory', 'currentElo', 'eloDelta', 'eloGraphData', 'stats']
+
+// Renames a season: copies each node's data to the new name, points the league at it, and only then deletes the old
+// copies, so a failure part way leaves the old data intact and running it again finishes the job.
+export async function renameSeasonData(league, from, to) {
+  if (!league) return missingLeague()
+  const db = getDatabase()
+  try {
+    const moved = []
+    for (const node of SEASON_NODES) {
+      const snapshot = await get(ref(db, `${league}/${node}/${from}`))
+      if (!snapshot.exists()) continue
+      await set(ref(db, `${league}/${node}/${to}`), snapshot.val())
+      moved.push(node)
+    }
+    await set(ref(db, `${league}/info/currentSeason`), to)
+    await Promise.all(moved.map(node => remove(ref(db, `${league}/${node}/${from}`))))
+    return { code: "success", message: `Season renamed to ${to}.` }
+  } catch (error) {
+    logEvent(analytics, 'A user was unable to rename a season', {error: error} );
+    return { code: "error", message: "Could not rename the season. Nothing was deleted, so you can try again." }
+  }
+}
 
 export function resetEloData(league, season, dbEntry) {
   if (!league) return missingLeague()
@@ -584,7 +595,6 @@ export const getUserDataV2 = (user) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
       logEvent(analytics, 'No userdata available');
     }
   }).catch((error) => {
@@ -599,7 +609,6 @@ export const getLeagueNames = () => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
       logEvent(analytics, 'No league name data available');
     }
   }).catch((error) => {
@@ -626,7 +635,6 @@ export const updateUsersLeaguesV2 = async (user, leagues) => {
     leagues: leagues
   })
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "League membership updated successfully!"}
   })
   .catch((error) => {
@@ -636,6 +644,30 @@ export const updateUsersLeaguesV2 = async (user, leagues) => {
   return res
 }
 
+// Streams a path: `onData` gets the current value (null if there's nothing there) now and again on every change.
+// Returns the function that stops listening. The data is downloaded once; after that only changes are sent.
+export const listenToPath = (path, onData, onError) => (
+  onValue(ref(getDatabase(), path), snapshot => onData(snapshot.exists() ? snapshot.val() : null), error => {
+    logEvent(analytics, 'Could not listen to ' + path, {error: error} );
+    onError && onError(error)
+  })
+)
+
+// Each league keeps its own copy of a member's UDisc name in its players list. Copies the new name into every league
+// the player is in, so the pages can read names from that one list. Entries that already match are left alone.
+const syncUDiscNameToLeagues = async (user, name) => {
+  const db = getDatabase()
+  const userData = (await get(ref(db, '/users/' + user.displayName + " " + user.uid))).val()
+  const leagues = (userData?.leagues || []).filter(league => league?.id)
+  await Promise.all(leagues.map(league => runTransaction(ref(db, league.id + '/players'), players => {
+    if (!players) return players
+    const hasChange = Object.values(players).some(member => member?.id === user.uid && member.uDiscDisplayName !== name)
+    if (!hasChange) return undefined
+    const rename = member => (member?.id === user.uid ? { ...member, uDiscDisplayName: name } : member)
+    return Array.isArray(players) ? players.map(rename) : Object.fromEntries(Object.entries(players).map(([key, member]) => [key, rename(member)]))
+  })))
+}
+
 // `aliases` ({ league, event }) are the other names UDisc exports for this player; left out, they aren't changed
 export const updateUsersUDiscName = async (user, name, aliases) => {
   const db = getDatabase()
@@ -643,8 +675,11 @@ export const updateUsersUDiscName = async (user, name, aliases) => {
     uDiscDisplayName: name,
     ...(aliases && { uDiscAliases: aliases })
   })
-  .then(() => {
-    // console.warn('success')
+  .then(async () => {
+    // The name itself is saved; if the leagues can't be updated now, an admin can sync them from the players tab
+    await syncUDiscNameToLeagues(user, name).catch(error => {
+      logEvent(analytics, "Could not copy the UDisc name to the leagues", {error: error} );
+    })
     return {code: "success", message: "League membership updated successfully!"}
   })
   .catch((error) => {
@@ -661,12 +696,11 @@ export function getLeagueMembers ( league ) {
     if (snapshot.exists()) {
       return Object.values(snapshot.val() || {}).filter(member => member && member.id)
     } else {
-      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
       return []
     }
   }).catch((error) => {
-    console.error("[getLeagueSettings] read failed", { league, code: error && error.code, message: error && error.message }, error)
+    console.error("[getLeagueMembers] read failed", { league, code: error && error.code, message: error && error.message }, error)
     logEvent(analytics, 'Could not league members', {error: error} );
     return "error"
   });
@@ -678,7 +712,6 @@ export function updateLeagueMembers(league, members) {
   const db = getDatabase()
   let res = set(ref(db, league + '/players/'), members)
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "You joined the league!"}
   })
   .catch((error) => {
@@ -694,7 +727,6 @@ export function removeLeagueMember(league, member) {
   const db = getDatabase()
   let res = set(ref(db, league + '/players/'), member)
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "You left the league!"}
   })
   .catch((error) => {
@@ -727,7 +759,6 @@ export function createNewLeague(leagueInfo) {
   if (leagueInfo.formData.doinkFund) {
     doinkFundInit = set(ref(db, leagueInfo.formData.leagueAcronym + '/doinkfund/'), leagueInfo.doinkObj)
     .then(() => {
-      // console.warn('success')
       return {code: "success", message: "New league crated!"}
     })
     .catch((error) => {
@@ -744,7 +775,6 @@ export function initDoinkFund (league) {
   const db = getDatabase()
   const res = set(ref(db, league.id + '/doinkfund/'), league.doinkObj)
     .then(() => {
-      // console.warn('success')
       return {code: "success", message: "Doink Fund Initialized"}
     })
     .catch((error) => {
@@ -759,7 +789,6 @@ export function resetDoinkFund (league) {
   const db = getDatabase()
   const res = set(ref(db, league.id + '/doinkfund/'), league.doinkObj)
     .then(() => {
-      // console.warn('success')
       return {code: "success", message: "Doink Fund Reset to 0"}
     })
     .catch((error) => {
@@ -774,7 +803,6 @@ export function joinDoinkFund (league, users) {
   const db = getDatabase()
   const res = set(ref(db, league + '/doinkfund/players'), users)
     .then(() => {
-      // console.warn('success')
       return {code: "success", message: "Doink Fund updated"}
     })
     .catch((error) => {
@@ -824,7 +852,6 @@ export function updateLeagueSettings (league, info) {
   const db = getDatabase()
   let res = update(ref(db, league + '/info'), info)
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "League setting updated successfully!"}
   })
   .catch((error) => {
@@ -843,7 +870,6 @@ export function deleteLeague (league, newIndex) {
   const db = getDatabase()
   let res = remove(ref(db, league))
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "You deleted the league!"}
   })
   .catch((error) => {
@@ -859,7 +885,6 @@ export function updateDoinkSettings (league, doinkLimit) {
   const db = getDatabase()
   let res = update(ref(db, league + '/doinkfund'), {maxDoink: doinkLimit})
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "Doinkfund settings updated successfully!"}
   })
   .catch((error) => {
@@ -875,7 +900,6 @@ export function getDoinkSettings (league) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
     }
   }).catch((error) => {
@@ -889,7 +913,6 @@ export function addDoinkExpense (league, expense) {
   const db = getDatabase();
   let res = push(ref(db, league + '/doinkfund/expenses'), expense)
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "Doinkfund expense added"}
   })
   .catch((error) => {
@@ -905,7 +928,6 @@ export function getDoinkExpenses (league) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
     }
   }).catch((error) => {
@@ -919,7 +941,6 @@ export function deleteDoinkExpense (league, expense) {
   const db = getDatabase();
   let res = remove(ref(db, league + '/doinkfund/expenses/' + expense))
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "Doinkfund expense removed"}
   })
   .catch((error) => {
@@ -934,7 +955,6 @@ export function editDoinkExpense (league, expense, expenseObj) {
   const db = getDatabase();
   let res = update(ref(db, league + '/doinkfund/expenses/' + expense), expenseObj)
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "Doinkfund expense edited"}
   })
   .catch((error) => {
@@ -950,7 +970,6 @@ export function getDoinkFundPlayers (league) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
     }
   }).catch((error) => {
@@ -964,7 +983,6 @@ export function updateDoinkBalanceV2 (league, player) {
   const db = getDatabase();
   let res = set(ref(db, league + '/doinkfund/players/'), player)
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "Doink added"}
   })
   .catch((error) => {
@@ -980,11 +998,9 @@ export function logDoinkEvent (params) {
 
 export function updateDoinkBalanceV3 (league, player, newBalance) {
   if (!league) return missingLeague()
-  // console.warn('player', player)
   const db = getDatabase();
   let res = update(ref(db, league + '/doinkfund/players/' + player), {doinks: newBalance})
   .then(() => {
-    // console.warn('success')
     return {code: "success", message: "Doink added"}
   })
   .catch((error) => {

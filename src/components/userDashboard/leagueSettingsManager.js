@@ -4,12 +4,13 @@ import {useState, useEffect} from 'react'
 import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress, Tooltip } from '@mui/material'
 import { Close, HelpOutline } from '@mui/icons-material'
 import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
-import { startNewSeason } from '../../services/leagueService'
+import { startNewSeason, nameNumberedSeason, isNumberedSeason } from '../../services/leagueService'
 import { refreshHandicaps } from '../../services/handicapStore'
 import { Link, Navigate } from 'react-router-dom'
 import LeagueStats from './leagueStats'
 import LeagueAvatar, { LEAGUE_ICONS } from '../leagueIcon/leagueIcon'
 import ManageLeagueRules from './manageLeagueRules'
+import ConfirmDialog from '../confirmDialog/confirmDialog'
 
 export default function LeagueSettingsManager(props) {
   const [name, setName] = useState(props.league.leagueName)
@@ -27,6 +28,10 @@ export default function LeagueSettingsManager(props) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [finalDialogOpen, setFinalDialogOpen] = useState(false)
+  const [seasonDialogOpen, setSeasonDialogOpen] = useState(false)
+  const [startingSeason, setStartingSeason] = useState(false)
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [renamingSeason, setRenamingSeason] = useState(false)
 
   useEffect(() => {
     getLeagueSettings(props.league.leagueId).then(
@@ -107,13 +112,25 @@ export default function LeagueSettingsManager(props) {
     })
   }
 
-  const handleNewSeason = (id) => {
-    if (!window.confirm("Start a new season? Rankings start over for everyone.")) return
-    startNewSeason(id).then(res => {
-      setAlertOpen(true)
-      setAlertMessage(res.message)
-      setAlertLevel(res.code)
-    })
+  const handleRenameSeason = async (id) => {
+    setRenamingSeason(true)
+    const res = await nameNumberedSeason(id)
+    setRenamingSeason(false)
+    setRenameDialogOpen(false)
+    if (res.code === "success") setLeagueData(previous => ({ ...previous, currentSeason: res.season }))
+    setAlertOpen(true)
+    setAlertMessage(res.message)
+    setAlertLevel(res.code)
+  }
+
+  const handleNewSeason = async (id) => {
+    setStartingSeason(true)
+    const res = await startNewSeason(id)
+    setStartingSeason(false)
+    setSeasonDialogOpen(false)
+    setAlertOpen(true)
+    setAlertMessage(res.message)
+    setAlertLevel(res.code)
   }
 
   return (
@@ -206,10 +223,35 @@ export default function LeagueSettingsManager(props) {
           <p>Starting a new season resets everyone's rankings. Deleting the league can't be undone.</p>
         </div>
         <div className="dangerActions">
-          <Button variant="contained" onClick={() => handleNewSeason(id)}>Start a new Season</Button>
+          {isNumberedSeason(leagueData.currentSeason) && (
+            <Button variant="outlined" onClick={() => setRenameDialogOpen(true)}>Rename season to "Season {leagueData.currentSeason}"</Button>
+          )}
+          <Button variant="contained" onClick={() => setSeasonDialogOpen(true)}>Start a new Season</Button>
           <Button variant="outlined" color="error" onClick={() => handleDeleteLeague()}>Delete League</Button>
         </div>
       </section>
+      <ConfirmDialog
+        open={renameDialogOpen}
+        title={`Rename the season to "Season ${leagueData.currentSeason}"?`}
+        confirmLabel="Rename season"
+        busy={renamingSeason}
+        onConfirm={() => handleRenameSeason(id)}
+        onCancel={() => setRenameDialogOpen(false)}
+      >
+        <p>This season is saved as just "{leagueData.currentSeason}". Renaming it moves its rounds, rankings and stats to "Season {leagueData.currentSeason}" so it matches every other season.</p>
+        <p>The old copies are only deleted once the move has finished.</p>
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={seasonDialogOpen}
+        title="Start a new season?"
+        confirmLabel="Start new season"
+        busy={startingSeason}
+        onConfirm={() => handleNewSeason(id)}
+        onCancel={() => setSeasonDialogOpen(false)}
+      >
+        <p>Everyone's rankings start over, and hat counts reset.</p>
+        <p>Past seasons' rounds and history are kept.</p>
+      </ConfirmDialog>
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}

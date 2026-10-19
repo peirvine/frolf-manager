@@ -8,9 +8,7 @@ import { getUDiscNameLookup, toMainUDiscName } from './uDiscNames'
 // `handicapsApplied`: the export's scores already include the league's handicaps, so the card is saved with that flag
 // and the scorecards page doesn't add its own handicapped standings
 export async function uDiscDump (card, league, simulation = false, { handicapsApplied = false } = {}) {
-  console.log("[uDiscDump] start", { league, simulation, handicapsApplied })
   const settings = await getLeagueSettings(league)
-  console.log("[uDiscDump] league settings", settings)
   if (settings === "error") {
     console.error("[uDiscDump] league settings lookup failed for", league)
     return {code: "error", message: "Error, league not found."}
@@ -51,7 +49,6 @@ export async function uDiscDump (card, league, simulation = false, { handicapsAp
       isOffSeason: isPreseason,
       handicapsApplied: Boolean(handicapsApplied)
     }
-    console.log("[uDiscDump] parsed card", returnValue)
   } catch (err) {
     console.error("[uDiscDump] could not parse card input", err)
     return {code: "error", message: "Error, card input not valid." }
@@ -61,12 +58,10 @@ export async function uDiscDump (card, league, simulation = false, { handicapsAp
     let response = {code: "success", message: "Card Validated."}
     if (!simulation) {
       response = await writeScorecardToDatabase(league, returnValue, season)
-      console.log("[uDiscDump] writeScorecardToDatabase response", response)
       if (response.code === "error") return response
       const cardSaved = true
       if (!isPreseason) {
         const res = await calculateElo(returnValue, season, league)
-        console.log("[uDiscDump] calculateElo result", res)
         if (res) {
           // Hat winners are saved on the card so an edit or delete can move the hat later
           const hatRes = response.key
@@ -81,7 +76,6 @@ export async function uDiscDump (card, league, simulation = false, { handicapsAp
       }
       // Rebuilt even if Elo failed: the card is saved, so the stored handicaps would otherwise be out of date
       const handicapRes = cardSaved ? await refreshHandicaps(league, settings) : null
-      console.log("[uDiscDump] refreshHandicaps result", handicapRes, "final response", response)
       if (cardSaved && handicapRes.code === "error" && response.code === "success") {
         response = {code: "error", message: response.message + " Handicaps could not be updated."}
       }

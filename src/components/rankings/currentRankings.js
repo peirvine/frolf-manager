@@ -1,6 +1,6 @@
 /* eslint-disable array-callback-return */
 /* eslint-disable no-unused-vars */
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useMemo, useState } from 'react'
 import PlayerHistory from './playerHistory';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -22,11 +22,9 @@ import Chip from '@mui/material/Chip';
 import Avatar from '@mui/material/Avatar';
 import Modal from '@mui/material/Modal';
 import CloseIcon from '@mui/icons-material/Close';
-import { Autocomplete, TextField } from '@mui/material';
 import { Link } from "react-router-dom";
 
 import { toBlob } from 'html-to-image';
-import { useAuthState } from 'react-firebase-hooks/auth';
 
 import Hat from '../../images/hat.png'
 
@@ -34,30 +32,28 @@ import HistoricalRankings from './historicalRankings'
 import HandicapTable from './handicapTable'
 
 // import { getRankingsFromGoogle } from '../../services/googleSheetsService';
-import { auth, getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers, getElosOfAllPlayers } from '../../firebase'
-import { getUserLeagues } from "../../services/userLeagues"
-import NoLeague from "../noLeague/noLeague"
+import { useLeague } from '../../context/leagueContext'
+import { useCurrentElo, useEloDeltas, useEloGraph, usePlayerEloHistory } from '../../context/leagueData'
+import LeagueGate from '../../context/LeagueGate'
 
 import './rankings.scss'
 // import { calculateElo, resetCurrentElo } from '../../services/eloService';
 // import { mockCard } from '../../services/mockData';
 
 export default function CurrentRankings () {
-  const [user] = useAuthState(auth)
-  const [rankings, setRankings] = useState()
-  const [deltas, setDeltas] = useState()
+  const { leagueId: league, members: leagueMembers } = useLeague()
+  const { value: rankings } = useCurrentElo()
+  const { value: deltas } = useEloDeltas()
+  const { value: eloGraph } = useEloGraph()
+  const { value: playerEloHistory } = usePlayerEloHistory()
   const imageRef = useRef(null);
   const [open, setOpen] = useState(false)
-  const [optionArray, setOptionArray] = useState([])
-  const [league, setLeague] = useState()
-  const [season, setSeason] = useState()
   const [userData, setUserData] = useState('')
-  const [noLeague, setNoLeague] = useState(false)
-  const [members, setMembers] = useState([])
-  const [graphData, setGraphData] = useState({})
-  const [playerEloHistoryRes, setPlayerEloHistoryRes] = useState([])
   const [hatDataUrl, setHatDataUrl] = useState(null)
   const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const playerEloHistoryRes = playerEloHistory || {}
+  const members = useMemo(() => leagueMembers.map(member => member.uDiscDisplayName), [leagueMembers])
+  const graphData = useMemo(() => ({ eloGraph, playersInLeague: members }), [eloGraph, members])
   // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -74,108 +70,6 @@ export default function CurrentRankings () {
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
-    if (user) {
-      buildOptions().then(res => {
-        if (res) {
-          const leagueId = res.length > 1 ? res[0].id : res.id;
-          getLeagueSettings(leagueId).then(settings => {
-            setSeason(settings.currentSeason);
-            Promise.all([
-              getCurrentElo(leagueId, settings.currentSeason),
-              getDelta(leagueId, settings.currentSeason),
-              getEloGraphData(leagueId, settings.currentSeason),
-              getLeagueMembers(leagueId).then(value => {
-                const hold = value.map(async player => {
-                  if (player) {
-                    const dataObj = {
-                      displayName: player.name,
-                      uid: player.id,
-                    };
-                    const res = await getUserDataV2(dataObj);
-                    return res.uDiscDisplayName;
-                  }
-                });
-                return Promise.all(hold);
-              }),
-              getElosOfAllPlayers( settings.currentSeason, leagueId)
-            ]).then(([rankings, deltas, graphData, members, playerEloHistory]) => {
-              setRankings(rankings);
-              setDeltas(deltas);
-              setMembers(members);
-              const graphObj = {
-                eloGraph: graphData,
-                playersInLeague: members
-              };
-              setGraphData(graphObj);
-              setPlayerEloHistoryRes(playerEloHistory);
-            });
-          });
-        }
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const buildOptions = async () => {
-    const userLeagues = await getUserLeagues(user)
-    if (userLeagues.length === 0) {
-      setNoLeague(true)
-      return null
-    }
-    setNoLeague(false)
-    const leagues = (await getLeagueNames()) || {}
-    if (userLeagues.length > 1) {
-      let optionsArray = []
-      userLeagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
-      setOptionArray(optionsArray)
-      setLeague(userLeagues[0].id)
-      return optionsArray
-    } else {
-      setLeague(userLeagues[0].id)
-      return userLeagues[0]
-    }
-  }
-
-  const handleChangeLeague = async league => {
-    setLeague(league.id);
-    const settings = await getLeagueSettings(league.id);
-    const season = settings.currentSeason;
-    setSeason(season);
-  
-    const [rankings, deltas, graphData, members] = await Promise.all([
-      getCurrentElo(league.id, season),
-      getDelta(league.id, season),
-      getEloGraphData(league.id, season),
-      getLeagueMembers(league.id).then(async (value) => {
-        const hold = await Promise.all(value.map(async player => {
-          if (player) {
-            const dataObj = {
-              displayName: player.name,
-              uid: player.id,
-            };
-            const res = await getUserDataV2(dataObj);
-            return res.uDiscDisplayName;
-          }
-        }));
-        setMembers(hold);
-        return hold;
-      })
-    ]);
-    const playerEloHistory = await getElosOfAllPlayers( settings.currentSeason, league.id)
-    setPlayerEloHistoryRes(playerEloHistory)
-  
-    setRankings(rankings);
-    setDeltas(deltas);
-  
-    const graphObj = {
-      eloGraph: graphData,
-      playersInLeague: members
-    };
-  
-    setGraphData(graphObj);
-  };
-  
   const getImage = async () => {
     const newFile = await toBlob(imageRef.current, { cacheBust: true });
     // Title/text are left out on purpose: with them, "Copy" on mobile copies the text instead of the image
@@ -192,7 +86,7 @@ export default function CurrentRankings () {
       }
       await navigator.share(data);
     } catch (err) {
-      // console.log(err);
+      // Sharing was cancelled or isn't available; nothing to do
     }
   }
    
@@ -274,32 +168,12 @@ export default function CurrentRankings () {
     return playerRankings
   }
 
-  if (noLeague) {
-    return (
-      <div className="currentRankings">
-        <h1>Current Rankings</h1>
-        <NoLeague />
-      </div>
-    )
-  }
-
   return (
     <div className="currentRankings">
-      <PlayerHistory player={selectedPlayer} eloGraph={graphData.eloGraph} league={league} onClose={() => setSelectedPlayer(null)} />
+      <PlayerHistory player={selectedPlayer} eloGraph={eloGraph} league={league} onClose={() => setSelectedPlayer(null)} />
       <h1>Current Rankings</h1>
+      <LeagueGate>
       <div className="pageCard">
-        {optionArray.length > 1 ? (
-          <Autocomplete
-            disablePortal
-            disableClearable
-            id="combo-box-demo"
-            options={optionArray}
-            sx={{ marginTop: 1, marginBottom: 1 }}
-            renderInput={(params) => <TextField {...params} label="Choose League" defaultValue={params[0]}/>}
-            onChange={(event, newValue) => {
-              handleChangeLeague(newValue);
-            }}
-          />) : null}
         <div ref={imageRef}>
           <TableContainer component={Paper} variant="outlined" size="medium" className="rankingsTable">
             <Table aria-label="simple table">
@@ -318,10 +192,7 @@ export default function CurrentRankings () {
           </TableContainer>
         </div>
         <div className="moreStats">
-         <Link to={`./detailedRankings`} state={{
-              leagueId: league,
-              season
-            }}>
+         <Link to="./detailedRankings">
             <Button variant="contained" color="primary" style={{ margin: "5px" }}>
               See Detailed Stats
             </Button>
@@ -330,8 +201,7 @@ export default function CurrentRankings () {
         <div className="getImg">
           <Button variant="contained" onClick={() => getImage()}>Share Rankings</Button>
         </div>
-        <HandicapTable league={league} members={members} />
-        {/* todo fix the rendering issue when switching leagues */}
+        <HandicapTable members={members} />
         <HistoricalRankings {...graphData} />
         <h3>About our ELO Ranking System</h3>
         <p>The ELO ranking system is a widely used method for ranking players or teams in games and sports. It was originally developed by Hungarian-American physicist Arpad Elo in the 1960s to rank chess players, but has since been adapted for use in a variety of other competitive activities, including soccer, basketball, and video games.</p>
@@ -339,6 +209,7 @@ export default function CurrentRankings () {
         <p>If a player or team performs better than expected, their rating will increase, while if they perform worse than expected, their rating will decrease. The size of the rating change is determined by the difference between the actual outcome and the expected outcome, as well as the difference in ratings between the two players or teams.</p>
         <p>The ELO ranking system is widely regarded as a fair and accurate way to rank players or teams, as it takes into account not only wins and losses, but also the strength of the opponents faced and the margin of victory or defeat. It is also relatively simple to understand and implement, which makes it appealing for use in a wide range of contexts.</p>
       </div>
+      </LeagueGate>
     </div>
   )
 }

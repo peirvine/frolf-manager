@@ -1,10 +1,45 @@
-import { getLeagueMembers, getLeagueSettings, getUserDataV2, setDeltaV2, updateCurrentEloV2, updateLeagueSettings, resetEloData, resetHatCounts } from "../firebase";
+import { getLeagueMembers, getLeagueSettings, getUserDataV2, setDeltaV2, updateCurrentEloV2, updateLeagueMembers, updateLeagueSettings, resetEloData, resetHatCounts, renameSeasonData } from "../firebase";
+
+// Pages read each member's UDisc name from the league's players list, which is kept in step as players save their name.
+// This copies every member's current name over from their account, for names changed before that happened.
+export async function syncMemberUDiscNames ( league ) {
+  const members = await getLeagueMembers(league)
+  if (!Array.isArray(members)) return {code: "error", message: "Could not get the league members"}
+
+  const users = await Promise.all(members.map(member => getUserDataV2({ displayName: member.name, uid: member.id })))
+  let changed = 0
+  const updated = members.map((member, i) => {
+    const name = users[i]?.uDiscDisplayName
+    if (!name || name === member.uDiscDisplayName) return member
+    changed++
+    return { ...member, uDiscDisplayName: name }
+  })
+  if (changed === 0) return {code: "success", message: "UDisc names are already up to date"}
+
+  const res = await updateLeagueMembers(league, updated)
+  if (res.code === "error") return res
+  return {code: "success", message: `Updated ${changed} UDisc ${changed === 1 ? "name" : "names"}`}
+}
+
+// Leagues made from the dashboard used to start on the bare number 1 instead of "Season 1"
+export const isNumberedSeason = (season) => /^\d+$/.test(String(season ?? ""))
+
+// Gives a season that's just a number the usual "Season N" name, moving its data. Returns the (new) season name.
+export async function nameNumberedSeason ( league ) {
+  const currentSeason = await getCurrentSeason(league)
+  if (currentSeason === false) return {code: "error", message: "Could not get current season"}
+  if (!isNumberedSeason(currentSeason)) return {code: "success", message: "The season already has a name", season: currentSeason}
+  const season = "Season " + currentSeason
+  const res = await renameSeasonData(league, String(currentSeason), season)
+  return { ...res, season }
+}
 
 // Pattern: Update the database, check for error, then move on. This way if you click the button again it'll just overwrite the failed update. Updating the season is last.
 export async function startNewSeason ( league ) {
   // Season
-  const currentSeason = await getCurrentSeason(league)
-  if (currentSeason === false) return {code: "error", message: "Could not get current season"}
+  const named = await nameNumberedSeason(league)
+  if (named.code === "error") return named
+  const currentSeason = named.season
   let newSeason
   if (currentSeason === undefined) {
     newSeason = "Season 1"
