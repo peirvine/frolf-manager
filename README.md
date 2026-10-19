@@ -59,8 +59,7 @@ Firebase has emulators, they aren't currently working but they will be soon.
 
 `npm start` automatically points the app at the local Firebase emulators (Auth, Firestore, Realtime Database) instead of production. App Check is disabled in this mode.
 
-1. In one terminal: `npm run emulators` (needs `firebase-tools`; data is saved to `./emulator-data` on exit and re-imported on next start).
-2. In another: `npm start`. Emulator UI is at http://localhost:4000.
-3. To seed with a copy of production data, export the Realtime Database JSON from the Firebase console and import it via the Emulator UI (or place it in `emulator-data/database_export/`).
+1. Run `npm run frolf` to start the emulators and the app together (needs `firebase-tools` and Java; data is saved to `./emulator-data` on exit and re-imported on next start). Or run `npm run emulators` and `npm start` in separate terminals.
+2. To seed with a copy of production data, export the Realtime Database JSON from the Firebase console and import it via the Emulator UI (or place it in `emulator-data/database_export/`).
 
 Set `REACT_APP_USE_EMULATOR=false` to run `npm start` against the real backend.
