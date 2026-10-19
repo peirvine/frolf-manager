@@ -58,7 +58,16 @@ export const getHoleNames = (card) => {
   return header.split(",").slice(8).map(name => name.trim().replace(/^Hole\s*/i, ""))
 }
 
-const timeOf = (value) => {
+// Milliseconds for sorting, or 0 if the date can't be read. Round dates look like "2023-10-20 2104" (UDisc's start
+// time), which Date.parse can't read, so they're read here, time included so rounds on the same day stay in order.
+// Anything else (like dateAdded, saved with Date().toString()) goes to Date.parse.
+export const timeOf = (value) => {
+  const match = String(value || "").match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{2})(\d{2}))?/)
+  if (match) {
+    // A date without a time has no hours or minutes, so those read as 0
+    const [, year, month, day, hours, minutes] = match.map(part => Number(part || 0))
+    return new Date(year, month - 1, day, hours, minutes).getTime()
+  }
   const parsed = Date.parse(value)
   return Number.isNaN(parsed) ? 0 : parsed
 }

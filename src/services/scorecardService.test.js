@@ -87,8 +87,8 @@ describe("uDiscDump", () => {
     expect((await uDiscDump(uDiscCsv({ scores: { Alice: 0 } }), "maftb")).code).toBe("error")
   })
 
-  // Bug: when the card can't be saved, uDiscDump still scores Elo for it and reports "Card and Elo added, but the
-  // hat count could not be updated"
+  // Bug #80: when the card can't be saved, uDiscDump still scores Elo for it and reports "Card and Elo added, but
+  // the hat count could not be updated"
   test.todo("doesn't score Elo for a card that wasn't saved")
 
   test("reports a card saved without Elo, and still updates handicaps", async () => {

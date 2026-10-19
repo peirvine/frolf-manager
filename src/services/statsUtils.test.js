@@ -1,4 +1,4 @@
-import { leagueHasHats, isOffSeasonCard, normalizeCourse, getCardStrokesPerHole, pickTop, getPreviousSeason, getAces, getHoleNames } from './statsUtils'
+import { leagueHasHats, isOffSeasonCard, normalizeCourse, getCardStrokesPerHole, pickTop, getPreviousSeason, getAces, getHoleNames, timeOf } from './statsUtils'
 import { storedCard, uDiscCsv } from './testUtils/fixtures'
 
 test("only MAFTB has hats", () => {
@@ -56,24 +56,37 @@ describe("getAces", () => {
     ...extra,
   })
 
-  test("finds members' aces, named by hole", () => {
+  test("finds members' aces, newest round first, named by hole", () => {
     const scorecards = {
       old: card("2026-04-01 1800", { Alice: ["1", "3", "3"], Visitor: ["1", "3", "3"] }),
       new: card("2026-05-01 1800", { " alice": ["3", "3", " 1"] }, { rawUDiscCard: uDiscCsv({ holeCount: 3, scores: {} }).replace("Hole3", "Hole 3A") }),
     }
-    const aces = getAces(scorecards, ["Alice"])
-    expect(aces).toHaveLength(2)
-    expect(aces).toEqual(expect.arrayContaining([
+    expect(getAces(scorecards, ["Alice"])).toEqual([
       { player: " alice", course: "Bryant", hole: "3A", date: "2026-05-01 1800" },
       { player: "Alice", course: "Bryant", hole: "1", date: "2026-04-01 1800" },
-    ]))
+    ])
   })
-
-  // Bug: timeOf uses Date.parse, which returns NaN for UDisc dates like "2026-05-01 1800", so nothing is sorted
-  test.todo("sorts aces newest round first")
 
   test("handles no scorecards", () => {
     expect(getAces(undefined, ["Alice"])).toEqual([])
+  })
+})
+
+describe("timeOf", () => {
+  test("reads UDisc round dates, time included", () => {
+    expect(timeOf("2026-05-01 1830")).toBe(new Date(2026, 4, 1, 18, 30).getTime())
+    expect(timeOf("2026-05-01 1830")).toBeGreaterThan(timeOf("2026-05-01 0900"))
+    expect(timeOf("2026-5-1")).toBe(new Date(2026, 4, 1).getTime())
+  })
+
+  test("reads other dates with Date.parse", () => {
+    const added = new Date(2026, 4, 1, 12, 0, 0)
+    expect(timeOf(added.toString())).toBe(added.getTime())
+  })
+
+  test("is 0 for dates it can't read", () => {
+    expect(timeOf("not a date")).toBe(0)
+    expect(timeOf(undefined)).toBe(0)
   })
 })
 

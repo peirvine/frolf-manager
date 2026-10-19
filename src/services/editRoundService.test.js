@@ -158,7 +158,22 @@ describe("rebuildSeason", () => {
     expect((await rebuildSeason("maftb", SEASON)).message).toMatch(/^Error calculating Elo for Bryant Lake Park/)
   })
 
-  // Bug: compareCards uses Date.parse, which can't read UDisc dates ("2026-05-01 1800"), so rounds are replayed
-  // in the order they were added rather than the order they were played
-  test.todo("replays rounds in the order they were played")
+  test("replays rounds in the order they were played, not the order they were added", async () => {
+    await playSeason(ROUNDS)
+    const expected = results()
+
+    // The second round is entered last
+    await playSeason([ROUNDS[0], ROUNDS[2], ROUNDS[1]])
+    expect(results()).not.toEqual(expected)
+    await rebuildSeason("maftb", SEASON)
+    expect(results()).toEqual(expected)
+  })
+
+  test("uses the order rounds were added for rounds played at the same time", async () => {
+    const sameTime = ROUNDS.map(round => ({ ...round, date: "2026-05-01 1800" }))
+    await playSeason(sameTime)
+    const expected = results()
+    await rebuildSeason("maftb", SEASON)
+    expect(results()).toEqual(expected)
+  })
 })
