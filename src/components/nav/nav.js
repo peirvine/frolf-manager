@@ -23,6 +23,7 @@ const brandName = window.location.href.includes("suchfrolf") ? "Such Frolf" : "D
 const publicPages = [
   { display: 'Home', route: "/" },
   { display: 'About DGM', route: "/about" },
+  { display: 'FAQ', route: "/faq" },
 ]
 
 // Signed in, the bar only has room for these (the brand links home; About DGM moves to the account menu)
@@ -43,6 +44,7 @@ const mobileMemberPages = [
   { display: 'Disc Charger', route: "/discCharger" },
   { display: 'League History', route: "/aboutLeague" },
   { display: 'About DGM', route: "/about" },
+  { display: 'FAQ', route: "/faq" },
 ]
 
 export default function Nav() {
@@ -128,6 +130,7 @@ export default function Nav() {
                 <MenuItem onClick={closeMenus} component={NavLink} to="/dashboard">Dashboard</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/discCharger">Disc Charger</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/about">About DGM</MenuItem>
+                <MenuItem onClick={closeMenus} component={NavLink} to="/faq">FAQ</MenuItem>
                 <Divider />
                 <MenuItem onClick={handleLogout}>Log out</MenuItem>
               </Menu>

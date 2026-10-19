@@ -14,6 +14,7 @@ import ManageLeague from './components/userDashboard/manageLeague';
 import EditRound from './components/userDashboard/editRound'
 import SimulateRound from './components/userDashboard/simulateRound/simulateRound';
 import AboutDGM from './components/about/aboutDGM/aboutDGM';
+import Faq from './components/faq/faq';
 import DiscCharger from './components/discCharger/discCharger';
 import ErrorPage from './errorPage';
 import RequireAuth from './protectedRoute'
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: <AboutDGM />,
+      },
+      {
+        path: "/faq",
+        element: <Faq />,
       },
       {
         path: "/aboutLeague",
