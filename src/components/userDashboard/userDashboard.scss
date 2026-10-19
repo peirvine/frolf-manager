@@ -110,6 +110,23 @@
       margin: 0;
     }
   }
+
+  .uDiscNames {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 16px;
+    margin: 0;
+
+    dt {
+      opacity: 0.7;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+  }
 }
 
 // Manage league page

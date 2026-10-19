@@ -31,6 +31,15 @@ describe("uDiscDump", () => {
     expect(Object.keys(db.read(`maftb/playerEloHistory/${SEASON}`))).toEqual(["Alice", "Bob"])
   })
 
+  test("saves members under their main name when the export uses a league or event round name", async () => {
+    seed()
+    db.write("users/Alice Google uid0/uDiscAliases", { event: "Alice Smith" })
+    await uDiscDump(uDiscCsv({ separator: "", scores: { "Alice Smith": -2, "bob ": 4 } }), "maftb")
+
+    expect(savedCards()[0].Players.map(p => p.player)).toEqual(["Par", "Alice", "Bob"])
+    expect(Object.keys(db.read(`maftb/playerEloHistory/${SEASON}`))).toEqual(["Alice", "Bob"])
+  })
+
   test("saves off-season rounds without touching Elo", async () => {
     seed("maftb", { isPreseason: true })
     expect(await uDiscDump(uDiscCsv({ course: "Bryant", scores: { Alice: 0 } }), "maftb")).toMatchObject({

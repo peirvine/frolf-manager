@@ -592,10 +592,12 @@ export const updateUsersLeaguesV2 = async (user, leagues) => {
   return res
 }
 
-export const updateUsersUDiscName = async (user, name) => {
+// `aliases` ({ league, event }) are the other names UDisc exports for this player; left out, they aren't changed
+export const updateUsersUDiscName = async (user, name, aliases) => {
   const db = getDatabase()
   let res = update(ref(db, '/users/' + user.displayName + " " + user.uid), {
-    uDiscDisplayName: name
+    uDiscDisplayName: name,
+    ...(aliases && { uDiscAliases: aliases })
   })
   .then(() => {
     // console.warn('success')

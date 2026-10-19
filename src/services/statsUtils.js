@@ -1,3 +1,5 @@
+import { getUDiscHoleNames } from './uDiscCsv'
+
 // The hat (lowest-rated player on the card wins it) is a MAFTB tradition; no other league tracks or shows it
 export const leagueHasHats = (league) => league === "maftb"
 
@@ -53,9 +55,7 @@ const sameName = (a, b) => String(a).trim().toLowerCase() === String(b).trim().t
 // which is only kept in rawUDiscCard. Returns [] if it isn't there, so callers fall back to the hole's position.
 export const getHoleNames = (card) => {
   if (typeof card.rawUDiscCard !== "string") return []
-  const header = card.rawUDiscCard.split(/(?:^|\s)Par,/)[0]
-  if (!header.startsWith("PlayerName")) return []
-  return header.split(",").slice(8).map(name => name.trim().replace(/^Hole\s*/i, ""))
+  return getUDiscHoleNames(card.rawUDiscCard).map(name => name.trim().replace(/^Hole\s*/i, ""))
 }
 
 // Milliseconds for sorting, or 0 if the date can't be read. Round dates look like "2023-10-20 2104" (UDisc's start

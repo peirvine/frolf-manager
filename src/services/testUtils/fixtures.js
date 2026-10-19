@@ -37,8 +37,9 @@ export const storedCard = (options, extra = {}) => {
   return { Course: card.course, Layout: card.layout, Players: card.playerArray, Date: card.date, Par: card.par, ...extra }
 }
 
-// A UDisc "Export to CSV" paste. UDisc separates rows with a space when pasted, which is what uDiscDump splits on.
-export const uDiscCsv = ({ course = "Bryant Lake Park", layout = "Long Tees", date = "2026-05-01 1800", holeCount = 18, scores }) => {
+// A UDisc "Export to CSV" paste. Rows usually arrive joined by a space, but pastes can also keep the line breaks or
+// lose them entirely, so `separator` sets what goes between rows.
+export const uDiscCsv = ({ course = "Bryant Lake Park", layout = "Long Tees", date = "2026-05-01 1800", holeCount = 18, separator = " ", scores }) => {
   const holeHeaders = Array.from({ length: holeCount }, (_, i) => `Hole${i + 1}`)
   const row = (name, total, plusMinus, holes) => [name, course, layout, date, date, total, plusMinus, "", ...holes].join(",")
   const par = 3 * holeCount
@@ -46,5 +47,5 @@ export const uDiscCsv = ({ course = "Bryant Lake Park", layout = "Long Tees", da
     ["PlayerName", "CourseName", "LayoutName", "StartDate", "EndDate", "Total", "+/-", "RoundRating", ...holeHeaders].join(","),
     row("Par", par, "", holesFor(holeCount, 0)),
     ...Object.entries(scores).map(([name, overPar]) => row(name, par + overPar, overPar, holesFor(holeCount, overPar))),
-  ].join(" ")
+  ].join(separator)
 }

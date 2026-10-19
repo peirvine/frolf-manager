@@ -2,6 +2,8 @@
 import { getLeagueSettings, writeScorecardToDatabase, setCardHatWinners } from '../firebase'
 import { calculateElo, changeHatWinners } from './eloService'
 import { refreshHandicaps } from './handicapStore'
+import { parseUDiscCsv } from './uDiscCsv'
+import { getUDiscNameLookup, toMainUDiscName } from './uDiscNames'
 
 export async function uDiscDump (card, league, simulation = false) {
   const settings = await getLeagueSettings(league)
@@ -11,43 +13,18 @@ export async function uDiscDump (card, league, simulation = false) {
   let playerArray = []
 
   try {
-    // eslint-disable-next-line no-unused-vars
-    const init = card.replace(/,\d\s[A-Z]/g, (match, offset) => match.replace(" ", "remove"))
-    const remove = init.split('remove')
-    const parRow = remove[0].split(/(Par),/)
-    const res = remove.slice(1)
-    
-    
-    const parData = parRow[2].split(',')
-    playerArray.push({
-      player: "Par",
-      total: parData[4],
-      plusMinus: '',
-      rating: '',
-      holes: parData.slice(7)
-    })
-  
-    
-    // eslint-disable-next-line array-callback-return
-    res.map(x => {
-      const y = x.split(',')
-      playerArray.push({
-        player: y[0],
-        total: y[5],
-        plusMinus: y[6],
-        rating: y[7],
-        holes: y.slice(8),
-      })
-    })
+    const rows = parseUDiscCsv(card)
+    const parRow = rows[0]
+    // Members are saved under their main UDisc name, whichever of their names this export used
+    const names = await getUDiscNameLookup(league)
+    playerArray = rows.map(({ player, total, plusMinus, rating, holes }) => ({ player: toMainUDiscName(names, player), total, plusMinus, rating, holes }))
+    const course = parRow.course.replace(/[.#$[\]]/g, '')
 
-    let course = settings.isPreseason ? "(Off-Season) " + parData[0].replace(/[.#$[\]]/g, '') : parData[0].replace(/[.#$[\]]/g, '')
-    
-    
     returnValue = {
-      course: course,
-      layout: parData[1].replace(/[.#$[\]]/g, ''),
-      par: parData[4],
-      date: parData[2],
+      course: settings.isPreseason ? "(Off-Season) " + course : course,
+      layout: parRow.layout.replace(/[.#$[\]]/g, ''),
+      par: parRow.total,
+      date: parRow.startDate,
       playerArray,
       rawUDiscCard: card,
       isOffSeason: settings.isPreseason
