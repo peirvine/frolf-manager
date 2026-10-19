@@ -40,7 +40,8 @@ export async function uDiscDump (card, league, simulation = false, { handicapsAp
     let response = {code: "success", message: "Card Validated."}
     if (!simulation) {
       response = await writeScorecardToDatabase(league, returnValue, season)
-      const cardSaved = response.code === "success"
+      if (response.code === "error") return response
+      const cardSaved = true
       if (!settings.isPreseason) {
         const res = await calculateElo(returnValue, season, league)
         if (res) {
