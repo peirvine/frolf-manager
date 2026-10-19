@@ -1,0 +1,21 @@
+name: Tests
+'on':
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # The tests stand in for Firebase (src/services/testUtils/fakeFirebase.js), so no secrets are needed.
+      # CI=true makes react-scripts run once instead of watching.
+      - run: npm test -- --watchAll=false
+        env:
+          CI: true

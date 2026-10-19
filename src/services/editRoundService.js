@@ -2,6 +2,7 @@ import { getScorecards, setSpecificScorecard, deleteSpecificScorecard, setCardHa
 import { resetCurrentSeason } from "./leagueService"
 import { calculateElo, changeHatWinners } from "./eloService"
 import { refreshHandicaps } from "./handicapStore"
+import { timeOf } from "./statsUtils"
 
 // Editing or deleting a round changes every later round's Elo (each card builds on the state left by the
 // previous one), so we reset the season's derived data and replay every remaining card in order.
@@ -91,11 +92,6 @@ const compareCards = ([keyA, a], [keyB, b]) => {
   const byAdded = timeOf(a.dateAdded) - timeOf(b.dateAdded)
   if (byAdded !== 0) return byAdded
   return keyA < keyB ? -1 : keyA > keyB ? 1 : 0
-}
-
-const timeOf = (value) => {
-  const parsed = Date.parse(value)
-  return Number.isNaN(parsed) ? 0 : parsed
 }
 
 // Builds the input calculateElo expects from a stored scorecard. Uses the stored Players (which hold any
