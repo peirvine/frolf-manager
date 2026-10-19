@@ -1,13 +1,13 @@
 /* eslint-disable no-unused-vars */
-import react, {useEffect, useState} from 'react'
-import { auth, getUserDataV2, getLeagueNames, updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2, getLeagueSettings } from "../../firebase"
+import react, {useEffect, useMemo, useState} from 'react'
+import { updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2, getLeagueSettings } from "../../firebase"
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar, Chip } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
 import { Link } from "react-router-dom";
 import './userDashboard.scss'
 import FunStats from './funStats';
 import LeagueAvatar from '../leagueIcon/leagueIcon';
-import { useAuthState } from "react-firebase-hooks/auth";
+import { useLeague } from '../../context/leagueContext';
 import UDiscNameDialog from '../nav/uDiscNameDialog';
 import { UDISC_ALIAS_TYPES } from '../../services/uDiscNames';
 
@@ -19,14 +19,15 @@ const statusColor = (status) => {
   return "default"
 }
 
+const NO_USER_DATA = {}
+
 export default function UserDashboard () {
-  const [user] = useAuthState(auth);
-  const [userData, setUserData] = useState([])
-  const [leagues, setLeauges] = useState({})
+  // The person's record and the league names stay up to date on their own, so joining or leaving shows straight away
+  const { user, userData: liveUserData, leagueNames: leagues } = useLeague()
+  const userData = liveUserData || NO_USER_DATA
   const [leagueMembers, setLeagueMembers] = useState([])
-  const [leaguesToJoin, setLeaguesToJoin] = useState([])
-  // { leagueId: icon id } for every league shown on the page
-  const [leagueIcons, setLeagueIcons] = useState({})
+  // { leagueId: settings } for every league, read once when the list of leagues loads
+  const [leagueSettings, setLeagueSettings] = useState({})
   const [open, setOpen] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
@@ -51,62 +52,21 @@ export default function UserDashboard () {
     p: 4,
   };
 
-  useEffect(() => { 
-    if (user) {
-      getUserDataV2(user).then(res => {
-        setUserData(res)
-      })
-    }
-  }, [user])
-
   useEffect(() => {
-    const ids = [...(userData.leagues || []).map(x => x.id), ...leaguesToJoin].filter(id => id && !(id in leagueIcons))
+    const ids = Object.keys(leagues)
     if (ids.length === 0) return
-    Promise.all(ids.map(id => getLeagueSettings(id))).then(settings => {
-      setLeagueIcons(previous => ({ ...previous, ...Object.fromEntries(ids.map((id, i) => [id, settings[i]?.icon || ""])) }))
+    let cancelled = false
+    Promise.all(ids.map(id => getLeagueSettings(id))).then(all => {
+      if (!cancelled) setLeagueSettings(Object.fromEntries(ids.map((id, i) => [id, all[i]])))
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userData, leaguesToJoin])
+    return () => { cancelled = true }
+  }, [leagues])
 
-  useEffect(() => {
-    if (userData.leagues) {
-      handleLeagueName(userData.leagues)
-    } else {
-      handleLeagueName({})
-    }    
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, userData])
-
-  const handleLeagueName = async (leagueObj) => {
-    const res = getLeagueNames()
-    res.then(x => {
-      setLeauges(x)
-    })
-    let compArray = []
-
-    if (leagueObj.length > 0) {
-      for (const [key, value] of Object.entries(leagues)) {
-        if (leagueObj.filter(l => l.id === key).length === 0 ) {
-          let a
-          await getLeagueSettings(key).then(res => {
-            if (res.acceptingPlayers) {
-              compArray.push(key)
-            }
-          })
-        }
-      }
-    } else {
-      for (const [key, value] of Object.entries(leagues)) {
-        await getLeagueSettings(key).then(res => {
-          if (res.acceptingPlayers) {
-            compArray.push(key)
-          }
-        })
-      }
-    }
-    
-    setLeaguesToJoin(compArray)
-  }
+  // { leagueId: icon id } for every league shown on the page
+  const leagueIcons = useMemo(() => Object.fromEntries(Object.entries(leagueSettings).map(([id, settings]) => [id, settings?.icon || ""])), [leagueSettings])
+  // The leagues taking new players that the person isn't in yet; joining or leaving updates it on its own
+  const leaguesToJoin = useMemo(() => Object.keys(leagueSettings)
+    .filter(id => leagueSettings[id]?.acceptingPlayers && !(userData.leagues || []).some(x => x.id === id)), [leagueSettings, userData])
 
   const handleLeaveLeague = async league => {
     const members = await getLeagueMembers(league)
@@ -115,10 +75,6 @@ export default function UserDashboard () {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
-      setUserData({
-        ...userData,
-        leagues: newLeagueList
-      })
     })
     const newMembers = members.filter( l => { return l.id !== userData.uid})
 
@@ -126,8 +82,6 @@ export default function UserDashboard () {
       setAlertOpen(true)
       setAlertMessage(res.message)
       setAlertLevel(res.code)
-      const holderLeague = leaguesToJoin.concat(league)
-      setLeaguesToJoin(holderLeague)
     })
   }
 
@@ -153,23 +107,7 @@ export default function UserDashboard () {
       setAlertLevel(res.code)
     })
 
-    setUserData({
-      ...userData,
-      leagues: updatedLeagueList
-    })
-
     handleUpdateLeagueMembers(league, user, isAdmin)
-
-    if (leaguesToJoin.length === 1) {
-      setLeaguesToJoin([])
-    } else {
-      const index = leaguesToJoin.indexOf(league)
-      const copyleagues = leaguesToJoin
-      if (index > -1) {
-        copyleagues.splice(index, 1)
-      }
-      setLeaguesToJoin(copyleagues)
-    }
   }
 
 
@@ -211,7 +149,7 @@ export default function UserDashboard () {
       doinkFund: doink,
       acceptingPlayers: true,
       blurb: '',
-      currentSeason: 1,
+      currentSeason: "Season 1",
       isPreseason: true,
     }
 
@@ -228,9 +166,7 @@ export default function UserDashboard () {
         uid: user.uid
       })
     }
-    const newLeagues = leagues
-
-    newLeagues[leagueAc] = leagueName
+    const newLeagues = { ...leagues, [leagueAc]: leagueName }
 
     const combinedData = {
       userObject,
@@ -307,10 +243,7 @@ export default function UserDashboard () {
           currentName={userData.uDiscDisplayName || ""}
           currentAliases={userData.uDiscAliases || {}}
           onCancel={() => setNameDialogOpen(false)}
-          onSaved={() => {
-            setNameDialogOpen(false)
-            getUserDataV2(user).then(res => setUserData(res || {}))
-          }}
+          onSaved={() => setNameDialogOpen(false)}
         />
       </section>
       <section className="dashSection">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Button, MenuItem, Skeleton, TextField } from '@mui/material'
 import { NavLink } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -10,8 +10,10 @@ import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GoogleIcon from '@mui/icons-material/Google';
-import { auth, signInWithGoogle, getUserDataV2, getLeagueNames } from '../../firebase'
-import { getHomeStats } from '../../services/homeStatsService'
+import { auth, signInWithGoogle } from '../../firebase'
+import { buildHomeStats } from '../../services/homeStatsService'
+import { useLeague } from '../../context/leagueContext'
+import { useScorecards, useCurrentElo, useEloDeltas, useHatCounts, useDoinkFund, useHandicaps } from '../../context/leagueData'
 import UDiscNameDialog from '../nav/uDiscNameDialog'
 import { Basket, AceAwards } from '../aceAward/aceAward'
 import { formatHandicap } from '../../services/handicapService'
@@ -139,31 +141,34 @@ function HeroArt () {
 
 /****************** Logged in ******************/
 
-const ACTIVE_STATUSES = ["Member", "Admin"]
-
 function LoggedInHome ({ user }) {
-  const [userData, setUserData] = useState(null)
+  const { userData, leagueNames, activeLeagues, leagueId, selectLeague, settings, members } = useLeague()
   const [nameDialogOpen, setNameDialogOpen] = useState(false)
-  const [leagueNames, setLeagueNames] = useState({})
-  const [league, setLeague] = useState('')
-  const [stats, setStats] = useState(null)
 
-  useEffect(() => {
-    Promise.all([getUserDataV2(user), getLeagueNames()]).then(([data, names]) => {
-      setUserData(data || {})
-      setLeagueNames(names || {})
-      const first = (data?.leagues || []).find(x => x?.id && ACTIVE_STATUSES.includes(x.membershipStatus))
-      if (first) setLeague(first.id)
-    })
-  }, [user])
+  const { current: cards, bySeason: allCards, loaded: cardsLoaded } = useScorecards()
+  const { value: elos, loaded: elosLoaded } = useCurrentElo()
+  const { value: deltas } = useEloDeltas()
+  const { value: hatCounts } = useHatCounts()
+  const { players: doinkPlayers } = useDoinkFund()
+  const handicaps = useHandicaps()
 
-  useEffect(() => {
-    if (!league || !userData) return
-    setStats(null)
-    getHomeStats(user, userData.uDiscDisplayName, league).then(setStats).catch(() => setStats({}))
-  }, [league, user, userData])
+  const uDiscName = userData?.uDiscDisplayName
+  const ready = settings && cardsLoaded && elosLoaded
+  const stats = useMemo(() => !ready ? null : buildHomeStats({
+    user,
+    uDiscName,
+    league: leagueId,
+    settings,
+    elos,
+    deltas,
+    cards,
+    allCards,
+    hatCounts,
+    doinkPlayers,
+    memberNames: members.map(member => member.uDiscDisplayName).filter(Boolean),
+    handicaps,
+  }), [ready, user, uDiscName, leagueId, settings, elos, deltas, cards, allCards, hatCounts, doinkPlayers, members, handicaps])
 
-  const leagues = (userData?.leagues || []).filter(x => x?.id && ACTIVE_STATUSES.includes(x.membershipStatus))
   const firstName = (user.displayName || "").split(" ")[0]
 
   return (
@@ -172,20 +177,20 @@ function LoggedInHome ({ user }) {
         <div className="homeHeroInner">
           <div className="homeHeroText">
             <span className="homeEyebrow">
-              {league ? `${leagueNames[league] || league}${stats?.season ? ` · ${stats.season}` : ""}` : "Disc Golf Manager"}
+              {leagueId ? `${leagueNames[leagueId] || leagueId}${stats?.season ? ` · ${stats.season}` : ""}` : "Disc Golf Manager"}
             </span>
             <h1>Welcome back{firstName ? `, ${firstName}` : ""}</h1>
           </div>
-          {leagues.length > 1 && (
+          {activeLeagues.length > 1 && (
             <TextField
               select
               size="small"
               className="homeLeaguePicker"
               label="League"
-              value={league}
-              onChange={(e) => setLeague(e.target.value)}
+              value={leagueId}
+              onChange={(e) => selectLeague(e.target.value)}
             >
-              {leagues.map(x => <MenuItem key={x.id} value={x.id}>{leagueNames[x.id] || x.id}</MenuItem>)}
+              {activeLeagues.map(x => <MenuItem key={x.id} value={x.id}>{leagueNames[x.id] || x.id}</MenuItem>)}
             </TextField>
           )}
         </div>
@@ -198,7 +203,7 @@ function LoggedInHome ({ user }) {
             <Button variant="contained" onClick={() => setNameDialogOpen(true)}>Add UDisc name</Button>
           </div>
         )}
-        {userData && leagues.length === 0 && (
+        {userData && activeLeagues.length === 0 && (
           <div className="homeNotice">
             <span>You're not in a league yet.</span>
             <Button variant="contained" component={NavLink} to="/dashboard">Find a league</Button>
@@ -240,13 +245,10 @@ function LoggedInHome ({ user }) {
           open={nameDialogOpen}
           user={user}
           onCancel={() => setNameDialogOpen(false)}
-          onSaved={() => {
-            setNameDialogOpen(false)
-            getUserDataV2(user).then(data => setUserData(data || {}))
-          }}
+          onSaved={() => setNameDialogOpen(false)}
         />
 
-        {leagues.length > 0 && (
+        {activeLeagues.length > 0 && (
           <section className="homeSeason">
             <h2>Your season</h2>
             {stats ? <SeasonTiles stats={stats} /> : (

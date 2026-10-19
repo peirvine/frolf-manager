@@ -4,7 +4,7 @@ import { IconButton, Alert, Snackbar } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-import { getDoinkFundPlayers, updateDoinkBalanceV3, logDoinkEvent } from '../../firebase'
+import { updateDoinkBalanceV3, logDoinkEvent } from '../../firebase'
 import './doinkUser.scss'
 
 
@@ -16,14 +16,9 @@ export default function DoinkUser(props) {
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
-  // const [doinkList, setDoinkList] = useState([])
-
   useEffect(() => {
     setDoinkHolder(props.player.doinks)
-    getDoinkFundPlayers(props.league).then(res => {
-      // setDoinkList(res)
-    })
-  }, [props.league, props.player.doinks])
+  }, [props.player.doinks])
 
   const reportDoink = (action) => {
     let newBalance
@@ -44,7 +39,6 @@ export default function DoinkUser(props) {
             setOpen(true)
             setVariant('success')
             setAlertMessage('Doink Updated')
-            props.handleUpdateSumDoink && props.handleUpdateSumDoink(action === "up" ? 1 : -1)
           } else {
             setOpen(true)
             setVariant('error')

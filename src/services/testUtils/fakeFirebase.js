@@ -27,7 +27,22 @@ export const read = (path) => {
   return clone(node)
 }
 
+// Live listeners (see listenToPath); each hears about every write that changes what's at its path
+const listeners = new Set()
+const notifyListeners = () => listeners.forEach(listener => {
+  const value = read(listener.path)
+  const json = JSON.stringify(value)
+  if (json === listener.last) return
+  listener.last = json
+  listener.onData(value === undefined ? null : value)
+})
+
 export const write = (path, value) => {
+  writeValue(path, value)
+  notifyListeners()
+}
+
+const writeValue = (path, value) => {
   const parts = split(path)
   const last = parts.pop()
   let node = tree
@@ -42,6 +57,7 @@ export const write = (path, value) => {
 
 // Starts every test from a known database; `data` is the whole tree, e.g. { users: {...}, maftb: { info: {...} } }
 export const reset = (data = {}) => {
+  listeners.clear()
   tree = clone(data)
   failing = new Set()
   nextId = 1
@@ -61,6 +77,25 @@ const readResult = (name, path, missing, onError) => {
   if (failed(name)) return Promise.resolve(onError)
   const value = read(path)
   return Promise.resolve(value === undefined ? missing : value)
+}
+
+export const renameSeasonData = (league, from, to) => {
+  if (failed('renameSeasonData')) return Promise.resolve({ code: "error", message: "Fake failure" })
+  const nodes = ['scorecards', 'eloTracking', 'playerEloHistory', 'currentElo', 'eloDelta', 'eloGraphData', 'stats']
+  const moved = nodes.filter(node => read(`${league}/${node}/${from}`) !== undefined)
+  moved.forEach(node => write(`${league}/${node}/${to}`, read(`${league}/${node}/${from}`)))
+  write(`${league}/info/currentSeason`, to)
+  moved.forEach(node => write(`${league}/${node}/${from}`, null))
+  return Promise.resolve({ code: "success", message: `Season renamed to ${to}.` })
+}
+
+/****************** Live data ******************/
+export const listenToPath = (path, onData) => {
+  const listener = { path, onData, last: JSON.stringify(read(path)) }
+  listeners.add(listener)
+  const value = read(path)
+  Promise.resolve().then(() => listeners.has(listener) && onData(value === undefined ? null : value))
+  return () => listeners.delete(listener)
 }
 
 /****************** Scorecards ******************/
@@ -128,5 +163,6 @@ export const getLeagueMembers = (league) => {
   if (failed('getLeagueMembers')) return Promise.resolve(undefined)
   return Promise.resolve(Object.values(read(`${league}/players`) || {}).filter(member => member && member.id))
 }
+export const updateLeagueMembers = (league, members) => writeResult('updateLeagueMembers', `${league}/players`, members)
 export const getUserDataV2 = (user) => readResult('getUserDataV2', `users/${user.displayName} ${user.uid}`, undefined, undefined)
 export const getDoinkFundPlayers = (league) => readResult('getDoinkFundPlayers', `${league}/doinkfund/players`, undefined, undefined)

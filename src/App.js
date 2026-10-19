@@ -7,6 +7,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import Nav from './components/nav/nav'
 import Home from './components/home/home'
 import Footer from './components/footer/footer';
+import { LeagueProvider } from './context/leagueContext';
 import { useLocation, Outlet } from "react-router-dom";
 
 import './App.scss';
@@ -34,6 +35,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <LeagueProvider user={user}>
       <div className="frolfLeague">
         <header className="frolfHeader">
             <Nav />
@@ -46,6 +48,7 @@ function App() {
         )}
         <Footer />
       </div>
+      </LeagueProvider>
     </ThemeProvider>
   );
 }

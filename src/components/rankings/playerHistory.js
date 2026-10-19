@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react'
 import { Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 
-import { getHatCount } from '../../firebase'
+import { useHatCounts } from '../../context/leagueData'
 import { leagueHasHats } from '../../services/statsUtils'
 
 import './rankings.scss'
@@ -48,13 +47,8 @@ function HistoryTooltip ({ active, payload }) {
 }
 
 export default function PlayerHistory ({ player, eloGraph, league, onClose }) {
-  const [hats, setHats] = useState(0)
-
-  useEffect(() => {
-    setHats(0)
-    if (!player || !leagueHasHats(league)) return
-    getHatCount(league, player).then(setHats)
-  }, [player, league])
+  const { value: hatCounts } = useHatCounts()
+  const hats = (player && hatCounts?.[player]) || 0
 
   const history = player ? getPlayerHistory(eloGraph, player) : []
   const current = history.length ? history[history.length - 1].rating : null
@@ -82,7 +76,7 @@ export default function PlayerHistory ({ player, eloGraph, league, onClose }) {
 
             <div className="phChart">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={history} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+                <LineChart data={history} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" tick={false} />
                   <YAxis domain={domain} width={50} />

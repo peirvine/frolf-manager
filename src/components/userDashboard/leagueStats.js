@@ -71,7 +71,7 @@ export default function LeagueStats(props) {
       }
       await navigator.share(data);
     } catch (err) {
-      // console.log(err);
+      // Sharing was cancelled or isn't available; nothing to do
     }
   }
 

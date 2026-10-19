@@ -79,14 +79,11 @@ export default function DoinkManager(props) {
 
   // const handleDoinkChange = (name, value) => {
   //   let tempDoink = [...doinkValues]
-  //   console.warn('fisrt tempDoink', doinkValues)
   //   tempDoink.forEach((item) => {
-  //     console.warn('item', item)
   //     if (item.name === name) {
   //       item.doinks = parseInt(value);
   //     }
   //   });
-  //   console.warn('tempDoink', tempDoink)
   //   setDoinkValues(tempDoink);
   // }
 

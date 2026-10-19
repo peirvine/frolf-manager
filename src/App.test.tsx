@@ -10,6 +10,7 @@ jest.mock('./firebase', () => ({
   signInWithGoogle: jest.fn(),
   logout: jest.fn(),
   updateUsersUDiscName: jest.fn(),
+  listenToPath: jest.fn(() => () => {}),
 }));
 jest.mock('react-firebase-hooks/auth', () => ({ useAuthState: () => [null, false] }));
 

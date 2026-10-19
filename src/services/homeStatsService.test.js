@@ -1,4 +1,5 @@
-import { getHomeStats } from './homeStatsService'
+import { buildHomeStats } from './homeStatsService'
+import { loadHandicaps } from './handicapStore'
 import * as db from './testUtils/fakeFirebase'
 import { leagueData, storedCard } from './testUtils/fixtures'
 
@@ -30,9 +31,29 @@ const seed = (league = "maftb", info = {}) => {
   db.reset(data)
 }
 
+// What the home page holds for a league, read from the test database
+const homeStats = async (uDiscName, league) => {
+  const settings = db.read(`${league}/info`)
+  const season = settings.currentSeason
+  return buildHomeStats({
+    user,
+    uDiscName,
+    league,
+    settings,
+    elos: db.read(`${league}/currentElo/${season}`),
+    deltas: db.read(`${league}/eloDelta/${season}`),
+    cards: db.read(`${league}/scorecards/${season}`),
+    allCards: db.read(`${league}/scorecards`),
+    hatCounts: db.read(`${league}/hatCount`),
+    doinkPlayers: db.read(`${league}/doinkfund/players`),
+    memberNames: db.read(`${league}/players`).map(member => member.uDiscDisplayName),
+    handicaps: settings.handicaps ? await loadHandicaps(league) : null,
+  })
+}
+
 test("sums up the signed-in player's season", async () => {
   seed()
-  const stats = await getHomeStats(user, "Alice", "maftb")
+  const stats = await homeStats("Alice", "maftb")
   expect(stats).toMatchObject({
     season: S2,
     elo: 1010,
@@ -52,7 +73,7 @@ test("sums up the signed-in player's season", async () => {
 
 test("includes the player's handicap when the league uses them", async () => {
   seed("maftb", { handicaps: true })
-  const stats = await getHomeStats(user, "alice", "maftb")
+  const stats = await homeStats("alice", "maftb")
   // Best 1 of Alice's 3 rounds: two at par, so E
   expect(stats.handicaps).toBe(true)
   expect(stats.handicap).toEqual({ handicap: 0, rounds: 3, best: 1, lastPlayed: expect.any(Number) })
@@ -60,11 +81,11 @@ test("includes the player's handicap when the league uses them", async () => {
 
 test("leaves out what the league doesn't use", async () => {
   seed("other", { doinkFund: false })
-  const stats = await getHomeStats(user, "Alice", "other")
+  const stats = await homeStats("Alice", "other")
   expect(stats).toMatchObject({ hats: null, doinkFund: false, doinks: null })
 })
 
 test("handles a player who hasn't set their UDisc name", async () => {
   seed()
-  expect(await getHomeStats(user, "", "maftb")).toMatchObject({ elo: null, rank: null, lastChange: null, rounds: 0, aces: [] })
+  expect(await homeStats("", "maftb")).toMatchObject({ elo: null, rank: null, lastChange: null, rounds: 0, aces: [] })
 })
