@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { Collapse, Alert, Autocomplete, TextField, Button } from '@mui/material'
 import DoinkUser from './doinkUser'
-import { auth, joinDoinkFund, getDoinkFundPlayers, getLeagueNames, getUserDataV2, getLeagueSettings, getDoinkExpenses, getDoinkSettings, joinDoinkFundV2 } from '../../firebase'
+import { auth, joinDoinkFund, getDoinkFundPlayers, getLeagueNames, getLeagueSettings, getDoinkExpenses, getDoinkSettings, joinDoinkFundV2 } from '../../firebase'
+import { getUserLeagues } from "../../services/userLeagues"
+import NoLeague from "../noLeague/noLeague"
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import './doink.scss'
@@ -16,6 +18,7 @@ export default function Doink() {
   const [alertMessage, setAlertMessage] = useState('')
   const [sumDoink, setSumDoink] = useState(0)
   const [optionArray, setOptionArray] = useState([])
+  const [noLeague, setNoLeague] = useState(false)
   const [league, setLeague] = useState()
   const [expenses, setExpenses] = useState({})
   const [expenseTotal, setExpenseTotal] = useState(0)
@@ -84,23 +87,28 @@ export default function Doink() {
 
   const buildOptions = async () => {
     if (user !== null) {
-      const userData = await getUserDataV2(user)
-      const leagues = await getLeagueNames()
-      setUserLeagues(userData.leagues)
-      if (userData.leagues.length > 1) {
+      const userLeaguesList = await getUserLeagues(user)
+      setUserLeagues(userLeaguesList)
+      if (userLeaguesList.length === 0) {
+        setNoLeague(true)
+        return null
+      }
+      setNoLeague(false)
+      const leagues = (await getLeagueNames()) || {}
+      if (userLeaguesList.length > 1) {
         let optionsArray = []
-        userData.leagues.forEach(x => {
+        userLeaguesList.forEach(x => {
           if (x.membershipStatus !== "Pending") {
             optionsArray.push({ label: leagues[x.id], id: x.id });
           }
         });
         if (optionsArray.length === 0) setJoinDisabled(true)
         setOptionArray(optionsArray)
-        setLeague(userData.leagues[0].id)
+        setLeague(userLeaguesList[0].id)
         return optionsArray
       } else {
-        setLeague(userData.leagues[0].id)
-        return userData.leagues[0]
+        setLeague(userLeaguesList[0].id)
+        return userLeaguesList[0]
       }
     }
   }
@@ -111,6 +119,7 @@ export default function Doink() {
   }
 
   const registerDoinkerV3 = (user) => {
+    if (!league) return
     const data = {
       doinks: 0,
       name: user.displayName,
@@ -135,6 +144,7 @@ export default function Doink() {
   return (
     <div className="doink">
       <h1>Doink Fund</h1>
+      {noLeague && <NoLeague />}
       <Collapse in={open}>
         <Alert severity={variant} onClose={() => setOpen(false)}>
           {alertMessage}
@@ -158,7 +168,7 @@ export default function Doink() {
           />
         ) : null
       }
-      {user ? (
+      {noLeague ? null : user ? (
         <>
           {!userRegistered && (
             <section className="doinkCard doinkJoin">
@@ -224,6 +234,7 @@ export default function Doink() {
       ) : (
         <section className="doinkCard">Please log in to see the doink fund.</section>
       )}
+      {!noLeague && (
       <section className="doinkCard aboutDoinks">
         <h3>Doink Fund Rules</h3>
         <p>In a disc golf game, if a player's throw hits a tree and goes backwards, landing behind the middle of the tree parallel to the tee box, it is considered a "doink". The throw must originate from a tee box or fairway, and the disc must hit the trunk or major limb of the tree, which is predominantly vertical in nature. It's important to note that if the disc hits the ground first and then hits a tree, it does not count as a doink. The sound of the disc hitting the tree is a crucial factor in determining whether it's a doink or not.</p>
@@ -233,6 +244,7 @@ export default function Doink() {
         <h3>What do we do with the Doink Fund?</h3>
         <p>Funds will go to the Couples BBQ first, then to a slush fund to pay for Pay-To-Play courses and potentially beer. Players will settle up their current balances before the Couples Tournament and before the end of the season.</p>
       </section>
+      )}
     </div>
   )
 }

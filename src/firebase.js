@@ -10,6 +10,7 @@ import {
   getAuth,
   signInWithPopup,
   signOut,
+  connectAuthEmulator,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -20,8 +21,9 @@ import {
   where,
   addDoc,
   setDoc,
+  connectFirestoreEmulator,
 } from "firebase/firestore"
-import { getDatabase, ref, set, child, get, update, push, remove, runTransaction } from "firebase/database";
+import { getDatabase, connectDatabaseEmulator, ref, set, child, get, update, push, remove, runTransaction } from "firebase/database";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
@@ -40,10 +42,25 @@ const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 const db = getFirestore(app);
 const database = getDatabase(app);
-const appCheck = initializeAppCheck(app, {
-  provider: new ReCaptchaEnterpriseProvider('6LcVbkMoAAAAAGRpwcBp_iOR5CVzLNVyHawnjdEx'),
-  isTokenAutoRefreshEnabled: true // Set to true to allow auto-refresh.
-});
+
+// `npm start` runs with NODE_ENV=development, so local dev uses the Firebase
+// emulators instead of production. Set REACT_APP_USE_EMULATOR=false to opt out.
+const useEmulator =
+  process.env.NODE_ENV === "development" &&
+  process.env.REACT_APP_USE_EMULATOR !== "false";
+
+console.log("[firebase] using emulators:", useEmulator, { databaseURL: firebaseConfig.databaseURL, projectId: firebaseConfig.projectId });
+
+if (useEmulator) {
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectDatabaseEmulator(database, "127.0.0.1", 9000);
+} else {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider('6LcVbkMoAAAAAGRpwcBp_iOR5CVzLNVyHawnjdEx'),
+    isTokenAutoRefreshEnabled: true // Set to true to allow auto-refresh.
+  });
+}
 
 
 /****************** Auth ******************/
@@ -95,33 +112,44 @@ export const signInWithGoogle = async () => {
 }
 
 export const logout = () => {
-  signOut(auth);
+  return signOut(auth);
 };
 
+// Writes keyed by league would otherwise create an `undefined/...` node when the user isn't in a league
+const missingLeague = () => {
+  console.error("[firebase] refusing to write without a league")
+  return Promise.resolve({code: "error", message: "You must be in a league to do that."})
+}
+
 /****************** Scorecards ******************/
-export function writeScorecardToDatabase(league, card, season) {
+export async function writeScorecardToDatabase(league, card, season) {
+  if (!league || season === undefined || season === null) {
+    console.error("[writeScorecardToDatabase] refusing to write without a league and season", { league, season })
+    return {code: "error", message: "Error, card not added."}
+  }
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   const newId = card.course + " " + card.date + " " + Math.floor(Math.random() * 100000000)
-  return set(ref(db, league + '/scorecards/' + season + "/" + newId), {
-    Course: card.course,
-    Layout: card.layout,
-    Players: card.playerArray,
-    Date: card.date,
-    Par: card.par,
-    id: id,
-    dateAdded: Date(Date.now()).toString(),
-    rawUDiscCard: card.rawUDiscCard,
-    isOffSeason: card.isOffSeason,
-    handicapsApplied: Boolean(card.handicapsApplied)
-  })
-  .then(() => {
+  try {
+    // set() throws synchronously (not a rejected promise) on invalid data such as undefined values
+    await set(ref(db, league + '/scorecards/' + season + "/" + newId), {
+      Course: card.course,
+      Layout: card.layout,
+      Players: card.playerArray,
+      Date: card.date,
+      Par: card.par,
+      id: id,
+      dateAdded: Date(Date.now()).toString(),
+      rawUDiscCard: card.rawUDiscCard,
+      isOffSeason: card.isOffSeason,
+      handicapsApplied: Boolean(card.handicapsApplied)
+    })
     return {code: "success", message: "Scorecard added successfully.", key: newId}
-  })
-  .catch((error) => {
+  } catch (error) {
+    console.error("[writeScorecardToDatabase] failed", { league, season, newId, code: error && error.code, message: error && error.message }, error)
     logEvent(analytics, 'A user was unable to add a scorecard', {error: error} );
     return {code: "error", message: "Error, card not added."}
-  });
+  }
 }
 
 export const getScorecards = (league, season) => {
@@ -159,6 +187,7 @@ export const getSpecificScorecard = (league, season, scorecardId) => {
 };
 
 export const setSpecificScorecard = (league, season, scorecardId, scorecard) => {
+  if (!league) return missingLeague()
   const dbRef = ref(getDatabase());
   const scorecardRef = child(dbRef, `${league}/scorecards/${season}/${scorecardId}`);
   return set(scorecardRef, scorecard).then(() => {
@@ -171,6 +200,7 @@ export const setSpecificScorecard = (league, season, scorecardId, scorecard) => 
 };
 
 export const deleteSpecificScorecard = (league, season, scorecardId) => {
+  if (!league) return missingLeague()
   const dbRef = ref(getDatabase());
   const scorecardRef = child(dbRef, `${league}/scorecards/${season}/${scorecardId}`);
   return remove(scorecardRef).then(() => {
@@ -214,6 +244,7 @@ export function getStoredHandicaps(league) {
 }
 
 export function setStoredHandicaps(league, handicaps) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   return set(ref(db, league + '/handicaps'), handicaps).then(() => {
     return {code: "success", message: ""}
@@ -226,6 +257,7 @@ export function setStoredHandicaps(league, handicaps) {
 
 /****************** ELO ******************/
 export function writeEloTracking(league, elo, season) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   const date = Date(Date.now()).toString();
@@ -250,6 +282,7 @@ export function writeEloTracking(league, elo, season) {
 }
 
 export function writeEloTrackingV2(league, elo, season) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   const id = Math.floor(Math.random() * 100000000)
   set(ref(db, league + '/eloTracking/' + season + '/' + elo.course + " " + elo.layout + " " + Date(Date.now()).toString() + " " + elo.id), {
@@ -272,6 +305,7 @@ export function writeEloTrackingV2(league, elo, season) {
 }
 
 export function addEloToPlayer(league, elo) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   const year = new Date().getFullYear();
   set(ref(db, league + '/playerEloHistory/' + year + '/' + elo.player), elo.elo)
@@ -284,6 +318,7 @@ export function addEloToPlayer(league, elo) {
 }
 
 export function addEloToPlayerV2(league, elo, season) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   return set(ref(db, league + '/playerEloHistory/' + season + '/' + elo.player), elo.elo)
   .then(() => {
@@ -373,6 +408,7 @@ export function getCurrentElo (league, season) {
 }
 
 export function updateCurrentEloV2(league, season, eloArray) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   return set(ref(db, league + '/currentElo/' + season), eloArray).then(() => {
     // Data saved successfully!
@@ -385,6 +421,7 @@ export function updateCurrentEloV2(league, season, eloArray) {
 }
 
 export function setCardHatWinners(league, season, key, hatWinners) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   return set(ref(db, league + '/scorecards/' + season + "/" + key + '/hatWinners'), hatWinners.length ? hatWinners : null).then(() => {
     return {code: "success", message: ""}
@@ -407,6 +444,7 @@ export function getSeasonStats(league, season) {
 }
 
 export function setSeasonStats(league, season, stats) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   return set(ref(db, league + '/stats/' + season), stats).then(() => {
     return {code: "success", message: ""}
@@ -418,6 +456,7 @@ export function setSeasonStats(league, season, stats) {
 }
 
 export function resetHatCounts(league) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   return set(ref(db, league + '/hatCount'), null).then(() => {
     return {code: "success", message: ""}
@@ -450,6 +489,7 @@ export function getHatCount(league, player) {
 }
 
 export function incrementHatCount(league, player, change = 1) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   return runTransaction(ref(db, league + '/hatCount/' + player), (count) => Math.max(0, (count || 0) + change)).then(() => {
     return {code: "success", message: ""}
@@ -477,6 +517,7 @@ export function getDelta (league, season) {
 }
 
 export function setDeltaV2(league, season, deltaObject) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   const year = new Date().getFullYear();
   return set(ref(db, league + '/eloDelta/' + season ), deltaObject)
@@ -491,6 +532,7 @@ export function setDeltaV2(league, season, deltaObject) {
 }
 
 export function setEloGraphDataV2(league, season, graphObj) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   const now = Date(Date.now()).toString()
   const randomInt = Math.floor(Math.random() * 1000000);
@@ -523,6 +565,7 @@ export function getEloGraphData(league, season) {
 
 
 export function resetEloData(league, season, dbEntry) {
+  if (!league) return missingLeague()
   const dbRef = ref(getDatabase());
   const scorecardRef = child(dbRef, `${league}/${dbEntry}/${season}`);
   return remove(scorecardRef).then(() => {
@@ -618,17 +661,20 @@ export function getLeagueMembers ( league ) {
     if (snapshot.exists()) {
       return Object.values(snapshot.val() || {}).filter(member => member && member.id)
     } else {
-      // console.log("No data available");
+      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
       return []
     }
   }).catch((error) => {
+    console.error("[getLeagueSettings] read failed", { league, code: error && error.code, message: error && error.message }, error)
     logEvent(analytics, 'Could not league members', {error: error} );
+    return "error"
   });
   return elo
 }
 
 export function updateLeagueMembers(league, members) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   let res = set(ref(db, league + '/players/'), members)
   .then(() => {
@@ -644,6 +690,7 @@ export function updateLeagueMembers(league, members) {
 
 //todo can't do this, we need to update the member array :salute:
 export function removeLeagueMember(league, member) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   let res = set(ref(db, league + '/players/'), member)
   .then(() => {
@@ -693,6 +740,7 @@ export function createNewLeague(leagueInfo) {
 }
 
 export function initDoinkFund (league) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   const res = set(ref(db, league.id + '/doinkfund/'), league.doinkObj)
     .then(() => {
@@ -707,6 +755,7 @@ export function initDoinkFund (league) {
 }
 
 export function resetDoinkFund (league) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   const res = set(ref(db, league.id + '/doinkfund/'), league.doinkObj)
     .then(() => {
@@ -721,6 +770,7 @@ export function resetDoinkFund (league) {
 }
 
 export function joinDoinkFund (league, users) {
+  if (!league) return Promise.resolve({code: "error", message: "No league selected"})
   const db = getDatabase()
   const res = set(ref(db, league + '/doinkfund/players'), users)
     .then(() => {
@@ -735,6 +785,7 @@ export function joinDoinkFund (league, users) {
 }
 
 export function joinDoinkFundV2 (league, user) {
+  if (!league) return Promise.resolve({code: "error", variant: "error", message: "You must be in a league to join the doink fund"})
   const db = getDatabase()
   const res = push(ref(db, league + '/doinkfund/players/'), user)
     .then(() => {
@@ -750,22 +801,26 @@ export function joinDoinkFundV2 (league, user) {
 
 /**************** league Settings Page ****************/
 export function getLeagueSettings (league) {
+  if (!league) return Promise.resolve("error")
   const dbRef = ref(getDatabase());
   let elo = get(child(dbRef, league + `/info/`)).then((snapshot) => {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
+      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
       return "error"
     }
   }).catch((error) => {
+    console.error("[getLeagueSettings] read failed", { league, code: error && error.code, message: error && error.message }, error)
     logEvent(analytics, 'Could not league members', {error: error} );
+    return "error"
   });
   return elo
 }
 
 export function updateLeagueSettings (league, info) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   let res = update(ref(db, league + '/info'), info)
   .then(() => {
@@ -784,6 +839,7 @@ export function updateLeaguePlayers (league, players) {
 }
 
 export function deleteLeague (league, newIndex) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   let res = remove(ref(db, league))
   .then(() => {
@@ -799,6 +855,7 @@ export function deleteLeague (league, newIndex) {
 }
 
 export function updateDoinkSettings (league, doinkLimit) {
+  if (!league) return missingLeague()
   const db = getDatabase()
   let res = update(ref(db, league + '/doinkfund'), {maxDoink: doinkLimit})
   .then(() => {
@@ -818,7 +875,7 @@ export function getDoinkSettings (league) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
+      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
     }
   }).catch((error) => {
@@ -828,6 +885,7 @@ export function getDoinkSettings (league) {
 }
 
 export function addDoinkExpense (league, expense) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   let res = push(ref(db, league + '/doinkfund/expenses'), expense)
   .then(() => {
@@ -847,7 +905,7 @@ export function getDoinkExpenses (league) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
+      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
     }
   }).catch((error) => {
@@ -857,6 +915,7 @@ export function getDoinkExpenses (league) {
 }
 
 export function deleteDoinkExpense (league, expense) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   let res = remove(ref(db, league + '/doinkfund/expenses/' + expense))
   .then(() => {
@@ -871,6 +930,7 @@ export function deleteDoinkExpense (league, expense) {
 }
 
 export function editDoinkExpense (league, expense, expenseObj) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   let res = update(ref(db, league + '/doinkfund/expenses/' + expense), expenseObj)
   .then(() => {
@@ -890,7 +950,7 @@ export function getDoinkFundPlayers (league) {
     if (snapshot.exists()) {
       return snapshot.val()
     } else {
-      // console.log("No data available");
+      console.error("[getLeagueSettings] no data at " + league + "/info/ (is the emulator database empty / seeded?)")
       logEvent(analytics, 'No league member data available')
     }
   }).catch((error) => {
@@ -900,6 +960,7 @@ export function getDoinkFundPlayers (league) {
 }
 
 export function updateDoinkBalanceV2 (league, player) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   let res = set(ref(db, league + '/doinkfund/players/'), player)
   .then(() => {
@@ -918,6 +979,7 @@ export function logDoinkEvent (params) {
 }
 
 export function updateDoinkBalanceV3 (league, player, newBalance) {
+  if (!league) return missingLeague()
   // console.warn('player', player)
   const db = getDatabase();
   let res = update(ref(db, league + '/doinkfund/players/' + player), {doinks: newBalance})
@@ -934,6 +996,7 @@ export function updateDoinkBalanceV3 (league, player, newBalance) {
 
 /****************** League Dashboard ******************/
 export function setLeagueHistory (league, season, historyObj) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   return set(ref(db, league + '/info/leagueHistory/' + season), historyObj)
   .then(() => {
@@ -962,6 +1025,7 @@ export function getLeagueHistory(league) {
 }
 
 export function updateLeagueHistory(league, season, historyObj) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   return update(ref(db, `${league}/info/leagueHistory/${season}`), historyObj)
     .then(() => {
@@ -974,6 +1038,7 @@ export function updateLeagueHistory(league, season, historyObj) {
 }
 
 export function deleteLeagueHistory(league, season) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   return remove(ref(db, `${league}/info/leagueHistory/${season}`))
     .then(() => {
@@ -1017,6 +1082,7 @@ export function getLeagueRules ( league ) {
 }
 
 export function addLeagueRule (league, rules) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   let res = push(ref(db, league + '/info/leagueRules'), rules)
   .then(() => {
@@ -1031,6 +1097,7 @@ export function addLeagueRule (league, rules) {
 }
 
 export function updateLeagueRule (league, rule, text) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   return set(ref(db, league + '/info/leagueRules/' + rule), text)
   .then(() => {
@@ -1043,6 +1110,7 @@ export function updateLeagueRule (league, rule, text) {
 }
 
 export function deleteLeagueRule (league, rule) {
+  if (!league) return missingLeague()
   const db = getDatabase();
   let res = remove(ref(db, league + '/info/leagueRules/' + rule))
   .then(() => {

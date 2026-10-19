@@ -45,3 +45,6 @@ amplifytools.xcconfig
 #amplify-do-not-edit-end
 
 .env
+# firebase emulator data
+/emulator-data
+*-debug.log

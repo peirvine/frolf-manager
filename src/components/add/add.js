@@ -4,7 +4,9 @@ import Papa from "papaparse"
 import { Autocomplete, Button, FormControl, TextField, Alert, Collapse, Backdrop, CircularProgress, Box, Grid, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, FormHelperText } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from "react-router-dom";
-import { auth, signInWithGoogle, getUserDataV2, getLeagueNames, getLeagueSettings } from "../../firebase"
+import { auth, signInWithGoogle, getLeagueNames, getLeagueSettings } from "../../firebase"
+import { getUserLeagues } from "../../services/userLeagues"
+import NoLeague from "../noLeague/noLeague"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { addScorecard, uDiscDump } from '../../services/scorecardService';
 import LeagueAdd from './leagueAdd';
@@ -23,6 +25,7 @@ export default function Add() {
   const [settings, setSettings] = useState([])
   const [addDisabled, setAddDisabled] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [noLeague, setNoLeague] = useState(false)
 
 
   useEffect(() => { 
@@ -73,20 +76,26 @@ export default function Add() {
 
   const buildOptions = async () => {
     if (user !== null) {
-      const userData = await getUserDataV2(user);
-      const leagues = await getLeagueNames();
-      if (userData.leagues.length > 1) {
+      const userLeagues = await getUserLeagues(user);
+      if (userLeagues.length === 0) {
+        setNoLeague(true);
+        setAddDisabled(true);
+        return;
+      }
+      setNoLeague(false);
+      const leagues = (await getLeagueNames()) || {};
+      if (userLeagues.length > 1) {
         let optionsArray = [];
-        userData.leagues.forEach(x => {
+        userLeagues.forEach(x => {
           if (x.membershipStatus !== "Pending") {
             optionsArray.push({ label: leagues[x.id], id: x.id });
           }
         });
         if (optionsArray.length === 0) setAddDisabled(true)
         setOptionArray(optionsArray);
-        setLeague(userData.leagues[0].id);
+        setLeague(userLeagues[0].id);
       } else {
-        setLeague(userData.leagues[0].id);
+        setLeague(userLeagues[0].id);
       }
     }
   };

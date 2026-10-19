@@ -41,7 +41,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "emulators": "firebase emulators:start --import=./emulator-data --export-on-exit",
+    "frolf": "node scripts/frolf.js"
   },
   "eslintConfig": {
     "extends": [

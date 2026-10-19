@@ -85,11 +85,11 @@ export default function LeagueStats(props) {
         <>
           <div className="statsCapture" ref={imageRef}>
             <div className="statTiles">
-              <div className="statTile">
+              <div className="statTile numberTile">
                 <span className="statLabel">Season</span>
-                <strong>{stats.season}</strong>
+                <strong className="bigNumber">{stats.season}</strong>
               </div>
-              <div className="statTile">
+              <div className="statTile numberTile">
                 <span className="statLabel">Rounds</span>
                 <strong className="bigNumber">{stats.numberOfRounds}</strong>
               </div>

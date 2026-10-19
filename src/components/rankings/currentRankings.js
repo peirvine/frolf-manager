@@ -35,6 +35,8 @@ import HandicapTable from './handicapTable'
 
 // import { getRankingsFromGoogle } from '../../services/googleSheetsService';
 import { auth, getCurrentElo, getDelta, getEloGraphData, getUserDataV2, getLeagueNames, getLeagueSettings, getLeagueMembers, getElosOfAllPlayers } from '../../firebase'
+import { getUserLeagues } from "../../services/userLeagues"
+import NoLeague from "../noLeague/noLeague"
 
 import './rankings.scss'
 // import { calculateElo, resetCurrentElo } from '../../services/eloService';
@@ -50,6 +52,7 @@ export default function CurrentRankings () {
   const [league, setLeague] = useState()
   const [season, setSeason] = useState()
   const [userData, setUserData] = useState('')
+  const [noLeague, setNoLeague] = useState(false)
   const [members, setMembers] = useState([])
   const [graphData, setGraphData] = useState({})
   const [playerEloHistoryRes, setPlayerEloHistoryRes] = useState([])
@@ -115,17 +118,22 @@ export default function CurrentRankings () {
   }, [user]);
 
   const buildOptions = async () => {
-    const userData = await getUserDataV2(user)
-    const leagues = await getLeagueNames()
-    if (userData.leagues.length > 1) {
+    const userLeagues = await getUserLeagues(user)
+    if (userLeagues.length === 0) {
+      setNoLeague(true)
+      return null
+    }
+    setNoLeague(false)
+    const leagues = (await getLeagueNames()) || {}
+    if (userLeagues.length > 1) {
       let optionsArray = []
-      userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+      userLeagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
       setOptionArray(optionsArray)
-      setLeague(userData.leagues[0].id)
+      setLeague(userLeagues[0].id)
       return optionsArray
     } else {
-      setLeague(userData.leagues[0].id)
-      return userData.leagues[0]
+      setLeague(userLeagues[0].id)
+      return userLeagues[0]
     }
   }
 
@@ -223,7 +231,7 @@ export default function CurrentRankings () {
   const formatRankings = (passedRankings) => {
     let maxDrop = 0;
     let playerWithMaxDrop = '';
-    Object.entries(deltas).forEach(([player, delta]) => {
+    Object.entries(deltas || {}).forEach(([player, delta]) => {
       if (delta < maxDrop) {
         maxDrop = delta;
         playerWithMaxDrop = player;
@@ -264,6 +272,15 @@ export default function CurrentRankings () {
       )
     })
     return playerRankings
+  }
+
+  if (noLeague) {
+    return (
+      <div className="currentRankings">
+        <h1>Current Rankings</h1>
+        <NoLeague />
+      </div>
+    )
   }
 
   return (
