@@ -47,6 +47,8 @@ test("getPreviousSeason counts down by one", () => {
   expect(getPreviousSeason("Season 1")).toBeNull()
   expect(getPreviousSeason("Spring")).toBeNull()
   expect(getPreviousSeason()).toBeNull()
+  expect(getPreviousSeason(3)).toBe("2")
+  expect(getPreviousSeason(1)).toBeNull()
 })
 
 describe("getAces", () => {

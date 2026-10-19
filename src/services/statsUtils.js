@@ -29,10 +29,12 @@ export const pickTop = (entries, score) => entries.reduce((best, entry) => {
 }, [])
 
 // "Season 4" -> "Season 3"; null when there's no earlier season to compare with
+// Seasons created in the app are plain numbers (1, 2, ...), older leagues use names like "Season 4"
 export const getPreviousSeason = (season = "") => {
-  const num = season.match(/\d+$/)
+  const name = String(season ?? "")
+  const num = name.match(/\d+$/)
   if (!num || Number(num[0]) <= 1) return null
-  return season.substr(0, num.index) + (Number(num[0]) - 1)
+  return name.substr(0, num.index) + (Number(num[0]) - 1)
 }
 
 // Every hole-in-one by a league member on this season's cards (off-season included), most recent round first
