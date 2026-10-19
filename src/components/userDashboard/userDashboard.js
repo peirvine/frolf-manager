@@ -212,7 +212,7 @@ export default function UserDashboard () {
       acceptingPlayers: true,
       blurb: '',
       currentSeason: 1,
-      isPreSeason: true,
+      isPreseason: true,
     }
 
     let doinkObj = {

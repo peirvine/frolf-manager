@@ -81,7 +81,7 @@ describe("uDiscDump", () => {
 
   test("rejects input that isn't a UDisc export", async () => {
     seed()
-    expect(await uDiscDump("not a scorecard", "maftb")).toEqual({ code: "error", message: "Error, card input not valid." })
+    expect(await uDiscDump("not a scorecard", "maftb")).toEqual({ code: "error", message: "Error, card input not valid. Paste the full UDisc CSV export, starting with PlayerName." })
     expect(savedCards()).toEqual([])
   })
 

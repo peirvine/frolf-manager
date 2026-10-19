@@ -15,7 +15,7 @@ import UDiscNameDialog from "./uDiscNameDialog"
 import { Basket } from '../aceAward/aceAward'
 import { useAuthState } from "react-firebase-hooks/auth";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import './nav.scss'
 
 const brandName = window.location.href.includes("suchfrolf") ? "Such Frolf" : "Disc Golf Manager"
@@ -50,6 +50,7 @@ export default function Nav() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [user] = useAuthState(auth);
+  const navigate = useNavigate();
 
   const closeMenus = () => {
     setAnchorElNav(null)
@@ -58,7 +59,8 @@ export default function Nav() {
 
   const handleLogout = () => {
     closeMenus()
-    logout()
+    // Back to the home page so a signed-out user isn't left on a page that needs a league
+    Promise.resolve(logout()).finally(() => navigate("/"))
   }
 
   const handleLogin = () => {

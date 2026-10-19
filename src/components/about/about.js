@@ -2,7 +2,9 @@ import { useState, useEffect } from "react"
 import "./about.scss"
 import LeagueHistoryHolder from "./leagueHistory/leagueHistoryHolder"
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, getUserDataV2, getLeagueNames } from "../../firebase"
+import { auth, getLeagueNames } from "../../firebase"
+import { getUserLeagues } from "../../services/userLeagues"
+import NoLeague from "../noLeague/noLeague"
 import { Autocomplete, TextField } from "@mui/material";
 import LeagueRules from "./leagueRules";
 import { LeagueBlurb } from "./leagueBlurb";
@@ -10,6 +12,7 @@ import { LeagueBlurb } from "./leagueBlurb";
 export default function About () {
   const [user] = useAuthState(auth);
   const [optionArray, setOptionArray] = useState([])
+  const [noLeague, setNoLeague] = useState(false)
   const [league, setLeague] = useState()
 
   useEffect(() => {
@@ -19,17 +22,29 @@ export default function About () {
 
   const buildOptions = async () => {
     if (user !== null) {
-      const userData = await getUserDataV2(user)
-      const leagues = await getLeagueNames()
-      if (userData.leagues.length > 1) {
-        let optionsArray = []
-        userData.leagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
-        setOptionArray(optionsArray)
-        setLeague(userData.leagues[0].id)
-      } else {
-        setLeague(userData.leagues[0].id)
+      const userLeagues = await getUserLeagues(user)
+      if (userLeagues.length === 0) {
+        setNoLeague(true)
+        return
       }
+      setNoLeague(false)
+      const leagues = (await getLeagueNames()) || {}
+      if (userLeagues.length > 1) {
+        let optionsArray = []
+        userLeagues.map(x => optionsArray.push({ label: leagues[x.id], id: x.id}))
+        setOptionArray(optionsArray)
+      }
+      setLeague(userLeagues[0].id)
     }
+  }
+
+  if (noLeague) {
+    return (
+      <div className="about">
+        <h1>League History</h1>
+        <NoLeague />
+      </div>
+    )
   }
 
   return (
@@ -50,16 +65,20 @@ export default function About () {
             }}
           />
         ) : null}
-        <div className="aboutText">
-          <LeagueBlurb league={league} />
-        </div>
-        <div className="leagueRules">
-          <LeagueRules league={league} />
-        </div>
-        <div className="aboutHistory">
-          <h3>Past Seasons</h3>
-          <LeagueHistoryHolder league={league} />
-        </div>
+        {league && (
+          <>
+            <div className="aboutText">
+              <LeagueBlurb league={league} />
+            </div>
+            <div className="leagueRules">
+              <LeagueRules league={league} />
+            </div>
+            <div className="aboutHistory">
+              <h3>Past Seasons</h3>
+              <LeagueHistoryHolder league={league} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

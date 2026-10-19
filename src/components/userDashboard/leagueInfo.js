@@ -37,7 +37,7 @@ export default function LeagueInfo () {
 
   useEffect(() => { 
     getUserDataV2(user).then(res => {
-      setUserData(res)
+      setUserData(res || {})
     })
   }, [user])
 

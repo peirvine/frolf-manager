@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { Autocomplete, TextField, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Skeleton } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import { getLeagueSettings, getScorecards, getUserDataV2, getLeagueNames } from '../../firebase'
+import { getLeagueSettings, getScorecards, getLeagueNames } from '../../firebase'
+import { getUserLeagues } from "../../services/userLeagues"
+import NoLeague from "../noLeague/noLeague"
 import RoundList from './roundList'
 import useHandicaps from '../../services/useHandicaps'
 
@@ -36,14 +38,16 @@ export default function AllRounds () {
   const [roundsBySeason, setRoundsBySeason] = useState({})
   const [loadingSeason, setLoadingSeason] = useState(null)
   const [error, setError] = useState("")
+  const [noLeague, setNoLeague] = useState(false)
   const handicaps = useHandicaps(league)
 
   useEffect(() => {
     const loadLeagues = async () => {
-      const [userData, names] = await Promise.all([getUserDataV2(user), getLeagueNames()])
-      const options = (userData.leagues || [])
+      const [userLeagues, names] = await Promise.all([getUserLeagues(user), getLeagueNames()])
+      const options = userLeagues
         .filter(x => x.membershipStatus !== "Pending")
-        .map(x => ({ label: names[x.id], id: x.id }))
+        .map(x => ({ label: names?.[x.id], id: x.id }))
+      setNoLeague(userLeagues.length === 0)
       setLeagueOptions(options)
       if (options.length > 0) setLeague(options[0].id)
     }
@@ -80,6 +84,7 @@ export default function AllRounds () {
   return (
     <div className="scorecards">
       <h1>All Rounds</h1>
+      {noLeague && <NoLeague />}
       <div className="pageCard">
         <Link to="/scorecards">Back to most recent season</Link>
         {leagueOptions.length > 1 && (
