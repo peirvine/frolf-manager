@@ -1,5 +1,5 @@
 import {useState, useEffect, useCallback} from 'react'
-import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, Dialog, DialogActions,DialogTitle, DialogContent, DialogContentText, TextField, Snackbar, Alert, Backdrop, CircularProgress } from '@mui/material'
+import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, Dialog, DialogActions,DialogTitle, DialogContent, DialogContentText, TextField, Snackbar, Alert, Backdrop, CircularProgress, Box, Divider, Typography } from '@mui/material'
 import { getScorecards, getLeagueSettings } from '../../firebase'
 import { editRound, deleteRound } from '../../services/editRoundService'
 
@@ -48,10 +48,10 @@ export default function RoundManager(props) {
     setDialogOpen(true)
   }
 
-  const submitEditedRound = async (key, updatedTotals) => {
+  const submitEditedRound = async (key, updatedTotals, names) => {
     setDialogOpen(false)
     setBusy(true)
-    const res = await editRound(props.league, season, key, updatedTotals, roundToEdit)
+    const res = await editRound(props.league, season, key, updatedTotals, roundToEdit, names)
     showResult(res)
     await loadRounds()
     setBusy(false)
@@ -123,36 +123,44 @@ export default function RoundManager(props) {
             onSubmit: (event) => {
               event.preventDefault();
               const formData = new FormData(event.currentTarget);
+              const names = { course: formData.get('roundCourse'), layout: formData.get('roundLayout') }
+              formData.delete('roundCourse')
+              formData.delete('roundLayout')
               let formObj = []
               for (const key of formData.keys()) {
                 formObj.push({key: key, data: formData.get(key)})
               }
-              submitEditedRound(roundToEdit.key, formObj)
+              submitEditedRound(roundToEdit.key, formObj, names)
             },
           }}
         >
-          <DialogTitle>Edit Round - {roundToEdit?.round?.Course} {roundToEdit?.round?.Layout}</DialogTitle>
+          <DialogTitle>Edit Round</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Edit each player's total score below. Per-hole scores aren't changed. Season rankings will be recalculated.
+              Per-hole scores aren't changed. Season rankings will be recalculated.
             </DialogContentText>
-            {roundToEdit?.round?.Players.filter(player => player.player !== "Par").map(player => {
-              return (
+            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, textTransform: 'uppercase', letterSpacing: 1, color: 'text.secondary' }}>Round</Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+              <TextField key={roundToEdit.key + 'course'} name="roundCourse" label="Course" defaultValue={roundToEdit.round.Course} required fullWidth />
+              <TextField key={roundToEdit.key + 'layout'} name="roundLayout" label="Layout" defaultValue={roundToEdit.round.Layout} required fullWidth />
+            </Box>
+            <Divider sx={{ my: 3 }} />
+            <Typography variant="subtitle2" sx={{ mb: 1, textTransform: 'uppercase', letterSpacing: 1, color: 'text.secondary' }}>Scores</Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+              {roundToEdit.round.Players.filter(player => player.player !== "Par").map(player => (
                 <TextField
                   key={roundToEdit.key + player.player}
-                  margin="dense"
                   id={player.player}
                   name={player.player}
                   label={player.player}
                   defaultValue={player.total}
                   type="number"
-                  variant="outlined"
-                  style={{ margin: 5}}
+                  fullWidth
                 />
-              )
-            })}
+              ))}
+            </Box>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
             <Button variant="outlined" color="error" onClick={handleClose}>Cancel</Button>
             <Button variant="contained" type="submit">Edit Round</Button>
           </DialogActions>
