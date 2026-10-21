@@ -27,9 +27,15 @@ const stripeClient = () => {
   const Stripe = require('stripe')
   return new Stripe(STRIPE_SECRET_KEY.value())
 }
+// Just the site's address, whatever was typed into SITE_URL (a path or trailing slash would double up in the return links)
+const siteUrl = () => new URL(SITE_URL.value()).origin
 const prices = () => ({ plusMonthly: PRICE_PLUS_MONTHLY.value(), plusYearly: PRICE_PLUS_YEARLY.value() })
 
 const read = async (path) => (await db().ref(path).get()).val()
+
+// Whether this signed-in person is a site admin. Users are saved under "<name> <uid>", so they're found by reading the
+// list, not by searching it (the database rules have no index for a search by uid).
+const isSiteAdmin = async (uid) => Object.values((await read('users')) || {}).some(user => user && user.uid === uid && user.siteAdmin === true)
 
 // League admins and site admins may manage a league's billing
 const assertCanManage = async (auth, league) => {
@@ -37,8 +43,7 @@ const assertCanManage = async (auth, league) => {
   if (typeof league !== 'string' || !league) throw new HttpsError('invalid-argument', 'No league given.')
   const members = Object.values((await read(`${league}/players`)) || {})
   if (members.some(member => member && member.id === auth.uid && member.membershipStatus === 'Admin')) return
-  const users = (await db().ref('users').orderByChild('uid').equalTo(auth.uid).get()).val() || {}
-  if (Object.values(users).some(user => user && user.siteAdmin === true)) return
+  if (await isSiteAdmin(auth.uid)) return
   throw new HttpsError('permission-denied', 'Only league admins can manage billing.')
 }
 
@@ -74,8 +79,8 @@ exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (
     billing_address_collection: 'required',
     tax_id_collection: { enabled: true },
     customer_update: { address: 'auto', name: 'auto' },
-    success_url: `${SITE_URL.value()}/dashboard?billing=success`,
-    cancel_url: `${SITE_URL.value()}/dashboard?billing=cancelled`,
+    success_url: `${siteUrl()}/dashboard?billing=success&league=${encodeURIComponent(league)}`,
+    cancel_url: `${siteUrl()}/dashboard?billing=cancelled`,
   })
   return { url: session.url }
 })
@@ -85,7 +90,7 @@ exports.createPortalSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async ({ 
   await assertCanManage(auth, league)
   const customer = await read(`${league}/billing/customerId`)
   if (!customer) throw new HttpsError('failed-precondition', 'This league has no billing yet.')
-  const session = await stripeClient().billingPortal.sessions.create({ customer, return_url: `${SITE_URL.value()}/dashboard` })
+  const session = await stripeClient().billingPortal.sessions.create({ customer, return_url: `${siteUrl()}/dashboard` })
   return { url: session.url }
 })
 
@@ -94,8 +99,7 @@ exports.createPortalSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async ({ 
 exports.setLeaguePlan = onCall(async ({ auth, data }) => {
   const { league, plan } = data || {}
   if (!auth) throw new HttpsError('unauthenticated', 'Sign in first.')
-  const users = (await db().ref('users').orderByChild('uid').equalTo(auth.uid).get()).val() || {}
-  if (!Object.values(users).some(user => user && user.siteAdmin === true)) throw new HttpsError('permission-denied', 'Site admins only.')
+  if (!(await isSiteAdmin(auth.uid))) throw new HttpsError('permission-denied', 'Site admins only.')
   if (!['free', 'plus', 'pro'].includes(plan)) throw new HttpsError('invalid-argument', 'Unknown plan.')
   if (!(await read(`leagueIndex/${league}`))) throw new HttpsError('not-found', 'No such league.')
   await db().ref(`${league}/info`).update({ plan, planSource: 'manual' })
