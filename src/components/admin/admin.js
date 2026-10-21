@@ -1,9 +1,13 @@
 import React, { useState } from 'react'
 import { Tab, Tabs, Box, Typography } from "@mui/material"
-import useWindowDimensions from '../../services/windowSize';
+import '../userDashboard/userDashboard.scss'
 import ScorecardManager from './scorecardManager';
-import CourseManager from './courseManager';
 import UserManager from './userManager';
+import SiteSettingsManager from './siteSettingsManager';
+import LeagueAdminManager from './leagueAdminManager';
+import BillingManager from './billingManager';
+import { useLeague } from '../../context/leagueContext';
+import { Alert, Skeleton } from '@mui/material';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -12,13 +16,13 @@ function TabPanel(props) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`vertical-tabpanel-${index}`}
-      aria-labelledby={`vertical-tab-${index}`}
+      id={`admin-tabpanel-${index}`}
+      aria-labelledby={`admin-tab-${index}`}
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
+        <Box sx={{ p: 0 }}>
+          <Typography component="div">{children}</Typography>
         </Box>
       )}
     </div>
@@ -27,50 +31,40 @@ function TabPanel(props) {
 
 function a11yProps(index) {
   return {
-    id: `vertical-tab-${index}`,
-    'aria-controls': `vertical-tabpanel-${index}`,
+    id: `admin-tab-${index}`,
+    'aria-controls': `admin-tabpanel-${index}`,
   };
 }
 
+const TABS = [
+  { label: "site settings", Panel: SiteSettingsManager },
+  { label: "leagues", Panel: LeagueAdminManager },
+  { label: "users", Panel: UserManager },
+  { label: "scorecards", Panel: ScorecardManager },
+  { label: "billing", Panel: BillingManager },
+]
+
 export default function Admin () {
   const [value, setValue] = useState(0);
+  const { isSiteAdmin, status } = useLeague();
 
-  const { width } = useWindowDimensions();
-
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-  };
+  // Only site admins; userData loads along with the league status
+  if (status === 'loading') return <div className="manage"><Skeleton variant="rounded" height={60} /></div>
+  if (!isSiteAdmin) return <div className="manage"><Alert severity="error">This page is only available to site admins.</Alert></div>
 
   return (
-    <div className="admin">
-      <h1>Such Frolf Control Panel</h1>
-      <div className="pageCard">
-        <Box
-          sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex' }}
-        >
-          <Tabs
-            orientation={width > 1000 ? "vertical" : ""}
-            variant="scrollable"
-            value={value}
-            onChange={handleChange}
-            aria-label="Vertical tabs example"
-            sx={{ borderRight: 1, borderColor: 'divider' }}
-          >
-            <Tab label="Edit Scorecards" {...a11yProps(0)} />
-            <Tab label="User Management" {...a11yProps(1)} />
-            <Tab label="Course Management" {...a11yProps(2)} />
+    <div className="manage">
+      <h1>Site Admin</h1>
+      <Box sx={{ width: '100%' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: 2 }}>
+          <Tabs value={value} onChange={(event, newValue) => setValue(newValue)} aria-label="site admin sections" variant="scrollable" allowScrollButtonsMobile>
+            {TABS.map((tab, i) => <Tab key={tab.label} label={tab.label} {...a11yProps(i)} />)}
           </Tabs>
-          <TabPanel value={value} index={0}>
-            <ScorecardManager />
-          </TabPanel>
-          <TabPanel value={value} index={1}>
-            <UserManager />
-          </TabPanel>
-          <TabPanel value={value} index={2}>
-            <CourseManager />
-          </TabPanel>
         </Box>
-      </div>
+        {TABS.map(({ Panel }, i) => (
+          <TabPanel key={i} value={value} index={i}><Panel /></TabPanel>
+        ))}
+      </Box>
     </div>
   )
 }

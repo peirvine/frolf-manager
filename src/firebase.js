@@ -24,6 +24,7 @@ import {
   connectFirestoreEmulator,
 } from "firebase/firestore"
 import { getDatabase, connectDatabaseEmulator, ref, set, child, get, update, push, remove, runTransaction, onValue } from "firebase/database";
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
@@ -42,6 +43,7 @@ const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 const db = getFirestore(app);
 const database = getDatabase(app);
+const functions = getFunctions(app);
 
 // `npm start` runs with NODE_ENV=development, so local dev uses the Firebase
 // emulators instead of production. Set REACT_APP_USE_EMULATOR=false to opt out.
@@ -53,6 +55,7 @@ if (useEmulator) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectDatabaseEmulator(database, "127.0.0.1", 9000);
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 } else {
   initializeAppCheck(app, {
     provider: new ReCaptchaEnterpriseProvider('6LcVbkMoAAAAAGRpwcBp_iOR5CVzLNVyHawnjdEx'),
@@ -138,7 +141,9 @@ export async function writeScorecardToDatabase(league, card, season) {
       dateAdded: Date(Date.now()).toString(),
       rawUDiscCard: card.rawUDiscCard,
       isOffSeason: card.isOffSeason,
-      handicapsApplied: Boolean(card.handicapsApplied)
+      handicapsApplied: Boolean(card.handicapsApplied),
+      // Only leagues with handicaps; undefined values are rejected by set()
+      ...(card.handicaps ? { handicaps: card.handicaps } : {})
     })
     return {code: "success", message: "Scorecard added successfully.", key: newId}
   } catch (error) {
@@ -1138,4 +1143,121 @@ export function deleteLeagueRule (league, rule) {
   });
 
   return res
+}
+/****************** Site admin ******************/
+// Site-wide switches, kept at siteSettings/ (the set of settings is still to be decided; any key/value works)
+export const getSiteSettings = () => (
+  get(ref(getDatabase(), 'siteSettings')).then(snapshot => (snapshot.exists() ? snapshot.val() : {}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not get site settings', {error: error} );
+      return {}
+    })
+)
+
+export const setSiteSetting = (key, value) => (
+  update(ref(getDatabase(), 'siteSettings'), { [key]: value })
+    .then(() => ({code: "success", message: "Setting saved"}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not save site setting', {error: error} );
+      return {code: "error", message: "Setting not saved"}
+    })
+)
+
+// Every league with its settings and member count, whether or not it takes new members
+export async function getAllLeaguesForAdmin () {
+  const db = getDatabase()
+  const index = (await get(ref(db, 'leagueIndex'))).val() || {}
+  return Promise.all(Object.keys(index).map(async (id) => {
+    const [info, players] = await Promise.all([get(ref(db, id + '/info')), get(ref(db, id + '/players'))])
+    const members = Object.values(players.val() || {}).filter(member => member && member.id)
+    return { id, name: index[id], info: info.val() || {}, members }
+  }))
+}
+
+// A suspended league is shut for its members (enforced in the league context) until it's unsuspended
+export const setLeagueSuspended = (league, suspended) => (
+  update(ref(getDatabase(), league + '/info'), { suspended })
+    .then(() => ({code: "success", message: suspended ? "League suspended" : "League unsuspended"}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not change league suspension', {error: error} );
+      return {code: "error", message: "League not updated"}
+    })
+)
+
+// A site admin setting a league's plan by hand ("free", "plus" or "pro"; see services/plans). It goes through a
+// Cloud Function because the plan can't be written from the browser.
+export const setLeaguePlan = (league, plan) => (
+  httpsCallable(functions, 'setLeaguePlan')({ league, plan })
+    .then(() => ({code: "success", message: "Plan updated"}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not change league plan', {error: error} );
+      return {code: "error", message: "Plan not updated"}
+    })
+)
+
+// Billing runs through Stripe in the Cloud Functions (functions/index.js). Both return the Stripe page to send the
+// browser to; { code: "error" } if it couldn't be opened.
+const stripePage = (name, data) => httpsCallable(functions, name)(data)
+  .then(result => ({code: "success", url: result.data.url}))
+  .catch((error) => {
+    logEvent(analytics, 'Could not open billing', {error: error} );
+    return {code: "error", message: error?.message || "Billing could not be opened"}
+  })
+export const startCheckout = (league, interval) => stripePage('createCheckoutSession', { league, interval })
+export const openBillingPortal = (league) => stripePage('createPortalSession', { league })
+
+// The site's owner: always a site admin, and nobody (including themselves) can take it away
+export const PERMANENT_SITE_ADMIN_UID = "sVg8LJeG6SOuNHbIGdS5g2UVGI82"
+
+export const setSiteAdmin = (userKey, uid, siteAdmin) => {
+  if (!siteAdmin && uid === PERMANENT_SITE_ADMIN_UID) {
+    return Promise.resolve({code: "error", message: "This site admin can't be removed"})
+  }
+  return update(ref(getDatabase(), 'users/' + userKey), { siteAdmin })
+    .then(() => ({code: "success", message: siteAdmin ? "User is now a site admin" : "Site admin removed"}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not change site admin', {error: error} );
+      return {code: "error", message: "Site admin not changed"}
+    })
+}
+
+// Removes the league's data and its entry in the league index, and drops it from every user's memberships
+export async function deleteLeagueCompletely (league) {
+  try {
+    const db = getDatabase()
+    const users = (await get(ref(db, 'users'))).val() || {}
+    const writes = {}
+    Object.entries(users).forEach(([key, u]) => {
+      const leagues = Array.isArray(u?.leagues) ? u.leagues : Object.values(u?.leagues || {})
+      if (leagues.some(x => x?.id === league)) writes[`users/${key}/leagues`] = leagues.filter(x => x?.id && x.id !== league)
+    })
+    writes[league] = null
+    writes[`leagueIndex/${league}`] = null
+    await update(ref(db), writes)
+    return {code: "success", message: "League deleted"}
+  } catch (error) {
+    logEvent(analytics, 'Could not delete league', {error: error} );
+    return {code: "error", message: "League not deleted"}
+  }
+}
+
+// Removes the user's record and their spot in every league. Their sign-in account itself has to be removed in the
+// Firebase console (it can't be done from the browser).
+export async function deleteUserCompletely (userKey, uid) {
+  try {
+    const db = getDatabase()
+    const index = (await get(ref(db, 'leagueIndex'))).val() || {}
+    const writes = { [`users/${userKey}`]: null }
+    await Promise.all(Object.keys(index).map(async (id) => {
+      const players = (await get(ref(db, id + '/players'))).val() || {}
+      Object.entries(players).forEach(([slot, member]) => {
+        if (member?.id === uid) writes[`${id}/players/${slot}`] = null
+      })
+    }))
+    await update(ref(db), writes)
+    return {code: "success", message: "User removed"}
+  } catch (error) {
+    logEvent(analytics, 'Could not remove user', {error: error} );
+    return {code: "error", message: "User not removed"}
+  }
 }

@@ -2,6 +2,7 @@ import {useState, useEffect, useCallback} from 'react'
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Button, Dialog, DialogActions,DialogTitle, DialogContent, DialogContentText, TextField, Snackbar, Alert, Backdrop, CircularProgress, Box, Divider, Typography } from '@mui/material'
 import { getScorecards, getLeagueSettings } from '../../firebase'
 import { editRound, deleteRound } from '../../services/editRoundService'
+import { newestRoundFirst } from '../../services/handicapService'
 
 export default function RoundManager(props) {
   const [scorecards, setScorecards] = useState({})
@@ -12,7 +13,7 @@ export default function RoundManager(props) {
   const [busy, setBusy] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
-  const [alertSeverity, setAlertSeverity] = useState("")
+  const [alertSeverity, setAlertSeverity] = useState("info")
   const handleClose = () => { setDialogOpen(false) }
 
   const loadRounds = useCallback(async () => {
@@ -85,7 +86,7 @@ export default function RoundManager(props) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {Object.entries(scorecards).map(([key, value]) => (
+              {Object.entries(scorecards).sort(([, a], [, b]) => newestRoundFirst(a, b)).map(([key, value]) => (
                 <TableRow key={key}>
                   <TableCell sx={{ width: 25 }}>{value.Course}</TableCell>
                   <TableCell sx={{ width: 25 }}>{value.Layout}</TableCell>

@@ -13,7 +13,7 @@ import GoogleIcon from '@mui/icons-material/Google';
 import { auth, signInWithGoogle } from '../../firebase'
 import { buildHomeStats } from '../../services/homeStatsService'
 import { useLeague } from '../../context/leagueContext'
-import { useScorecards, useCurrentElo, useEloDeltas, useHatCounts, useDoinkFund, useHandicaps } from '../../context/leagueData'
+import { useScorecards, useCurrentElo, useEloDeltas, useHatCounts, useDoinkFund, useHandicaps, useGatedSettings } from '../../context/leagueData'
 import UDiscNameDialog from '../nav/uDiscNameDialog'
 import { Basket, AceAwards } from '../aceAward/aceAward'
 import { formatHandicap } from '../../services/handicapService'
@@ -142,7 +142,8 @@ function HeroArt () {
 /****************** Logged in ******************/
 
 function LoggedInHome ({ user }) {
-  const { userData, leagueNames, activeLeagues, leagueId, selectLeague, settings, members } = useLeague()
+  const { userData, leagueNames, activeLeagues, leagueId, selectLeague, members } = useLeague()
+  const settings = useGatedSettings()
   const [nameDialogOpen, setNameDialogOpen] = useState(false)
 
   const { current: cards, bySeason: allCards, loaded: cardsLoaded } = useScorecards()

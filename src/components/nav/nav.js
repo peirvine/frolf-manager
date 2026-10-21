@@ -16,6 +16,8 @@ import { Basket } from '../aceAward/aceAward'
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { NavLink, useNavigate } from "react-router-dom";
+import { useLeague } from '../../context/leagueContext';
+import { useBillingEnabled } from '../../context/leagueData';
 import './nav.scss'
 
 const brandName = window.location.href.includes("suchfrolf") ? "Such Frolf" : "Disc Golf Manager"
@@ -25,6 +27,8 @@ const publicPages = [
   { display: 'About DGM', route: "/about" },
   { display: 'FAQ', route: "/faq" },
 ]
+
+const pricingPage = { display: 'Pricing', route: "/pricing" }
 
 // Signed in, the bar only has room for these (the brand links home; About DGM moves to the account menu)
 const memberPages = [
@@ -52,6 +56,8 @@ export default function Nav() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [user] = useAuthState(auth);
+  const { isSiteAdmin } = useLeague();
+  const billingEnabled = useBillingEnabled();
   const navigate = useNavigate();
 
   const closeMenus = () => {
@@ -74,7 +80,8 @@ export default function Nav() {
     })
   }
 
-  const pages = user ? memberPages : publicPages
+  // Pricing only exists while site billing is on; signed in it's in the account menu
+  const pages = user ? memberPages : [...publicPages, ...(billingEnabled ? [pricingPage] : [])]
 
   return (
     <AppBar position="static" elevation={0} className="navBar">
@@ -127,11 +134,13 @@ export default function Nav() {
               >
                 <MenuItem disabled className="navMenuName">{user.displayName}</MenuItem>
                 <Divider />
-                <MenuItem onClick={closeMenus} component={NavLink} to="/dashboard">Dashboard</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/discCharger">Disc Charger</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/about">About DGM</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/faq">FAQ</MenuItem>
+                {billingEnabled && <MenuItem onClick={closeMenus} component={NavLink} to="/pricing">Pricing</MenuItem>}
                 <Divider />
+                <MenuItem onClick={closeMenus} component={NavLink} to="/dashboard">Dashboard</MenuItem>
+                {isSiteAdmin && <MenuItem onClick={closeMenus} component={NavLink} to="/admin">Site admin</MenuItem>}
                 <MenuItem onClick={handleLogout}>Log out</MenuItem>
               </Menu>
             </>
@@ -160,7 +169,7 @@ export default function Nav() {
             open={Boolean(anchorElNav)}
             onClose={closeMenus}
           >
-            {(user ? mobileMemberPages : publicPages).map((page) => (
+            {(user ? [...mobileMemberPages, ...(billingEnabled ? [pricingPage] : [])] : [...publicPages, ...(billingEnabled ? [pricingPage] : [])]).map((page) => (
               <MenuItem key={page.route} onClick={closeMenus} component={NavLink} to={page.route} end={page.route === "/"}>
                 {page.display}
               </MenuItem>
@@ -168,6 +177,7 @@ export default function Nav() {
             <Divider />
             {user ? [
               <MenuItem key="dashboard" onClick={closeMenus} component={NavLink} to="/dashboard">Dashboard</MenuItem>,
+              ...(isSiteAdmin ? [<MenuItem key="admin" onClick={closeMenus} component={NavLink} to="/admin">Site admin</MenuItem>] : []),
               <MenuItem key="logout" onClick={handleLogout}>Log out</MenuItem>,
             ] : (
               <MenuItem onClick={handleLogin}>Log In</MenuItem>

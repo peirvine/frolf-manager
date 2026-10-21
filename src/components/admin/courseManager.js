@@ -2,10 +2,10 @@ import AddCourse from  "./addCourse"
 import ListCourses from "./listCourses"
 export default function CourseManager () {
   return (
-    <div className="home">
-      <h1>CourseManager</h1>
+    <section className="manageCard">
+      <h3>Courses</h3>
       <AddCourse />
       <ListCourses />
-    </div>
+    </section>
   )
 }

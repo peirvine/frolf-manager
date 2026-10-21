@@ -23,7 +23,7 @@ describe("refreshHandicaps", () => {
     expect(stored).toMatchObject({ version: HANDICAP_VERSION, updatedAt: expect.any(String) })
     expect(stored.current).toEqual([expect.objectContaining({ player: "Alice", handicap: -2, rounds: 2, best: 1 })])
     // Going into the Season 2 round, Alice had her +6
-    expect(stored.byCard["2"]).toEqual([{ player: "Alice", handicap: -6, rounds: 1, best: 1 }])
+    expect(stored.byCard["2"]).toEqual([{ player: "Alice", handicap: -6, overParPerHole: 1 / 3, rounds: 1, best: 1 }])
   })
 
   test("uses settings that were already read", async () => {
@@ -63,7 +63,7 @@ describe("loadHandicaps", () => {
     seed()
     await refreshHandicaps("maftb")
     db.fail("getAllScorecards")
-    expect(await loadHandicaps("maftb")).toEqual({
+    expect(await loadHandicaps("maftb")).toMatchObject({
       byCard: { 2: { Alice: { handicap: -6, rounds: 1, best: 1 } } },
       current: { Alice: { handicap: -2, rounds: 2, best: 1, lastPlayed: expect.any(Number) } },
     })

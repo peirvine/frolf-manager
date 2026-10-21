@@ -49,7 +49,7 @@ export function LeagueHistoryManager(props) {
     let tempArray = []
     for (let i = 0; i < numAwards; i++) {
       tempArray.push(
-        <div className="awardRow">
+        <div className="awardRow" key={i}>
           <TextField
             label="Award"
             onChange={(e) => handleAward(i, e.target.value)}
@@ -356,10 +356,10 @@ export function LeagueHistoryManager(props) {
         <DialogContent>
         If you have a tournament round that you would like to add to the season stats, please select it below. If you have multiple rounds, you will need to add them individually. To remove a round, simply click on it again.
           <ul>
-            {rounds && Object.entries(rounds).map(([round, value], index) => {
+            {rounds && Object.entries(rounds).map(([round, value]) => {
               return (
-                <div>
-                  <Button style={{marginBottom: 5}} key={index} variant="contained" color={tournamentRounds.includes(round) ? "success" : "primary"} onClick={() => handleChooseRound(round)}>{value.Course} - {value.Date}</Button>
+                <div key={round}>
+                  <Button style={{marginBottom: 5}} variant="contained" color={tournamentRounds.includes(round) ? "success" : "primary"} onClick={() => handleChooseRound(round)}>{value.Course} - {value.Date}</Button>
                 </div>
               )
             })}

@@ -9,6 +9,9 @@ import { Tabs, Tab, Box, Typography } from '@mui/material'
 import './userDashboard.scss'
 import { LeagueHistoryManager } from './leagueHistoryManager';
 import ChooseTournamentHost from './chooseTournamentHost';
+import LockedFeature from '../plans/lockedFeature';
+import LeagueBilling from './leagueBilling';
+import { useFeatures, useBillingEnabled } from '../../context/leagueData';
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -23,7 +26,7 @@ function CustomTabPanel(props) {
     >
       {value === index && (
         <Box sx={{ p: 0 }}>
-          <Typography>{children}</Typography>
+          <Typography component="div">{children}</Typography>
         </Box>
       )}
     </div>
@@ -41,6 +44,8 @@ export default function ManageLeague() {
   const location = useLocation()
   const { state } = location
   const [ value, setValue ] = useState(0);
+  const features = useFeatures(state?.leagueId)
+  const billingEnabled = useBillingEnabled()
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -62,19 +67,20 @@ export default function ManageLeague() {
             <Tab label="doinks" {...a11yProps(3)} />
             <Tab label="rounds" {...a11yProps(4)} />
             <Tab label="tournament" {...a11yProps(5)} />
+            {billingEnabled && <Tab label="billing" {...a11yProps(6)} />}
           </Tabs>
         </Box>
         <CustomTabPanel value={value} index={0}>
           <LeagueSettingsManager league={state} />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={1}>
-          <LeagueHistoryManager league={state.leagueId} />
+          {features.has("leagueHistory") ? <LeagueHistoryManager league={state.leagueId} /> : <LockedFeature>League history is part of the Plus plan.</LockedFeature>}
         </CustomTabPanel>
         <CustomTabPanel value={value} index={2}>
           <LeaguePlayersManager league={state.leagueId} />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={3}>
-          <DoinkManager league={state.leagueId} />
+          {features.has("doinkFund") ? <DoinkManager league={state.leagueId} /> : <LockedFeature>The doink fund is part of the Plus plan.</LockedFeature>}
         </CustomTabPanel>
         <CustomTabPanel value={value} index={4} >
           <RoundManager league={state.leagueId} />
@@ -82,6 +88,11 @@ export default function ManageLeague() {
         <CustomTabPanel value={value} index={5} >
           <ChooseTournamentHost league={state.leagueId} />
         </CustomTabPanel>
+        {billingEnabled && (
+          <CustomTabPanel value={value} index={6}>
+            <LeagueBilling league={state.leagueId} />
+          </CustomTabPanel>
+        )}
       </Box>
     </div>
   )

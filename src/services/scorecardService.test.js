@@ -73,6 +73,18 @@ describe("uDiscDump", () => {
     ])
   })
 
+  test("saves the handicaps going into the round on the card", async () => {
+    seed("maftb", { handicaps: true })
+    await uDiscDump(uDiscCsv({ date: "2026-05-01 1800", scores: { Alice: 4, Bob: 0 } }), "maftb")
+    await uDiscDump(uDiscCsv({ date: "2026-05-08 1800", scores: { Alice: 0, Bob: 0 } }), "maftb")
+    const [first, second] = savedCards().sort((a, b) => a.Date.localeCompare(b.Date))
+    expect(first.handicaps).toBeUndefined()
+    expect(second.handicaps).toEqual([
+      expect.objectContaining({ player: "Alice", handicap: -4 }),
+      expect.objectContaining({ player: "Bob", handicap: 0 }),
+    ])
+  })
+
   test("leaves handicaps alone for leagues that don't", async () => {
     seed()
     await uDiscDump(uDiscCsv({ scores: { Alice: 4 } }), "maftb")

@@ -48,12 +48,13 @@ export function LeagueProvider ({ user, children }) {
   const settings = settingsSnap.value
   const leagueNames = namesSnap.value || {}
 
-  // 'signedOut' | 'loading' | 'noLeague' | 'pending' | 'ready'
+  // 'signedOut' | 'loading' | 'noLeague' | 'pending' | 'suspended' | 'ready'
   let status = 'ready'
   if (!user) status = 'signedOut'
   else if (!userSnap.loaded || !namesSnap.loaded) status = 'loading'
   else if (!leagueId) status = memberships.some(x => x.membershipStatus === "Pending") ? 'pending' : 'noLeague'
   else if (!settingsSnap.loaded || !membersSnap.loaded) status = 'loading'
+  else if (settings?.suspended) status = 'suspended'
 
   const value = useMemo(() => ({
     user,
@@ -63,6 +64,7 @@ export function LeagueProvider ({ user, children }) {
     leagueId,
     leagueName: leagueId ? leagueNames[leagueId] || leagueId : "",
     selectLeague,
+    isSiteAdmin: userData?.siteAdmin === true,
     isLeagueAdmin: activeLeagues.find(x => x.id === leagueId)?.membershipStatus === "Admin",
     settings,
     season: settings?.currentSeason,

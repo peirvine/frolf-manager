@@ -9,10 +9,16 @@ import { refreshHandicaps } from '../../services/handicapStore'
 import { Link, Navigate } from 'react-router-dom'
 import LeagueStats from './leagueStats'
 import LeagueAvatar, { LEAGUE_ICONS } from '../leagueIcon/leagueIcon'
+import LeaguePlayersManager from './leaguePlayersManager'
 import ManageLeagueRules from './manageLeagueRules'
+import LockedFeature from '../plans/lockedFeature'
+import { useFeatures } from '../../context/leagueData'
 import ConfirmDialog from '../confirmDialog/confirmDialog'
 
+// `ignorePlan` is for site admins, who can change every option whatever plan the league is on
 export default function LeagueSettingsManager(props) {
+  const features = useFeatures(props.league.leagueId)
+  const canUse = (feature) => props.ignorePlan || features.has(feature)
   const [name, setName] = useState(props.league.leagueName)
   const [id, setId] = useState(props.league.leagueId)
   const [blurb, setBlurb] = useState()
@@ -201,20 +207,32 @@ export default function LeagueSettingsManager(props) {
               <FormControlLabel control={<Switch checked={Boolean(checked)} onChange={(event) => setChecked(event.target.checked)}/>} label="Accepting New Players" />
               <FormControlLabel control={<Switch checked={Boolean(checked2)} onChange={(event) => setChecked2(event.target.checked)}/>} label="Off-Season?" />
               <small>Off-season rounds are added and count towards stats, but don't affect Elo.</small>
-              <FormControlLabel control={<Switch checked={handicaps} onChange={(event) => setHandicaps(event.target.checked)}/>} label="Handicaps" />
-              <small>Shows handicapped results on every round, based on the average of each player's best 8 of their last 20 league rounds (any season). Saving recalculates everyone's handicap.</small>
+              {canUse("handicaps") ? (
+                <>
+                  <FormControlLabel control={<Switch checked={handicaps} onChange={(event) => setHandicaps(event.target.checked)}/>} label="Handicaps" />
+                  <small>Shows handicapped results on every round, based on the average of each player's best 8 of their last 20 league rounds (any season). Saving recalculates everyone's handicap.</small>
+                </>
+              ) : (
+                <LockedFeature>Handicaps are part of the Plus plan.</LockedFeature>
+              )}
             </div>
             <Button variant="contained" onClick={() => updateLeagueData()}>Save</Button>
           </div>
         </section>
 
-        <section className="manageCard">
-          <LeagueStats league={id} />
-        </section>
+        {props.showPlayers ? (
+          <div>
+            <LeaguePlayersManager league={id} />
+          </div>
+        ) : (
+          <section className="manageCard">
+            <LeagueStats league={id} />
+          </section>
+        )}
       </div>
 
       <section className="manageCard">
-        <ManageLeagueRules league={id} />
+        {canUse("customRules") ? <ManageLeagueRules league={id} /> : <LockedFeature>Custom league rules are part of the Plus plan.</LockedFeature>}
       </section>
 
       <section className="manageCard dangerCard">
