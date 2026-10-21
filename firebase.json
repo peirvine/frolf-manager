@@ -31,6 +31,12 @@
       "enabled": true,
       "port": 4000
     },
-    "singleProjectMode": true
+    "singleProjectMode": true,
+    "functions": {
+      "port": 5001
+    }
+  },
+  "functions": {
+    "source": "functions"
   }
 }

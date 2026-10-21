@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Tab, Tabs, Box, Typography } from "@mui/material"
 import '../userDashboard/userDashboard.scss'
 import ScorecardManager from './scorecardManager';
-import CourseManager from './courseManager';
 import UserManager from './userManager';
 import SiteSettingsManager from './siteSettingsManager';
 import LeagueAdminManager from './leagueAdminManager';
@@ -42,7 +41,6 @@ const TABS = [
   { label: "leagues", Panel: LeagueAdminManager },
   { label: "users", Panel: UserManager },
   { label: "scorecards", Panel: ScorecardManager },
-  { label: "courses", Panel: CourseManager },
   { label: "billing", Panel: BillingManager },
 ]
 

@@ -48,3 +48,7 @@ amplifytools.xcconfig
 # firebase emulator data
 /emulator-data
 *-debug.log
+
+# Local Stripe secrets for the functions emulator
+functions/.secret.local
+functions/.env.local

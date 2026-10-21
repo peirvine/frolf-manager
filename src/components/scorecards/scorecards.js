@@ -1,7 +1,7 @@
 import React, { useMemo } from "react"
 import { Link } from 'react-router-dom'
 import RoundList from "./roundList";
-import { useScorecards, useHandicaps } from "../../context/leagueData";
+import { useScorecards, useHandicaps, useFeatures } from "../../context/leagueData";
 import { newestRoundFirst } from "../../services/handicapService";
 import LeagueGate from "../../context/LeagueGate";
 import { Skeleton } from '@mui/material'
@@ -11,6 +11,7 @@ import './scorecards.scss'
 export default function ViewScorecards () {
   const { current, loaded } = useScorecards()
   const handicaps = useHandicaps()
+  const features = useFeatures()
 
   const rounds = useMemo(() => Object.entries(current)
     .map(([key, value]) => ({ ...value, id: value.id || key }))
@@ -22,7 +23,7 @@ export default function ViewScorecards () {
       <LeagueGate>
         <div className="pageCard">
           <h3>Most Recent Season</h3>
-          <Link to="/scorecards/seasons">View every season</Link>
+          {features.has("pastSeasons") && <Link to="/scorecards/seasons">View every season</Link>}
           {rounds.length !== 0 ? (
             <RoundList rounds={rounds} handicaps={handicaps?.byCard} />
           ) : loaded ? (

@@ -3,7 +3,8 @@ import { Collapse, Alert, Button } from '@mui/material'
 import DoinkUser from './doinkUser'
 import { joinDoinkFundV2 } from '../../firebase'
 import { useLeague } from '../../context/leagueContext'
-import { useDoinkFund } from '../../context/leagueData'
+import { useDoinkFund, useFeatures } from '../../context/leagueData'
+import LockedFeature from '../plans/lockedFeature'
 import LeagueGate from '../../context/LeagueGate'
 
 import './doink.scss'
@@ -11,6 +12,7 @@ import './doink.scss'
 export default function Doink() {
   const { user, leagueId: league, settings, isLeagueAdmin } = useLeague()
   const { players: data, expenses, maxDoink } = useDoinkFund()
+  const features = useFeatures()
   const [open, setOpen] = useState(false)
   const [variant, setVariant] = useState('info')
   const [alertMessage, setAlertMessage] = useState('')
@@ -48,7 +50,9 @@ export default function Doink() {
           {alertMessage}
         </Alert>
       </Collapse>
-      {!settings?.doinkFund ? (
+      {!features.has("doinkFund") ? (
+        <LockedFeature>The doink fund is part of the Plus plan.</LockedFeature>
+      ) : !settings?.doinkFund ? (
         <section className="doinkCard">This league doesn't use a doink fund.</section>
       ) : (
         <>

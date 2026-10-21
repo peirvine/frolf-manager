@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Chip, Skeleton, Snackbar, TextField } from '@mui/material'
-import { getAllUsers, deleteUserCompletely } from '../../firebase'
+import { getAllUsers, deleteUserCompletely, setSiteAdmin, PERMANENT_SITE_ADMIN_UID } from '../../firebase'
 import ConfirmDialog from '../confirmDialog/confirmDialog'
 
 export default function UserManager () {
@@ -19,6 +19,12 @@ export default function UserManager () {
     setNotice({ code: res.code, message: res.message })
     setBusy(false)
     setTarget(null)
+    load()
+  }
+
+  const toggleSiteAdmin = async (key, u) => {
+    const res = await setSiteAdmin(key, u.uid, !u.siteAdmin)
+    setNotice({ code: res.code, message: res.message })
     load()
   }
 
@@ -43,10 +49,13 @@ export default function UserManager () {
                   <strong>{u?.name || key}</strong>
                   {u?.email && <small>{u.email}</small>}
                 </div>
-                {u?.siteAdmin && <Chip size="small" color="success" label="Site admin" />}
+                {u?.siteAdmin && <Chip size="small" color="success" label={u.uid === PERMANENT_SITE_ADMIN_UID ? "Site admin (permanent)" : "Site admin"} />}
               </div>
               <div className="manageActions">
-                <Button size="small" variant="contained" color="error" disabled={u?.siteAdmin} onClick={() => setTarget({ key, user: u })}>Remove</Button>
+                {u?.uid !== PERMANENT_SITE_ADMIN_UID && (
+                  <Button size="small" variant="outlined" onClick={() => toggleSiteAdmin(key, u)}>{u?.siteAdmin ? "Remove site admin" : "Make site admin"}</Button>
+                )}
+                <Button size="small" variant="contained" color="error" disabled={u?.siteAdmin || u?.uid === PERMANENT_SITE_ADMIN_UID} onClick={() => setTarget({ key, user: u })}>Remove</Button>
               </div>
             </li>
           ))}

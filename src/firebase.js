@@ -24,6 +24,7 @@ import {
   connectFirestoreEmulator,
 } from "firebase/firestore"
 import { getDatabase, connectDatabaseEmulator, ref, set, child, get, update, push, remove, runTransaction, onValue } from "firebase/database";
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 const firebaseConfig = {
@@ -42,6 +43,7 @@ const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 const db = getFirestore(app);
 const database = getDatabase(app);
+const functions = getFunctions(app);
 
 // `npm start` runs with NODE_ENV=development, so local dev uses the Firebase
 // emulators instead of production. Set REACT_APP_USE_EMULATOR=false to opt out.
@@ -53,6 +55,7 @@ if (useEmulator) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectDatabaseEmulator(database, "127.0.0.1", 9000);
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 } else {
   initializeAppCheck(app, {
     provider: new ReCaptchaEnterpriseProvider('6LcVbkMoAAAAAGRpwcBp_iOR5CVzLNVyHawnjdEx'),
@@ -1180,6 +1183,43 @@ export const setLeagueSuspended = (league, suspended) => (
       return {code: "error", message: "League not updated"}
     })
 )
+
+// A site admin setting a league's plan by hand ("free", "plus" or "pro"; see services/plans). It goes through a
+// Cloud Function because the plan can't be written from the browser.
+export const setLeaguePlan = (league, plan) => (
+  httpsCallable(functions, 'setLeaguePlan')({ league, plan })
+    .then(() => ({code: "success", message: "Plan updated"}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not change league plan', {error: error} );
+      return {code: "error", message: "Plan not updated"}
+    })
+)
+
+// Billing runs through Stripe in the Cloud Functions (functions/index.js). Both return the Stripe page to send the
+// browser to; { code: "error" } if it couldn't be opened.
+const stripePage = (name, data) => httpsCallable(functions, name)(data)
+  .then(result => ({code: "success", url: result.data.url}))
+  .catch((error) => {
+    logEvent(analytics, 'Could not open billing', {error: error} );
+    return {code: "error", message: error?.message || "Billing could not be opened"}
+  })
+export const startCheckout = (league, interval) => stripePage('createCheckoutSession', { league, interval })
+export const openBillingPortal = (league) => stripePage('createPortalSession', { league })
+
+// The site's owner: always a site admin, and nobody (including themselves) can take it away
+export const PERMANENT_SITE_ADMIN_UID = "sVg8LJeG6SOuNHbIGdS5g2UVGI82"
+
+export const setSiteAdmin = (userKey, uid, siteAdmin) => {
+  if (!siteAdmin && uid === PERMANENT_SITE_ADMIN_UID) {
+    return Promise.resolve({code: "error", message: "This site admin can't be removed"})
+  }
+  return update(ref(getDatabase(), 'users/' + userKey), { siteAdmin })
+    .then(() => ({code: "success", message: siteAdmin ? "User is now a site admin" : "Site admin removed"}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not change site admin', {error: error} );
+      return {code: "error", message: "Site admin not changed"}
+    })
+}
 
 // Removes the league's data and its entry in the league index, and drops it from every user's memberships
 export async function deleteLeagueCompletely (league) {

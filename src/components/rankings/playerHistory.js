@@ -2,7 +2,7 @@ import { Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 
-import { useHatCounts } from '../../context/leagueData'
+import { useHatCounts, useFeatures } from '../../context/leagueData'
 import { leagueHasHats } from '../../services/statsUtils'
 
 import './rankings.scss'
@@ -48,6 +48,7 @@ function HistoryTooltip ({ active, payload }) {
 
 export default function PlayerHistory ({ player, eloGraph, league, onClose }) {
   const { value: hatCounts } = useHatCounts()
+  const features = useFeatures()
   const hats = (player && hatCounts?.[player]) || 0
 
   const history = player ? getPlayerHistory(eloGraph, player) : []
@@ -71,7 +72,7 @@ export default function PlayerHistory ({ player, eloGraph, league, onClose }) {
               <div className="phStat"><span>Rating</span><strong>{current}</strong></div>
               <div className="phStat"><span>Peak</span><strong>{peak}</strong></div>
               <div className="phStat"><span>Rounds</span><strong>{history.length}</strong></div>
-              {leagueHasHats(league) && <div className="phStat"><span>Hats</span><strong>{hats}</strong></div>}
+              {leagueHasHats(league) && features.has("hats") && <div className="phStat"><span>Hats</span><strong>{hats}</strong></div>}
             </div>
 
             <div className="phChart">

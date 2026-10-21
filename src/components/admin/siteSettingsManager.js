@@ -7,6 +7,8 @@ import { getSiteSettings, setSiteSetting } from '../../firebase'
 const KNOWN_SETTINGS = [
   { key: 'maintenanceMode', label: 'Maintenance mode', type: 'boolean' },
   { key: 'announcement', label: 'Site announcement', type: 'text' },
+  // Off unless turned on. Billing is hidden from everyone but site admins, and the Billing tab here always shows
+  { key: 'billingEnabled', label: 'Enable site billing', type: 'boolean' },
 ]
 
 export default function SiteSettingsManager () {

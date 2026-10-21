@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { useLeague } from '../../context/leagueContext'
-import { useScorecards, useHandicaps } from '../../context/leagueData'
+import { useScorecards, useHandicaps, useFeatures } from '../../context/leagueData'
+import LockedFeature from '../plans/lockedFeature'
 import LeagueGate from '../../context/LeagueGate'
 import RoundList from './roundList'
 import { newestRoundFirst } from '../../services/handicapService'
@@ -33,6 +34,7 @@ export default function AllRounds () {
   const { bySeason, loaded } = useScorecards()
   const [expanded, setExpanded] = useState(false)
   const handicaps = useHandicaps()
+  const features = useFeatures()
 
   const seasons = useMemo(() => getSeasonNames(currentSeason), [currentSeason])
   const roundsBySeason = useMemo(() => Object.fromEntries(seasons.map(season => [season, sortRounds(bySeason[season])])), [seasons, bySeason])
@@ -43,7 +45,8 @@ export default function AllRounds () {
       <LeagueGate>
         <div className="pageCard">
           <Link to="/scorecards">Back to most recent season</Link>
-          {seasons.map(season => (
+          {!features.has("pastSeasons") && <LockedFeature>Past seasons are part of the Plus plan. Your rounds are saved and will show again if you upgrade.</LockedFeature>}
+          {features.has("pastSeasons") && seasons.map(season => (
             <Accordion key={season} TransitionProps={{ unmountOnExit: true }} expanded={expanded === season} onChange={(event, isExpanded) => setExpanded(isExpanded ? season : false)}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls={`${season}-content`} id={`${season}-header`}>
                 <strong>{season}</strong>{season === currentSeason && <span>&nbsp;(current)</span>}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert, Button, Chip, Skeleton, Snackbar } from '@mui/material'
 import { getAllLeaguesForAdmin, setLeagueSuspended, deleteLeagueCompletely } from '../../firebase'
 import LeagueSettingsManager from '../userDashboard/leagueSettingsManager'
+import DoinkManager from '../userDashboard/doinkManager'
 import ConfirmDialog from '../confirmDialog/confirmDialog'
 
 // Every league and its settings, whether or not it takes new members. Only shown here: site admins still can't
@@ -55,7 +56,8 @@ export default function LeagueAdminManager () {
               </div>
               {open === league.id && (
                 <div style={{ width: '100%' }}>
-                  <LeagueSettingsManager league={{ leagueId: league.id, leagueName: league.name }} showPlayers />
+                  <LeagueSettingsManager league={{ leagueId: league.id, leagueName: league.name }} showPlayers ignorePlan />
+                  <DoinkManager league={league.id} />
                 </div>
               )}
             </li>

@@ -1,7 +1,11 @@
 import { useLeague } from "../../context/leagueContext"
+import { useFeatures } from "../../context/leagueData"
 
 export function LeagueBlurb () {
   const { settings } = useLeague()
+  const features = useFeatures()
+
+  if (!features.has("customRules")) return null
 
   return (
     <div>

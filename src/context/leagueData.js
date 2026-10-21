@@ -4,6 +4,7 @@ import { useLeague, useLeagueData } from './leagueContext'
 import { loadHandicaps } from '../services/handicapStore'
 import { fromStored } from '../services/handicapService'
 import { leagueHasHats } from '../services/statsUtils'
+import { planOf, leagueHasFeature } from '../services/plans'
 
 // Live league data for the pages. Each one is downloaded the first time a page asks for it and kept current after
 // that (see liveStore), so switching pages doesn't read it again. All of them use the league chosen on the home page.
@@ -24,13 +25,15 @@ export const useEloTracking = () => useLeagueData('eloTracking', { perSeason: tr
 // { uDiscName: count }; only MAFTB keeps hats
 export const useHatCounts = () => {
   const { leagueId } = useLeague()
-  return useLive(leagueId && leagueHasHats(leagueId) ? `${leagueId}/hatCount` : null)
+  const features = useFeatures()
+  return useLive(leagueId && leagueHasHats(leagueId) && features.has("hats") ? `${leagueId}/hatCount` : null)
 }
 
 // The league's doink fund, or nothing for leagues that don't run one
 export const useDoinkFund = () => {
   const { leagueId, settings } = useLeague()
-  const base = leagueId && settings?.doinkFund ? `${leagueId}/doinkfund` : null
+  const features = useFeatures()
+  const base = leagueId && settings?.doinkFund && features.has("doinkFund") ? `${leagueId}/doinkfund` : null
   const players = useLive(base && `${base}/players`)
   const expenses = useLive(base && `${base}/expenses`)
   const maxDoink = useLive(base && `${base}/maxDoink`)
@@ -47,7 +50,8 @@ export const useDoinkFund = () => {
 // once here and saved for next time.
 export const useHandicaps = () => {
   const { leagueId, settings } = useLeague()
-  const enabled = Boolean(leagueId && settings?.handicaps)
+  const features = useFeatures()
+  const enabled = Boolean(leagueId && settings?.handicaps && features.has("handicaps"))
   const stored = useLive(enabled ? `${leagueId}/handicaps` : null)
   const [rebuilt, setRebuilt] = useState({})
   const requested = useRef(new Set())
@@ -63,3 +67,34 @@ export const useHandicaps = () => {
   if (!enabled) return null
   return saved || rebuilt[leagueId] || null
 }
+
+// What a league's plan includes (the current league unless `leagueId` is given): has("pastSeasons"), ... Everything is
+// included while site billing is off, can't be read, or hasn't loaded yet, so billing only matters once it has been
+// turned on in site settings.
+export const useFeatures = (leagueId) => {
+  const { leagueId: currentLeague } = useLeague()
+  const id = leagueId || currentLeague
+  const billing = useLive('siteSettings/billingEnabled')
+  const planSnap = useLive(id ? `${id}/info/plan` : null)
+  const billingEnabled = billing.value === true
+  const ready = billing.loaded && planSnap.loaded
+  return useMemo(() => ({
+    billingEnabled,
+    plan: planOf({ plan: planSnap.value }),
+    has: (feature) => !ready || leagueHasFeature({ plan: planSnap.value }, feature, billingEnabled),
+  }), [planSnap.value, billingEnabled, ready])
+}
+
+// The current league's settings with the options its plan doesn't include switched off, for pages that show them
+export const useGatedSettings = () => {
+  const { settings } = useLeague()
+  const features = useFeatures()
+  return useMemo(() => settings && ({
+    ...settings,
+    doinkFund: Boolean(settings.doinkFund) && features.has("doinkFund"),
+    handicaps: Boolean(settings.handicaps) && features.has("handicaps"),
+  }), [settings, features])
+}
+
+// Whether site billing has been turned on in site settings. Off (or unreadable) means nothing about plans is shown.
+export const useBillingEnabled = () => useLive('siteSettings/billingEnabled').value === true
