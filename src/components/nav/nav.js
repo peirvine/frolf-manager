@@ -129,12 +129,12 @@ export default function Nav() {
               >
                 <MenuItem disabled className="navMenuName">{user.displayName}</MenuItem>
                 <Divider />
-                <MenuItem onClick={closeMenus} component={NavLink} to="/dashboard">Dashboard</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/discCharger">Disc Charger</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/about">About DGM</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/faq">FAQ</MenuItem>
-                {isSiteAdmin && <MenuItem onClick={closeMenus} component={NavLink} to="/admin">Site admin</MenuItem>}
                 <Divider />
+                <MenuItem onClick={closeMenus} component={NavLink} to="/dashboard">Dashboard</MenuItem>
+                {isSiteAdmin && <MenuItem onClick={closeMenus} component={NavLink} to="/admin">Site admin</MenuItem>}
                 <MenuItem onClick={handleLogout}>Log out</MenuItem>
               </Menu>
             </>
