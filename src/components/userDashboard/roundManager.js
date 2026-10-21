@@ -13,7 +13,7 @@ export default function RoundManager(props) {
   const [busy, setBusy] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
-  const [alertSeverity, setAlertSeverity] = useState("")
+  const [alertSeverity, setAlertSeverity] = useState("info")
   const handleClose = () => { setDialogOpen(false) }
 
   const loadRounds = useCallback(async () => {

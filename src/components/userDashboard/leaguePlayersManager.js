@@ -219,7 +219,7 @@ export default function LeaguePlayersManager(props) {
   const leaguePlayers = members.filter(player => ![...pendingMembers, ...removedMembers, ...deniedMembers].includes(player))
 
   const renderMember = (player) => (
-    <li key={player.id}>
+    <li key={player.id ?? player.name}>
       <div className="manageListMain">
         <div className="playerNames">
           <strong>{player.name}</strong>
@@ -278,7 +278,7 @@ export default function LeaguePlayersManager(props) {
         {usersNotInLeague.length !== 0 ? (
           <ul className="manageList">
             {usersNotInLeague.map(player => (
-              <li key={player.uid}>
+              <li key={player.uid ?? player.email ?? player.name}>
                 <div className="manageListMain">
                   <div className="playerNames">
                     <strong>{player.name}</strong>
