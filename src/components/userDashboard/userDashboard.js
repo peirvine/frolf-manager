@@ -6,6 +6,7 @@ import { Help, Close } from '@mui/icons-material'
 import { Link } from "react-router-dom";
 import './userDashboard.scss'
 import FunStats from './funStats';
+import BillingReturn from './billingReturn';
 import LeagueAvatar from '../leagueIcon/leagueIcon';
 import { useLeague } from '../../context/leagueContext';
 import UDiscNameDialog from '../nav/uDiscNameDialog';
@@ -196,6 +197,7 @@ export default function UserDashboard () {
   
   return (
     <div className="userDashboard">
+      <BillingReturn />
       <h1>Hi, {user?.displayName}</h1>
       <p className="dashIntro">Manage your leagues, run what-if rounds, or start something new.</p>
       {/* <FunStats user={userData} leagues={userData.leagues} leagueNames={leagues} /> */}

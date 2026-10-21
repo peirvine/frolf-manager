@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, Button, Chip, Snackbar, ToggleButton, ToggleButtonGroup } from '@mui/material'
+import { Alert, Backdrop, Button, Chip, CircularProgress, Snackbar, ToggleButton, ToggleButtonGroup } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import { useLive } from '../../context/liveStore'
 import { useFeatures } from '../../context/leagueData'
@@ -43,6 +43,11 @@ export default function LeagueBilling ({ league }) {
 
   return (
     <>
+      {/* Stays up until the browser leaves for Stripe; an error clears it */}
+      <Backdrop open={busy} sx={{ zIndex: theme => theme.zIndex.modal + 1, color: '#fff', flexDirection: 'column', gap: 2 }}>
+        <CircularProgress color="inherit" />
+        <strong>Taking you to Stripe. Please wait.</strong>
+      </Backdrop>
       <Snackbar open={Boolean(notice)} autoHideDuration={6000} onClose={() => setNotice(null)}>
         {notice && <Alert severity={notice.code} onClose={() => setNotice(null)}>{notice.message}</Alert>}
       </Snackbar>
