@@ -6,6 +6,7 @@ import { useLeague } from '../../context/leagueContext'
 import { useScorecards, useHandicaps } from '../../context/leagueData'
 import LeagueGate from '../../context/LeagueGate'
 import RoundList from './roundList'
+import { newestRoundFirst } from '../../services/handicapService'
 
 import './scorecards.scss'
 
@@ -24,7 +25,7 @@ const getSeasonNames = (currentSeason) => {
 const sortRounds = (cards) => (
   Object.entries(cards || {})
     .map(([key, value]) => ({ ...value, id: value.id || key }))
-    .sort((a, b) => (a.Date < b.Date) ? 1 : ((b.Date < a.Date) ? -1 : 0))
+    .sort(newestRoundFirst)
 )
 
 export default function AllRounds () {

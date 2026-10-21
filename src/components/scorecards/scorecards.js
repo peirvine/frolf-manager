@@ -2,6 +2,7 @@ import React, { useMemo } from "react"
 import { Link } from 'react-router-dom'
 import RoundList from "./roundList";
 import { useScorecards, useHandicaps } from "../../context/leagueData";
+import { newestRoundFirst } from "../../services/handicapService";
 import LeagueGate from "../../context/LeagueGate";
 import { Skeleton } from '@mui/material'
 
@@ -13,7 +14,7 @@ export default function ViewScorecards () {
 
   const rounds = useMemo(() => Object.entries(current)
     .map(([key, value]) => ({ ...value, id: value.id || key }))
-    .sort((a, b) => (a.Date < b.Date) ? 1 : ((b.Date < a.Date) ? -1 : 0)), [current])
+    .sort(newestRoundFirst), [current])
 
   return (
     <div className="scorecards">

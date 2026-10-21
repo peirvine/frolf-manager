@@ -44,6 +44,15 @@ export const parseCardDate = (date) => {
   return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
 }
 
+// Orders rounds newest first: by the day on the card, and for rounds on the same day by when they were submitted
+// (`dateAdded`, a Date().toString()). Rounds with no readable date go last.
+export const newestRoundFirst = (a, b) => {
+  const day = (parseCardDate(b.Date) ?? -Infinity) - (parseCardDate(a.Date) ?? -Infinity)
+  if (day !== 0 && !Number.isNaN(day)) return day
+  const added = (round) => Date.parse(round.dateAdded) || 0
+  return added(b) - added(a)
+}
+
 // Each finished round on a card as a score differential: strokes over par per hole, so 9, 18 and 27 hole layouts
 // can be compared.
 // Players who skipped a hole are left out: their total would make them look better than they are.

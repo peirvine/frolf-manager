@@ -12,7 +12,7 @@ export default function DoinkManager(props) {
   const [maxDoink, setMaxDoink] = useState(50)
   const [alertOpen, setAlertOpen] = useState(false)
   const [desc, setDesc] = useState('')
-  const [amount, setAmount] = useState(0)
+  const [amount, setAmount] = useState("")
   // eslint-disable-next-line no-unused-vars
   const [alertMessage, setAlertMessage] = useState("")
   const [alertLevel, setAlertLevel] = useState("info")
@@ -117,7 +117,8 @@ export default function DoinkManager(props) {
   const handleLeagueExpense = () => {
     const expenseObj = {
       expense: desc,
-      amount: amount,
+      // The field starts empty (showing 0 as a placeholder), so an untouched amount is saved as 0
+      amount: amount === "" ? 0 : amount,
       date: Date(Date.now()).toString()
     }
 
@@ -126,7 +127,7 @@ export default function DoinkManager(props) {
       setAlertLevel(res.code)
       setAlertMessage(res.message)
       setDesc('')
-      setAmount(0)
+      setAmount("")
     })
     setRender(render.concat(' '))
   }
@@ -235,6 +236,7 @@ export default function DoinkManager(props) {
                     id="outlined-adornment-amount"
                     startAdornment={<InputAdornment position="start">$</InputAdornment>}
                     label="Amount"
+                    placeholder="0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                   />

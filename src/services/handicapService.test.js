@@ -1,4 +1,4 @@
-import { buildHandicaps, applyHandicaps, bestCountFor, toStored, fromStored, scaledHandicap } from './handicapService'
+import { buildHandicaps, applyHandicaps, bestCountFor, toStored, fromStored, scaledHandicap, newestRoundFirst } from './handicapService'
 
 const par18 = Array(18).fill("3")
 const card = (id, date, scores, holes = par18) => ({
@@ -93,4 +93,15 @@ test("scaledHandicap gives a layout's handicap from the saved average per hole",
   expect(scaledHandicap(entry, 18)).toBe(-4)
   expect(scaledHandicap(entry, 12)).toBe(-2)
   expect(scaledHandicap({ handicap: -9 }, 9)).toBe(-5)
+})
+
+test("newestRoundFirst sorts by card day, then by when the card was submitted", () => {
+  const added = (day) => new Date(2026, 9, day, 12).toString()
+  const rounds = [
+    { id: "old", Date: "2026-10-12 1800", dateAdded: added(20) },
+    { id: "lateGame", Date: "2026-10-19 2100", dateAdded: added(21) },
+    { id: "earlyGame", Date: "2026-10-19 1000", dateAdded: added(22) },
+    { id: "noDate", Date: "", dateAdded: added(23) },
+  ]
+  expect(rounds.sort(newestRoundFirst).map(round => round.id)).toEqual(["earlyGame", "lateGame", "old", "noDate"])
 })
