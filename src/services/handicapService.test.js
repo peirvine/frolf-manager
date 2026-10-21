@@ -1,4 +1,4 @@
-import { buildHandicaps, applyHandicaps, bestCountFor, toStored, fromStored } from './handicapService'
+import { buildHandicaps, applyHandicaps, bestCountFor, toStored, fromStored, scaledHandicap } from './handicapService'
 
 const par18 = Array(18).fill("3")
 const card = (id, date, scores, holes = par18) => ({
@@ -31,7 +31,7 @@ test("handicaps carry across seasons and average the best 8 of the newest 20", (
   }
   const { byCard, current } = buildHandicaps(seasons)
   // Going into round 7: 6 rounds, best 2 are +30 and +20
-  expect(byCard[7].Sam).toEqual({ handicap: -25, rounds: 6, best: 2 })
+  expect(byCard[7].Sam).toMatchObject({ handicap: -25, rounds: 6, best: 2 })
   // Now: the newest 20 are +20..+1 (the +30s dropped off), best 8 are +1..+8, averaging +4.5
   expect(current.Sam).toMatchObject({ handicap: -5, rounds: 20, best: 8 })
 })
@@ -86,4 +86,11 @@ test("handicaps survive a round trip through the database format", () => {
   expect(Object.keys(stored.byCard)).toEqual(["2"])
   expect(fromStored(stored)).toEqual({ byCard: { 2: built.byCard[2] }, current: built.current })
   expect(fromStored({ ...stored, version: 1 })).toBeNull()
+})
+
+test("scaledHandicap gives a layout's handicap from the saved average per hole", () => {
+  const entry = { handicap: -4, overParPerHole: 0.2 }
+  expect(scaledHandicap(entry, 18)).toBe(-4)
+  expect(scaledHandicap(entry, 12)).toBe(-2)
+  expect(scaledHandicap({ handicap: -9 }, 9)).toBe(-5)
 })

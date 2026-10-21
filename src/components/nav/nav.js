@@ -16,6 +16,7 @@ import { Basket } from '../aceAward/aceAward'
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { NavLink, useNavigate } from "react-router-dom";
+import { useLeague } from '../../context/leagueContext';
 import './nav.scss'
 
 const brandName = window.location.href.includes("suchfrolf") ? "Such Frolf" : "Disc Golf Manager"
@@ -52,6 +53,7 @@ export default function Nav() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [user] = useAuthState(auth);
+  const { isSiteAdmin } = useLeague();
   const navigate = useNavigate();
 
   const closeMenus = () => {
@@ -131,6 +133,7 @@ export default function Nav() {
                 <MenuItem onClick={closeMenus} component={NavLink} to="/discCharger">Disc Charger</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/about">About DGM</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/faq">FAQ</MenuItem>
+                {isSiteAdmin && <MenuItem onClick={closeMenus} component={NavLink} to="/admin">Site admin</MenuItem>}
                 <Divider />
                 <MenuItem onClick={handleLogout}>Log out</MenuItem>
               </Menu>
@@ -168,6 +171,7 @@ export default function Nav() {
             <Divider />
             {user ? [
               <MenuItem key="dashboard" onClick={closeMenus} component={NavLink} to="/dashboard">Dashboard</MenuItem>,
+              ...(isSiteAdmin ? [<MenuItem key="admin" onClick={closeMenus} component={NavLink} to="/admin">Site admin</MenuItem>] : []),
               <MenuItem key="logout" onClick={handleLogout}>Log out</MenuItem>,
             ] : (
               <MenuItem onClick={handleLogin}>Log In</MenuItem>

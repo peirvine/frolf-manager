@@ -1,7 +1,7 @@
 // import { addScorecardToGoogle } from './googleSheetsService'
 import { getLeagueSettings, writeScorecardToDatabase, setCardHatWinners } from '../firebase'
 import { calculateElo, changeHatWinners } from './eloService'
-import { refreshHandicaps } from './handicapStore'
+import { refreshHandicaps, snapshotHandicaps } from './handicapStore'
 import { parseUDiscCsv, getUDiscHoleNames } from './uDiscCsv'
 import { getUDiscNameLookup, toMainUDiscName } from './uDiscNames'
 
@@ -57,6 +57,16 @@ export async function uDiscDump (card, league, simulation = false, { handicapsAp
   if (validateCard(returnValue)) {
     let response = {code: "success", message: "Card Validated."}
     if (!simulation) {
+      // Grabbed before anything is written or rebuilt, so the card keeps the handicaps the round was played with
+      if (settings.handicaps) {
+        const handicaps = await snapshotHandicaps(league, {
+          Date: returnValue.date,
+          Par: returnValue.par,
+          Players: playerArray.map(({ player, total, holes }) => ({ player, total, holes })),
+        })
+        if (!handicaps) return {code: "error", message: "Error, could not read the current handicaps. Card not added."}
+        returnValue.handicaps = handicaps
+      }
       response = await writeScorecardToDatabase(league, returnValue, season)
       if (response.code === "error") return response
       const cardSaved = true

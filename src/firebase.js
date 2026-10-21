@@ -138,7 +138,9 @@ export async function writeScorecardToDatabase(league, card, season) {
       dateAdded: Date(Date.now()).toString(),
       rawUDiscCard: card.rawUDiscCard,
       isOffSeason: card.isOffSeason,
-      handicapsApplied: Boolean(card.handicapsApplied)
+      handicapsApplied: Boolean(card.handicapsApplied),
+      // Only leagues with handicaps; undefined values are rejected by set()
+      ...(card.handicaps ? { handicaps: card.handicaps } : {})
     })
     return {code: "success", message: "Scorecard added successfully.", key: newId}
   } catch (error) {
@@ -1138,4 +1140,84 @@ export function deleteLeagueRule (league, rule) {
   });
 
   return res
+}
+/****************** Site admin ******************/
+// Site-wide switches, kept at siteSettings/ (the set of settings is still to be decided; any key/value works)
+export const getSiteSettings = () => (
+  get(ref(getDatabase(), 'siteSettings')).then(snapshot => (snapshot.exists() ? snapshot.val() : {}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not get site settings', {error: error} );
+      return {}
+    })
+)
+
+export const setSiteSetting = (key, value) => (
+  update(ref(getDatabase(), 'siteSettings'), { [key]: value })
+    .then(() => ({code: "success", message: "Setting saved"}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not save site setting', {error: error} );
+      return {code: "error", message: "Setting not saved"}
+    })
+)
+
+// Every league with its settings and member count, whether or not it takes new members
+export async function getAllLeaguesForAdmin () {
+  const db = getDatabase()
+  const index = (await get(ref(db, 'leagueIndex'))).val() || {}
+  return Promise.all(Object.keys(index).map(async (id) => {
+    const [info, players] = await Promise.all([get(ref(db, id + '/info')), get(ref(db, id + '/players'))])
+    const members = Object.values(players.val() || {}).filter(member => member && member.id)
+    return { id, name: index[id], info: info.val() || {}, members }
+  }))
+}
+
+// A suspended league is shut for its members (enforced in the league context) until it's unsuspended
+export const setLeagueSuspended = (league, suspended) => (
+  update(ref(getDatabase(), league + '/info'), { suspended })
+    .then(() => ({code: "success", message: suspended ? "League suspended" : "League unsuspended"}))
+    .catch((error) => {
+      logEvent(analytics, 'Could not change league suspension', {error: error} );
+      return {code: "error", message: "League not updated"}
+    })
+)
+
+// Removes the league's data and its entry in the league index, and drops it from every user's memberships
+export async function deleteLeagueCompletely (league) {
+  try {
+    const db = getDatabase()
+    const users = (await get(ref(db, 'users'))).val() || {}
+    const writes = {}
+    Object.entries(users).forEach(([key, u]) => {
+      const leagues = Array.isArray(u?.leagues) ? u.leagues : Object.values(u?.leagues || {})
+      if (leagues.some(x => x?.id === league)) writes[`users/${key}/leagues`] = leagues.filter(x => x?.id && x.id !== league)
+    })
+    writes[league] = null
+    writes[`leagueIndex/${league}`] = null
+    await update(ref(db), writes)
+    return {code: "success", message: "League deleted"}
+  } catch (error) {
+    logEvent(analytics, 'Could not delete league', {error: error} );
+    return {code: "error", message: "League not deleted"}
+  }
+}
+
+// Removes the user's record and their spot in every league. Their sign-in account itself has to be removed in the
+// Firebase console (it can't be done from the browser).
+export async function deleteUserCompletely (userKey, uid) {
+  try {
+    const db = getDatabase()
+    const index = (await get(ref(db, 'leagueIndex'))).val() || {}
+    const writes = { [`users/${userKey}`]: null }
+    await Promise.all(Object.keys(index).map(async (id) => {
+      const players = (await get(ref(db, id + '/players'))).val() || {}
+      Object.entries(players).forEach(([slot, member]) => {
+        if (member?.id === uid) writes[`${id}/players/${slot}`] = null
+      })
+    }))
+    await update(ref(db), writes)
+    return {code: "success", message: "User removed"}
+  } catch (error) {
+    logEvent(analytics, 'Could not remove user', {error: error} );
+    return {code: "error", message: "User not removed"}
+  }
 }

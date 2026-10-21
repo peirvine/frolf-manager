@@ -9,6 +9,7 @@ import { refreshHandicaps } from '../../services/handicapStore'
 import { Link, Navigate } from 'react-router-dom'
 import LeagueStats from './leagueStats'
 import LeagueAvatar, { LEAGUE_ICONS } from '../leagueIcon/leagueIcon'
+import LeaguePlayersManager from './leaguePlayersManager'
 import ManageLeagueRules from './manageLeagueRules'
 import ConfirmDialog from '../confirmDialog/confirmDialog'
 
@@ -208,9 +209,15 @@ export default function LeagueSettingsManager(props) {
           </div>
         </section>
 
-        <section className="manageCard">
-          <LeagueStats league={id} />
-        </section>
+        {props.showPlayers ? (
+          <div>
+            <LeaguePlayersManager league={id} />
+          </div>
+        ) : (
+          <section className="manageCard">
+            <LeagueStats league={id} />
+          </section>
+        )}
       </div>
 
       <section className="manageCard">

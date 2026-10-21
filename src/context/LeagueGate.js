@@ -36,6 +36,14 @@ export default function LeagueGate ({ children }) {
     )
   }
 
+  if (status === 'suspended') {
+    return (
+      <div className="pageCard">
+        <Alert severity="warning">{leagueName} has been suspended by the site admins. Contact them if you think this is a mistake.</Alert>
+      </div>
+    )
+  }
+
   if (status === 'pending') {
     return (
       <div className="pageCard">

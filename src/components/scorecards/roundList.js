@@ -4,7 +4,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import RoundScoreboard from './roundScoreboard'
 import MobileRound from './mobileRound'
 import HandicapBoard from './handicapBoard'
-import { formatHandicap } from '../../services/handicapService'
+import { formatHandicap, handicapsForRound } from '../../services/handicapService'
 
 const getCoursePar = (players) => players[players.map(e => e.player).indexOf("Par")]
 
@@ -58,7 +58,7 @@ export default function RoundList ({ rounds, handicaps }) {
           <p><strong>{round.Course}</strong>: {round.Layout} - {round.Date.slice(0, round.Date.indexOf(" "))}</p>
         </AccordionSummary>
         <AccordionDetails>
-          <RoundDetails round={round} cardHandicaps={handicaps && (handicaps[round.id] || {})} />
+          <RoundDetails round={round} cardHandicaps={handicapsForRound(round, handicaps)} />
         </AccordionDetails>
       </Accordion>
     )

@@ -76,7 +76,7 @@ test("includes the player's handicap when the league uses them", async () => {
   const stats = await homeStats("alice", "maftb")
   // Best 1 of Alice's 3 rounds: two at par, so E
   expect(stats.handicaps).toBe(true)
-  expect(stats.handicap).toEqual({ handicap: 0, rounds: 3, best: 1, lastPlayed: expect.any(Number) })
+  expect(stats.handicap).toEqual({ handicap: 0, overParPerHole: 0, rounds: 3, best: 1, lastPlayed: expect.any(Number) })
 })
 
 test("leaves out what the league doesn't use", async () => {
