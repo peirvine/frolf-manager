@@ -26,12 +26,23 @@ const stripeClient = () => {
 const siteUrl = () => new URL(SITE_URL.value()).origin
 const prices = () => ({ plusMonthly: PRICE_PLUS_MONTHLY.value(), plusYearly: PRICE_PLUS_YEARLY.value() })
 
+// Runs a Stripe call and, if Stripe refuses, reports Stripe's own reason to the page (and the log) instead of a bare
+// "internal error", e.g. "No such price" when test and live keys are mixed
+const stripeCall = async (action, work) => {
+  try {
+    return await work()
+  } catch (error) {
+    console.error(`Stripe ${action} failed:`, error?.type, error?.code, error?.message)
+    throw new HttpsError('failed-precondition', `Stripe: ${error?.message || 'the request failed'}`)
+  }
+}
+
 // One Stripe customer per league, remembered so later purchases use the same one
 const customerFor = async (stripe, league, email) => {
   const saved = await read(`${league}/billing/customerId`)
   if (saved) return saved
   const name = await read(`leagueIndex/${league}`)
-  const customer = await stripe.customers.create({ name: name || league, email: email || undefined, metadata: { league } })
+  const customer = await stripeCall('customer', () => stripe.customers.create({ name: name || league, email: email || undefined, metadata: { league } }))
   await db().ref(`${league}/billing`).update({ customerId: customer.id })
   return customer.id
 }
@@ -47,7 +58,7 @@ exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (
   // A league only gets the trial once
   const trial = billing.hadTrial ? {} : { trial_period_days: TRIAL_DAYS }
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await stripeCall('checkout', () => stripe.checkout.sessions.create({
     mode: 'subscription',
     customer,
     client_reference_id: league,
@@ -60,7 +71,7 @@ exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (
     customer_update: { address: 'auto', name: 'auto' },
     success_url: `${siteUrl()}/dashboard?billing=success&league=${encodeURIComponent(league)}`,
     cancel_url: `${siteUrl()}/dashboard?billing=cancelled`,
-  })
+  }))
   return { url: session.url }
 })
 
@@ -69,7 +80,7 @@ exports.createPortalSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async ({ 
   await requireLeagueAdmin(auth, league)
   const customer = await read(`${league}/billing/customerId`)
   if (!customer) throw new HttpsError('failed-precondition', 'This league has no billing yet.')
-  const session = await stripeClient().billingPortal.sessions.create({ customer, return_url: `${siteUrl()}/dashboard` })
+  const session = await stripeCall('portal', () => stripeClient().billingPortal.sessions.create({ customer, return_url: `${siteUrl()}/dashboard` }))
   return { url: session.url }
 })
 
