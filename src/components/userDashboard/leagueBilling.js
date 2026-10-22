@@ -76,7 +76,7 @@ export default function LeagueBilling ({ league }) {
             {buyable && (
               <>
                 <ToggleButtonGroup size="small" exclusive value={interval} onChange={(e, value) => value && setInterval(value)} style={{ marginBottom: 12 }}>
-                  <ToggleButton value="year">$40 / year</ToggleButton>
+                  <ToggleButton value="year">$50 / year</ToggleButton>
                   <ToggleButton value="month">$5 / month</ToggleButton>
                 </ToggleButtonGroup>
                 <div>

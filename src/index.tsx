@@ -16,6 +16,8 @@ import SimulateRound from './components/userDashboard/simulateRound/simulateRoun
 import AboutDGM from './components/about/aboutDGM/aboutDGM';
 import Faq from './components/faq/faq';
 import Pricing from './components/pricing/pricing';
+import Terms from './components/legal/terms';
+import Privacy from './components/legal/privacy';
 import DiscCharger from './components/discCharger/discCharger';
 import ErrorPage from './errorPage';
 import RequireAuth from './protectedRoute'
@@ -47,6 +49,14 @@ const router = createBrowserRouter([
       {
         path: "/pricing",
         element: <Pricing />,
+      },
+      {
+        path: "/terms",
+        element: <Terms />,
+      },
+      {
+        path: "/privacy",
+        element: <Privacy />,
       },
       {
         path: "/aboutLeague",

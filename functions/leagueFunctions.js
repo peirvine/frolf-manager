@@ -152,6 +152,8 @@ exports.createLeague = onCall(async ({ auth, data }) => {
     [`${id}/info`]: {
       leagueName, leagueAcronym: id, doinkFund: Boolean(data?.doink), acceptingPlayers: true,
       blurb: '', currentSeason: 'Season 1', isPreseason: true,
+      // Every new league starts on the free plan; Stripe (or a site admin) moves it up from there
+      plan: 'free', planSource: 'default',
     },
     [`${id}/players`]: [admin],
     [`${id}/memberRoles/${uid}`]: 'Admin',

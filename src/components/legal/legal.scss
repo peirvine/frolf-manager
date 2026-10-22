@@ -1,0 +1,53 @@
+@import '../../globalStyles.scss';
+
+.legalPage {
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Roboto, sans-serif;
+  color: #1f2a37;
+
+  counter-reset: legalSection;
+
+  section { margin-bottom: 28px; }
+
+  h2::before {
+    counter-increment: legalSection;
+    content: counter(legalSection) ". ";
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 1.25rem;
+    color: $navy;
+  }
+
+  p, li { line-height: 1.6; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  a { color: $navy; }
+}
+
+.legalBanner {
+  margin-bottom: 32px;
+  padding: 32px;
+  border-radius: 16px;
+  color: white;
+  background: linear-gradient(135deg, $navy, $navy-dark);
+
+  h1 {
+    margin: 4px 0 8px;
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    line-height: 1.1;
+    color: white;
+  }
+
+  p { margin: 0; opacity: 0.85; }
+}
+
+.legalEyebrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $gold;
+}
