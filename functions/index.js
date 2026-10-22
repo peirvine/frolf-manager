@@ -52,6 +52,7 @@ exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (
   await requireLeagueAdmin(auth, league)
   if (interval !== 'month' && interval !== 'year') throw new HttpsError('invalid-argument', 'Pick monthly or yearly.')
 
+  if ((await read(`${league}/info/plan`)) === 'founding') throw new HttpsError('failed-precondition', 'This league is a Founding League, which is free forever. There is nothing to buy.')
   const stripe = stripeClient()
   const billing = (await read(`${league}/billing`)) || {}
   const customer = await customerFor(stripe, league, auth.token.email)
@@ -85,7 +86,7 @@ exports.createPortalSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async ({ 
 exports.setLeaguePlan = onCall(async ({ auth, data }) => {
   const { league, plan } = data || {}
   await requireSiteAdmin(auth)
-  if (!['free', 'plus', 'pro'].includes(plan)) throw new HttpsError('invalid-argument', 'Unknown plan.')
+  if (!['free', 'plus', 'founding'].includes(plan)) throw new HttpsError('invalid-argument', 'Unknown plan.')
   await requireLeague(league)
   await db().ref(`${league}/info`).update({ plan, planSource: 'manual' })
   return { ok: true }

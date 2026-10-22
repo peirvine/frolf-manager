@@ -999,7 +999,7 @@ export async function getAllLeaguesForAdmin () {
   }))
 }
 
-// A site admin setting a league's plan by hand ("free", "plus" or "pro"; see services/plans). It goes through a
+// A site admin setting a league's plan by hand ("free", "plus" or "founding"; see services/plans). It goes through a
 // Cloud Function because the plan can't be written from the browser.
 export const setLeaguePlan = (league, plan) => (
   httpsCallable(functions, 'setLeaguePlan')({ league, plan })

@@ -3,7 +3,7 @@ import { Alert, Chip, MenuItem, Select, Skeleton, Snackbar } from '@mui/material
 import { getAllLeaguesForAdmin, setLeaguePlan } from '../../firebase'
 import { PLANS, planOf, planLabel } from '../../services/plans'
 
-const PLAN_COLORS = { free: "default", plus: "primary", pro: "success" }
+const PLAN_COLORS = { free: "default", plus: "primary", founding: "secondary" }
 
 // Which plan every league is on, and a way to change it. Plans aren't tied to any features or payments yet.
 export default function BillingManager () {

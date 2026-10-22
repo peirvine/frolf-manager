@@ -2,7 +2,7 @@
 export const PLANS = [
   { id: "free", label: "Free" },
   { id: "plus", label: "Plus" },
-  { id: "pro", label: "Pro" },
+  { id: "founding", label: "Founding League" },
 ]
 
 export const DEFAULT_PLAN = "free"
@@ -12,7 +12,8 @@ export const planOf = (info) => PLANS.some(plan => plan.id === info?.plan) ? inf
 
 export const planLabel = (id) => PLANS.find(plan => plan.id === id)?.label || id
 
-// What each plan includes. Pro matches Plus until it has something of its own.
+// What each plan includes. Founding League is for the first leagues: everything Plus has, free forever. It isn't sold
+// or shown to anyone; only a site admin can put a league on it.
 //  - pastSeasons: seasons before the current one can be opened (Free keeps them, but locked)
 //  - leagueHistory: the league's season-end summaries on the League History page
 //  - doinkFund, handicaps, hats: those league features
@@ -21,7 +22,7 @@ const PLUS_FEATURES = ["pastSeasons", "leagueHistory", "doinkFund", "handicaps",
 export const PLAN_FEATURES = {
   free: [],
   plus: PLUS_FEATURES,
-  pro: PLUS_FEATURES,
+  founding: PLUS_FEATURES,
 }
 
 export const planHasFeature = (plan, feature) => (PLAN_FEATURES[plan] || []).includes(feature)
@@ -29,12 +30,13 @@ export const planHasFeature = (plan, feature) => (PLAN_FEATURES[plan] || []).inc
 // Whether a league gets `feature`. With site billing off every league gets everything, as before billing existed.
 export const leagueHasFeature = (info, feature, billingEnabled) => !billingEnabled || planHasFeature(planOf(info), feature)
 
-// How the pricing page describes things. Pro isn't listed until it has something of its own. `price` is the headline
+// How the pricing page describes things. Founding League is never listed (a league only sees it once a site admin has
+// given it to them). `price` is the headline
 // price and `priceNote` the line under it (billing is per league, not per player).
 export const PLAN_DETAILS = {
   free: { tagline: "Everything you need to run a league's current season", price: "$0", priceNote: "", listed: true },
   plus: { tagline: "Keep your league's history and add the extras", price: "$5/month", priceNote: "or $50/year, two months free. One price for the whole league.", listed: true },
-  pro: { tagline: "", price: null, priceNote: "", listed: false },
+  founding: { tagline: "Thank you for being one of the first leagues. You get everything in Plus, free forever.", price: "Free forever", priceNote: "", listed: false },
 }
 
 export const BASE_FEATURES = ["Elo rankings", "Add rounds from UDisc", "The current season's round history", "Start a new season whenever you like"]

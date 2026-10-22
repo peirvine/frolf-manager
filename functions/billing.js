@@ -81,6 +81,9 @@ const expired = (summary, now = Date.now()) => Boolean(
 // Whether a webhook may change this league's plan. A plan a site admin set by hand (a comped or founding league) is
 // left alone unless the league has bought a subscription itself: it already has one on record, or this event is the
 // purchase (the completed checkout).
-const canChangePlan = (info, billing, purchase = false) => info?.planSource !== "manual" || Boolean(billing?.subscriptionId) || purchase
+// A Founding League is free forever: nothing from Stripe ever changes its plan.
+const canChangePlan = (info, billing, purchase = false) => (
+  info?.plan !== "founding" && (info?.planSource !== "manual" || Boolean(billing?.subscriptionId) || purchase)
+)
 
 module.exports = { GRACE_DAYS, TRIAL_DAYS, planForPrice, fromSubscription, isInGoodStanding, planToSave, expired, canChangePlan }

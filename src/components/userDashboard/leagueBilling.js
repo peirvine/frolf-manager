@@ -70,7 +70,7 @@ export default function LeagueBilling ({ league }) {
       {plans.map(p => {
         const details = PLAN_DETAILS[p.id] || {}
         const features = [...BASE_FEATURES, ...(PLAN_FEATURES[p.id] || []).map(feature => FEATURE_LABELS[feature])]
-        const buyable = p.id === "plus" && plan !== "plus"
+        const buyable = p.id === "plus" && plan !== "plus" && plan !== "founding"
         return (
           <section className="manageCard" key={p.id}>
             <h3>{p.label} {p.id === plan && <Chip size="small" color="success" label="Current plan" />}</h3>

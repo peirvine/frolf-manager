@@ -169,8 +169,8 @@ test('a league admin runs the league but cannot change who is in it or the billi
   for (const field of ['plan', 'planSource', 'billingSummary', 'suspended']) {
     await assertFails(db.ref(`lg/info/${field}`).set('x'))
   }
-  await assertFails(db.ref('lg/info').update({ blurb: 'ok', plan: 'pro' }))
-  await assertFails(db.ref('lg/info').set({ leagueName: 'x', plan: 'pro' }))
+  await assertFails(db.ref('lg/info').update({ blurb: 'ok', plan: 'founding' }))
+  await assertFails(db.ref('lg/info').set({ leagueName: 'x', plan: 'founding' }))
   await assertFails(db.ref('lg/players').set([{ id: ALICE, membershipStatus: 'Admin' }, { id: CAROL, membershipStatus: 'Admin' }]))
   await assertFails(db.ref('lg/memberRoles/' + CAROL).set('Admin'))
   await assertFails(db.ref('lg/billing/customerId').set('cus_x'))
@@ -189,7 +189,7 @@ test('a site admin can read and run every league, but the billing fields stay se
   await assertSucceeds(db.ref('other/scorecards/Season 1/card9').set({ Course: 'fixed' }))
   await assertSucceeds(db.ref('other/scorecards/Season 1/card9').remove())
   await assertSucceeds(db.ref('lg/doinkfund/expenses').push({ amount: 1 }))
-  await assertFails(db.ref('lg/info/plan').set('pro'))
+  await assertFails(db.ref('lg/info/plan').set('founding'))
   await assertFails(db.ref('siteSettings/billingEnabled').set(true))
   await assertFails(db.ref('siteAdmins/' + CAROL).set(true))
   await assertFails(db.ref('lg/players').set([]))

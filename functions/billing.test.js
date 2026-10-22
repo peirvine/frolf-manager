@@ -74,6 +74,9 @@ test("a hand-set plan is only changed by a webhook once the league has its own s
   assert.equal(canChangePlan({ planSource: "manual" }, { subscriptionId: "sub_1" }), true)
   assert.equal(canChangePlan({ planSource: "stripe" }, {}), true)
   assert.equal(canChangePlan({}, undefined), true)
+  // a founding league is never changed by Stripe, even by a purchase
+  assert.equal(canChangePlan({ plan: "founding", planSource: "manual" }, { subscriptionId: "sub_1" }, true), false)
+  assert.equal(canChangePlan({ plan: "founding" }, {}), false)
   // the completed checkout is a purchase, so it takes over a hand-set plan the first time
   assert.equal(canChangePlan({ planSource: "manual" }, {}, true), true)
 })
