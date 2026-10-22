@@ -1,6 +1,6 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const { fromSubscription, expired, canChangePlan, planForPrice, GRACE_DAYS } = require('./billing')
+const { fromSubscription, expired, canChangePlan, planForPrice, planToSave, GRACE_DAYS } = require('./billing')
 
 const prices = { plusMonthly: "price_m", plusYearly: "price_y" }
 const DAY = 24 * 60 * 60 * 1000
@@ -64,4 +64,22 @@ test("a hand-set plan is only changed by a webhook once the league has its own s
   assert.equal(canChangePlan({ planSource: "manual" }, { subscriptionId: "sub_1" }), true)
   assert.equal(canChangePlan({ planSource: "stripe" }, {}), true)
   assert.equal(canChangePlan({}, undefined), true)
+  // the completed checkout is a purchase, so it takes over a hand-set plan the first time
+  assert.equal(canChangePlan({ planSource: "manual" }, {}, true), true)
+})
+
+test("the plan to save follows the subscription, including its grace week", () => {
+  const active = fromSubscription(sub(), prices, {}, NOW)
+  assert.equal(planToSave("active", active, NOW), "plus")
+
+  const ended = Math.floor((NOW - 2 * DAY) / 1000)
+  const cancelled = fromSubscription(sub({ status: "canceled", ended_at: ended }), prices, {}, NOW)
+  assert.equal(planToSave("canceled", cancelled, NOW), "plus")
+  assert.equal(planToSave("canceled", cancelled, NOW + 6 * DAY), "free")
+
+  const pastDue = fromSubscription(sub({ status: "past_due" }), prices, {}, NOW)
+  assert.equal(planToSave("past_due", pastDue, NOW), "plus")
+
+  const unknownPrice = fromSubscription(sub({ items: { data: [{ price: { id: "price_other" } }] } }), prices, {}, NOW)
+  assert.equal(planToSave("active", unknownPrice, NOW), null)
 })

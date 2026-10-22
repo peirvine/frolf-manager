@@ -59,13 +59,24 @@ const fromSubscription = (subscription, prices, previous = {}, now = Date.now())
 // keeps its plan until accessUntil passes (see expired), so only a fully good state sets it straight away.
 const isInGoodStanding = (status) => status === "active" || status === "trialing"
 
+// The plan a webhook should save for a subscription, or null to leave the plan as it is. Good standing, and a
+// cancelled or unpaid subscription still inside its grace week, are on the plan the subscription is for; once the
+// grace week has passed the league is on Free. Saving it each time keeps the plan matching what the billing tab says.
+const planToSave = (status, result, now = Date.now()) => {
+  if (!result.plan) return null
+  if (isInGoodStanding(status)) return result.plan
+  if (result.accessUntil) return Date.parse(result.accessUntil) > now ? result.plan : 'free'
+  return null
+}
+
 // A league past its cut-off date with no good-standing subscription drops to Free
 const expired = (summary, now = Date.now()) => Boolean(
   summary?.accessUntil && !isInGoodStanding(summary.status) && Date.parse(summary.accessUntil) <= now
 )
 
 // Whether a webhook may change this league's plan. A plan a site admin set by hand (a comped or founding league) is
-// left alone unless the league has bought a subscription itself.
-const canChangePlan = (info, billing) => info?.planSource !== "manual" || Boolean(billing?.subscriptionId)
+// left alone unless the league has bought a subscription itself: it already has one on record, or this event is the
+// purchase (the completed checkout).
+const canChangePlan = (info, billing, purchase = false) => info?.planSource !== "manual" || Boolean(billing?.subscriptionId) || purchase
 
-module.exports = { GRACE_DAYS, TRIAL_DAYS, planForPrice, fromSubscription, isInGoodStanding, expired, canChangePlan }
+module.exports = { GRACE_DAYS, TRIAL_DAYS, planForPrice, fromSubscription, isInGoodStanding, planToSave, expired, canChangePlan }

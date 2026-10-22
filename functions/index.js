@@ -1,7 +1,7 @@
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { onSchedule } = require('firebase-functions/v2/scheduler')
 const { defineSecret, defineString } = require('firebase-functions/params')
-const { TRIAL_DAYS, fromSubscription, expired, canChangePlan } = require('./billing')
+const { TRIAL_DAYS, fromSubscription, planToSave, expired, canChangePlan } = require('./billing')
 const { db, read, requireLeagueAdmin, requireSiteAdmin, requireLeague } = require('./access')
 
 // League, membership and site-admin functions live in their own files
@@ -85,7 +85,7 @@ exports.setLeaguePlan = onCall(async ({ auth, data }) => {
 })
 
 // Saves what Stripe says about a subscription onto the league. Safe to run more than once for the same event.
-const applySubscription = async (subscription, league) => {
+const applySubscription = async (subscription, league, purchase = false) => {
   const info = (await read(`${league}/info`)) || {}
   const billing = (await read(`${league}/billing`)) || {}
   const result = fromSubscription(subscription, prices(), info.billingSummary || {})
@@ -96,10 +96,12 @@ const applySubscription = async (subscription, league) => {
     ...(subscription.trial_end ? { hadTrial: true } : {}),
   })
   const update = { billingSummary: result.summary }
-  if (canChangePlan(info, billing) && result.plan) {
+  if (canChangePlan(info, billing, purchase) && result.plan) {
     update.planSource = 'stripe'
-    // Good standing sets the plan now; a cancelled or unpaid league keeps it until the daily check drops it
-    if (subscription.status === 'active' || subscription.status === 'trialing') update.plan = result.plan
+    // Good standing, or a grace week after cancelling or a failed payment, is on the plan; the daily check (and any
+    // later event) drops it to Free once the week is over
+    const plan = planToSave(subscription.status, result)
+    if (plan) update.plan = plan
   }
   await db().ref(`${league}/info`).update(update)
 }
@@ -126,7 +128,7 @@ exports.stripeWebhook = onRequest({ secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_
       if (session.mode === 'subscription' && session.subscription) {
         const subscription = await stripe.subscriptions.retrieve(session.subscription)
         const league = session.client_reference_id || await leagueOf(stripe, subscription)
-        if (league) await applySubscription(subscription, league)
+        if (league) await applySubscription(subscription, league, true)
       }
     } else if (event.type.startsWith('customer.subscription.')) {
       const subscription = event.data.object
