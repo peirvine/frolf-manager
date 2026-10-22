@@ -1,9 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 import {useState, useEffect} from 'react'
-import { getLeagueMembers, getUserDataV2, updateLeagueMembers, updateUsersLeaguesV2, getAllUsers } from '../../firebase'
+import { getLeagueMembers, listUsers, setMemberStatus, updateMember, syncLeagueNames } from '../../firebase'
 import { Skeleton, Button, Chip, Snackbar, Alert, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, TextField } from '@mui/material'
 import { UDISC_ALIAS_TYPES } from '../../services/uDiscNames'
-import { syncMemberUDiscNames } from '../../services/leagueService'
 
 // Set when an admin removes someone without banning them
 const REMOVED_STATUS = "Removed, you may reapply"
@@ -19,7 +18,6 @@ export default function LeaguePlayersManager(props) {
   const [ emails, setEmails ] = useState({})
   const [ dialogOpen, setDialogOpen ] = useState(false)
   const [ kickedMember, setKickedMember ] = useState('')
-  const [ rerender, setReRender] = useState('')
   const [ editedMember, setEditedMember ] = useState(null)
   const [ uDiscName, setUDiscName ] = useState('')
   // { league, event }: the other names UDisc exports for the member being edited
@@ -28,79 +26,31 @@ export default function LeaguePlayersManager(props) {
   const [ notice, setNotice ] = useState(null)
 
 
-  useEffect(() => {
-    Promise.all([getLeagueMembers(league), getAllUsers()])
-      .then(([leagueMembers, users]) => {
-        setMembers(leagueMembers);
-        setEmails(Object.fromEntries(Object.values(users || {}).filter(user => user?.uid && user.email).map(user => [user.uid, user.email])));
-        let temp = [];
-        Object.entries(users).forEach(([key, value]) => {
-          const isMember = leagueMembers.some(member => member.id === value.uid);
-          if (!isMember) {
-            temp.push(value);
-          }
-        });
+  // The members and the people on the site, read again after every change so the page shows what the database has
+  const load = () => Promise.all([getLeagueMembers(league), listUsers(league)])
+    .then(([leagueMembers, usersRes]) => {
+      const users = usersRes.code === "success" ? usersRes.data : []
+      setMembers(Array.isArray(leagueMembers) ? leagueMembers : [])
+      setEmails(Object.fromEntries(users.filter(user => user?.uid && user.email).map(user => [user.uid, user.email])))
+      setUsersNotInLeague(users.filter(user => !(Array.isArray(leagueMembers) ? leagueMembers : []).some(member => member.id === user.uid)))
+    })
+    .catch(() => {
+      setMembers([])
+      setUsersNotInLeague([])
+    })
 
-        setUsersNotInLeague(temp);
-      })
-      .catch(error => {
-        setMembers([]);
-        setUsersNotInLeague([]);
-      });
-  }, [league]);
-  
-  // Sets this league's entry on the player's own record, adding it if their record doesn't have one yet. Their other
-  // leagues are kept; if the record can't be read, nothing is saved rather than erasing them.
-  const saveUserMembership = async (player, { membershipStatus, isAdmin }) => {
-    const playerObj = { displayName: player.name, uid: player.id }
-    const userData = await getUserDataV2(playerObj)
-    if (!userData) return { code: "error", message: "Could not read the player's account" }
-    const leagues = (userData.leagues || []).filter(x => x?.id)
-    const entry = { id: league, isAdmin, membershipStatus }
-    const updated = leagues.some(x => x.id === league) ? leagues.map(x => (x.id === league ? { ...x, ...entry } : x)) : [...leagues, entry]
-    return updateUsersLeaguesV2(playerObj, updated)
+  useEffect(() => { load() }, [league]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Every change goes through a Cloud Function, which checks the caller is a league admin and keeps the league's list,
+  // the person's own account and the database rules' view of who is in the league in step
+  const changeMember = async (player, action, failure) => {
+    const res = await setMemberStatus(league, player.id ?? player.uid, action)
+    if (res.code === "error") setNotice({ code: "error", message: `${failure} ${res.message}` })
+    await load()
+    return res
   }
 
-  const handlePlayer = async (player, action) => {
-    let status =""
-    switch (action) {
-      case "approve":
-        status = "Member"
-        break
-      case "promote":
-        status = "Admin"
-        break
-      case "demote":
-        status = "Member"
-        break
-      case "readd":
-        status = "Member"
-        break
-      case "deny": 
-        status = DENIED_STATUS
-        break
-      case "ban":
-        status= ""
-        break
-      default:
-        status = "Pending"
-        break
-    }
-    const playerIndex = members.findIndex((obj => obj.id === player.id))
-    members[playerIndex].membershipStatus = status
-    if (action === "promote" || action === "demote") {
-      members[playerIndex].isAdmin = !members[playerIndex].isAdmin
-    }
-    if (action === "readd") members[playerIndex].isAdmin = false
-    const [membersRes, userRes] = await Promise.all([
-      updateLeagueMembers(league, members),
-      saveUserMembership(player, { membershipStatus: status, isAdmin: members[playerIndex].isAdmin }),
-    ])
-    if (membersRes.code === "error" || userRes.code === "error") {
-      setNotice({ code: "error", message: `${player.name}'s membership couldn't be saved. Refresh the page and try again.` })
-    }
-    setReRender(rerender.concat(' '))
-  }
+  const handlePlayer = (player, action) => changeMember(player, action, `${player.name}'s membership couldn't be saved.`)
 
   const handleKickPlayer = player => {
     setKickedMember(player)
@@ -108,16 +58,7 @@ export default function LeaguePlayersManager(props) {
   }
 
   const kickPlayer = async (player, isPerma) => {
-    const status = isPerma ? BANNED_STATUS : REMOVED_STATUS
-    const playerIndex = members.findIndex((obj => obj.id === player.id))
-    members[playerIndex].membershipStatus = status
-    const [membersRes, userRes] = await Promise.all([
-      updateLeagueMembers(league, members),
-      saveUserMembership(player, { membershipStatus: status, isAdmin: members[playerIndex].isAdmin }),
-    ])
-    if (membersRes.code === "error" || userRes.code === "error") {
-      setNotice({ code: "error", message: `${player.name} couldn't be removed. Refresh the page and try again.` })
-    }
+    await changeMember(player, isPerma ? "ban" : "kick", `${player.name} couldn't be removed.`)
     setDialogOpen(false)
 
     //todo also delete elo data
@@ -125,9 +66,11 @@ export default function LeaguePlayersManager(props) {
 
   // Names players saved before the lists stayed in step with their accounts
   const handleSyncNames = async () => {
-    const res = await syncMemberUDiscNames(league)
-    setNotice(res)
-    if (res.code === "success") setMembers(await getLeagueMembers(league))
+    const res = await syncLeagueNames(league)
+    setNotice(res.code === "success"
+      ? { code: "success", message: res.data.changed === 0 ? "UDisc names are already up to date" : `Updated ${res.data.changed} UDisc ${res.data.changed === 1 ? "name" : "names"}` }
+      : res)
+    if (res.code === "success") await load()
   }
 
   const handleEditPlayer = player => {
@@ -137,35 +80,23 @@ export default function LeaguePlayersManager(props) {
     setEditError('')
   }
 
-  // Saves to this member's entry in the league's player list, which is where their UDisc names are matched against cards.
-  // The whole list is rewritten (like the other actions here), which also drops any empty leftover entries.
+  // Saves to this member's entry in the league's player list, which is where their UDisc names are matched against cards
   const saveUDiscName = async () => {
     const name = uDiscName.trim()
     const aliases = Object.fromEntries(UDISC_ALIAS_TYPES.map(({ key }) => [key, (uDiscAliases[key] || '').trim()]))
-    const updated = members.map(member => member.id === editedMember.id ? { ...member, uDiscDisplayName: name, uDiscAliases: aliases } : member)
-    const res = await updateLeagueMembers(league, updated)
+    const res = await updateMember(league, editedMember.id, name, aliases)
     if (res.code === "error") {
       setEditError(res.message)
       return
     }
-    setMembers(updated)
     setEditedMember(null)
+    await load()
   }
 
-  // The player moves into the list straight away, even if saving fails, so they aren't left looking un-added; the
-  // error says to refresh, and the list is what the database has again on the next load
+  // The person becomes a member straight away; the function also puts the league on their own account
   const handleAddPlayer = async (player) => {
-    const updated = [...members, {id: player.uid, name: player.name, membershipStatus: "Member", isAdmin: false, uDiscDisplayName: player.uDiscDisplayName}]
-    setMembers(updated)
     setUsersNotInLeague(previous => previous.filter(user => user.uid !== player.uid))
-    // The league also has to be on the player's own record, or it never shows up for them
-    const [membersRes, userRes] = await Promise.all([
-      updateLeagueMembers(league, updated),
-      saveUserMembership({ name: player.name, id: player.uid }, { membershipStatus: "Member", isAdmin: false }),
-    ])
-    if (membersRes.code === "error" || userRes.code === "error") {
-      setNotice({ code: "error", message: `${player.name} couldn't be saved to the league. Refresh the page and try again.` })
-    }
+    await changeMember(player, "add", `${player.name} couldn't be saved to the league.`)
   }
 
   const handleMakeActions = player => {
@@ -293,7 +224,6 @@ export default function LeaguePlayersManager(props) {
           <i>No Members to Add</i>
         )}
       </section>
-      {rerender}
       <Dialog open={Boolean(editedMember)} onClose={() => setEditedMember(null)} fullWidth maxWidth="xs">
         <DialogTitle>Edit {editedMember?.name}</DialogTitle>
         <DialogContent>

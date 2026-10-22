@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Chip, Skeleton, Snackbar } from '@mui/material'
-import { getAllLeaguesForAdmin, setLeagueSuspended, deleteLeagueCompletely } from '../../firebase'
+import { getAllLeaguesForAdmin, setLeagueSuspended, deleteLeague } from '../../firebase'
 import LeagueSettingsManager from '../userDashboard/leagueSettingsManager'
 import DoinkManager from '../userDashboard/doinkManager'
 import ConfirmDialog from '../confirmDialog/confirmDialog'
@@ -24,7 +24,7 @@ export default function LeagueAdminManager () {
   }
   const remove = async () => {
     setBusy(true)
-    const res = await deleteLeagueCompletely(target.id)
+    const res = await deleteLeague(target.id)
     setNotice({ code: res.code, message: res.message })
     setBusy(false)
     setTarget(null)

@@ -92,8 +92,6 @@ export const signInWithGoogle = async () => {
         name: user.displayName,
         authProvider: "google",
         email: user.email,
-        leagues: [{}],
-        siteAdmin: false,
         uDiscDisplayName: '',
       })
       .then(() => {
@@ -594,20 +592,6 @@ export function resetEloData(league, season, dbEntry) {
 }
 
 /****************** Player Dashboard ******************/
-export const getUserDataV2 = (user) => {
-  const dbRef = ref(getDatabase());
-  let userData = get(child(dbRef, `users/` + user.displayName + " " + user.uid)).then((snapshot) => {
-    if (snapshot.exists()) {
-      return snapshot.val()
-    } else {
-      logEvent(analytics, 'No userdata available');
-    }
-  }).catch((error) => {
-    logEvent(analytics, 'Could not fetch league data', {error: error} );
-  });
-  return userData
-}
-
 export const getLeagueNames = () => {
   const dbRef = ref(getDatabase());
   let eloGraph = get(child(dbRef, `leagueIndex/`)).then((snapshot) => {
@@ -622,33 +606,6 @@ export const getLeagueNames = () => {
   return eloGraph
 }
 
-export function updateLeagueNames (newIndex) {
-  const db = getDatabase()
-  set(ref(db, 'leagueIndex'), newIndex)
-    .then(() => {
-      return {code: "success", message: "league updated!"}
-    })
-    .catch((error) => {
-      logEvent(analytics, `The system failed to remove the league index`, {error: error} );
-      return {code: "error", message: "League Not Created"}
-    });
-}
-
-export const updateUsersLeaguesV2 = async (user, leagues) => {
-  const db = getDatabase()
-  let res = update(ref(db, '/users/' + user.displayName + " " + user.uid), {
-    leagues: leagues
-  })
-  .then(() => {
-    return {code: "success", message: "League membership updated successfully!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, "Error updating your league membership", {error: error} );
-    return {code: "error", message: "League Not Updated"}
-  });
-  return res
-}
-
 // Streams a path: `onData` gets the current value (null if there's nothing there) now and again on every change.
 // Returns the function that stops listening. The data is downloaded once; after that only changes are sent.
 export const listenToPath = (path, onData, onError) => (
@@ -657,42 +614,6 @@ export const listenToPath = (path, onData, onError) => (
     onError && onError(error)
   })
 )
-
-// Each league keeps its own copy of a member's UDisc name in its players list. Copies the new name into every league
-// the player is in, so the pages can read names from that one list. Entries that already match are left alone.
-const syncUDiscNameToLeagues = async (user, name) => {
-  const db = getDatabase()
-  const userData = (await get(ref(db, '/users/' + user.displayName + " " + user.uid))).val()
-  const leagues = (userData?.leagues || []).filter(league => league?.id)
-  await Promise.all(leagues.map(league => runTransaction(ref(db, league.id + '/players'), players => {
-    if (!players) return players
-    const hasChange = Object.values(players).some(member => member?.id === user.uid && member.uDiscDisplayName !== name)
-    if (!hasChange) return undefined
-    const rename = member => (member?.id === user.uid ? { ...member, uDiscDisplayName: name } : member)
-    return Array.isArray(players) ? players.map(rename) : Object.fromEntries(Object.entries(players).map(([key, member]) => [key, rename(member)]))
-  })))
-}
-
-// `aliases` ({ league, event }) are the other names UDisc exports for this player; left out, they aren't changed
-export const updateUsersUDiscName = async (user, name, aliases) => {
-  const db = getDatabase()
-  let res = update(ref(db, '/users/' + user.displayName + " " + user.uid), {
-    uDiscDisplayName: name,
-    ...(aliases && { uDiscAliases: aliases })
-  })
-  .then(async () => {
-    // The name itself is saved; if the leagues can't be updated now, an admin can sync them from the players tab
-    await syncUDiscNameToLeagues(user, name).catch(error => {
-      logEvent(analytics, "Could not copy the UDisc name to the leagues", {error: error} );
-    })
-    return {code: "success", message: "League membership updated successfully!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, "Error updating your league membership", {error: error} );
-    return {code: "error", message: "League Not Updated"}
-  });
-  return res
-}
 
 // Only real members: entries deleted by hand (e.g. in the Firebase console) can leave empty slots in the list
 export function getLeagueMembers ( league ) {
@@ -710,69 +631,6 @@ export function getLeagueMembers ( league ) {
     return "error"
   });
   return elo
-}
-
-export function updateLeagueMembers(league, members) {
-  if (!league) return missingLeague()
-  const db = getDatabase()
-  let res = set(ref(db, league + '/players/'), members)
-  .then(() => {
-    return {code: "success", message: "You joined the league!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, `The system failed to update the league members of ` + league, {error: error} );
-    return {code: "error", message: "League Not Updated"}
-  });
-  return res
-}
-
-//todo can't do this, we need to update the member array :salute:
-export function removeLeagueMember(league, member) {
-  if (!league) return missingLeague()
-  const db = getDatabase()
-  let res = set(ref(db, league + '/players/'), member)
-  .then(() => {
-    return {code: "success", message: "You left the league!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, `The system failed to update the league members of ` + league, {error: error} );
-    return {code: "error", message: "League Not Updated"}
-  });
-  return res
-}
-
-export function createNewLeague(leagueInfo) {
-  const db = getDatabase()
-
-  let leagueIndex = set(ref(db, 'leagueIndex'), leagueInfo.newLeagues)
-    .then(() => {
-      return {code: "success", message: "New league crated!"}
-    })
-    .catch((error) => {
-      logEvent(analytics, `The system failed to update the league index`, {error: error} );
-      return {code: "error", message: "League Not Created"}
-    });
-  set(ref(db, leagueInfo.formData.leagueAcronym + '/info'), leagueInfo.formData)
-  .then(() => {
-    return {code: "success", message: "New league crated!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, `The system failed to update the league index`, {error: error} );
-    return {code: "error", message: "League Not Created"}
-  });
-  let doinkFundInit
-  if (leagueInfo.formData.doinkFund) {
-    doinkFundInit = set(ref(db, leagueInfo.formData.leagueAcronym + '/doinkfund/'), leagueInfo.doinkObj)
-    .then(() => {
-      return {code: "success", message: "New league crated!"}
-    })
-    .catch((error) => {
-      logEvent(analytics, `The system failed to update the league members of`, {error: error} );
-      return {code: "error", message: "League Not Created"}
-    });
-  }
-
-  return leagueIndex
 }
 
 export function initDoinkFund (league) {
@@ -852,10 +710,15 @@ export function getLeagueSettings (league) {
   return elo
 }
 
+// Fields of a league's info that only the Cloud Functions write (billing and suspension); the database refuses a write
+// that includes them, so they're left out of anything saved from a copy of the whole info
+const SERVER_INFO_FIELDS = ['plan', 'planSource', 'billingSummary', 'suspended']
+
 export function updateLeagueSettings (league, info) {
   if (!league) return missingLeague()
   const db = getDatabase()
-  let res = update(ref(db, league + '/info'), info)
+  const allowed = Object.fromEntries(Object.entries(info || {}).filter(([key]) => !SERVER_INFO_FIELDS.includes(key)))
+  let res = update(ref(db, league + '/info'), allowed)
   .then(() => {
     return {code: "success", message: "League setting updated successfully!"}
   })
@@ -868,21 +731,6 @@ export function updateLeagueSettings (league, info) {
 
 export function updateLeaguePlayers (league, players) {
 
-}
-
-export function deleteLeague (league, newIndex) {
-  if (!league) return missingLeague()
-  const db = getDatabase()
-  let res = remove(ref(db, league))
-  .then(() => {
-    return {code: "success", message: "You deleted the league!"}
-  })
-  .catch((error) => {
-    logEvent(analytics, `The system failed to update the league members of ` + league, {error: error} );
-    return {code: "error", message: "League Not Updated"}
-  });
-  // remove from index
-  return res
 }
 
 export function updateDoinkSettings (league, doinkLimit) {
@@ -1071,20 +919,6 @@ export function deleteLeagueHistory(league, season) {
     });
 }
 
-export function getAllUsers () {
-  const dbRef = ref(getDatabase());
-  return get(child(dbRef, `users/`)).then((snapshot) => {
-    if (snapshot.exists()) {
-      return snapshot.val();
-    } else {
-      logEvent(analytics, 'No users available');
-      return []
-    }
-  }).catch((error) => { 
-    logEvent(analytics, 'Could not get users', { error: error });
-  });
-}
-
 // league rules
 export function getLeagueRules ( league ) {
   const dbRef = ref(getDatabase());
@@ -1154,15 +988,6 @@ export const getSiteSettings = () => (
     })
 )
 
-export const setSiteSetting = (key, value) => (
-  update(ref(getDatabase(), 'siteSettings'), { [key]: value })
-    .then(() => ({code: "success", message: "Setting saved"}))
-    .catch((error) => {
-      logEvent(analytics, 'Could not save site setting', {error: error} );
-      return {code: "error", message: "Setting not saved"}
-    })
-)
-
 // Every league with its settings and member count, whether or not it takes new members
 export async function getAllLeaguesForAdmin () {
   const db = getDatabase()
@@ -1173,16 +998,6 @@ export async function getAllLeaguesForAdmin () {
     return { id, name: index[id], info: info.val() || {}, members }
   }))
 }
-
-// A suspended league is shut for its members (enforced in the league context) until it's unsuspended
-export const setLeagueSuspended = (league, suspended) => (
-  update(ref(getDatabase(), league + '/info'), { suspended })
-    .then(() => ({code: "success", message: suspended ? "League suspended" : "League unsuspended"}))
-    .catch((error) => {
-      logEvent(analytics, 'Could not change league suspension', {error: error} );
-      return {code: "error", message: "League not updated"}
-    })
-)
 
 // A site admin setting a league's plan by hand ("free", "plus" or "pro"; see services/plans). It goes through a
 // Cloud Function because the plan can't be written from the browser.
@@ -1209,55 +1024,61 @@ export const openBillingPortal = (league) => stripePage('createPortalSession', {
 // The site's owner: always a site admin, and nobody (including themselves) can take it away
 export const PERMANENT_SITE_ADMIN_UID = "sVg8LJeG6SOuNHbIGdS5g2UVGI82"
 
-export const setSiteAdmin = (userKey, uid, siteAdmin) => {
+
+/****************** League membership and site admin (Cloud Functions) ******************/
+// Who is in a league, what they may do and who runs the site can't be changed from the browser (the database rules
+// refuse it). These ask the Cloud Functions in functions/, which check who is asking. Each gives back
+// { code: "success" | "error", message, data }.
+const callFunction = (name, data, successMessage = "") => httpsCallable(functions, name)(data || {})
+  .then(result => ({code: "success", message: successMessage, data: result.data}))
+  .catch((error) => {
+    logEvent(analytics, `Could not run ${name}`, {error: error} );
+    return {code: "error", message: error?.message || "Something went wrong. Try again."}
+  })
+
+export const joinLeague = (league) => callFunction('joinLeague', { league }, "You asked to join the league!")
+export const leaveLeague = (league) => callFunction('leaveLeague', { league }, "You left the league!")
+// action: approve, promote, demote, readd, deny, kick, ban, unban, or add (someone not in the league yet)
+export const setMemberStatus = (league, memberId, action) => callFunction('setMemberStatus', { league, memberId, action })
+export const updateMember = (league, memberId, uDiscDisplayName, uDiscAliases) => (
+  callFunction('updateMember', { league, memberId, uDiscDisplayName, uDiscAliases })
+)
+export const syncMyNames = () => callFunction('syncMyNames')
+export const syncLeagueNames = (league) => callFunction('syncLeagueNames', { league })
+export const createLeague = (leagueName, doink) => callFunction('createLeague', { leagueName, doink: Boolean(doink) }, "New league created!")
+export const deleteLeague = (league) => callFunction('deleteLeague', { league }, "You deleted the league!")
+// League admins get the people on the site (to add them); site admins get everyone with their admin status
+export const listUsers = (league) => callFunction('listUsers', { league })
+
+export const setSiteAdmin = (uid, siteAdmin) => {
   if (!siteAdmin && uid === PERMANENT_SITE_ADMIN_UID) {
     return Promise.resolve({code: "error", message: "This site admin can't be removed"})
   }
-  return update(ref(getDatabase(), 'users/' + userKey), { siteAdmin })
-    .then(() => ({code: "success", message: siteAdmin ? "User is now a site admin" : "Site admin removed"}))
-    .catch((error) => {
-      logEvent(analytics, 'Could not change site admin', {error: error} );
-      return {code: "error", message: "Site admin not changed"}
-    })
+  return callFunction('setSiteAdmin', { uid, siteAdmin }, siteAdmin ? "User is now a site admin" : "Site admin removed")
 }
+export const setLeagueSuspended = (league, suspended) => callFunction('setLeagueSuspended', { league, suspended }, suspended ? "League suspended" : "League unsuspended")
+export const setSiteSetting = (key, value) => callFunction('setSiteSetting', { key, value }, "Setting saved")
+// One-time setup for the database rules (the site owner only)
+export const bootstrapAccess = () => callFunction('bootstrapAccess')
+// Their sign-in account itself has to be removed in the Firebase console
+export const deleteUser = (uid) => callFunction('deleteUser', { uid }, "User removed")
 
-// Removes the league's data and its entry in the league index, and drops it from every user's memberships
-export async function deleteLeagueCompletely (league) {
+// Saves the player's UDisc names on their own record, then has the functions copy them onto their entry in every
+// league they're in (each league keeps its own copy, so pages never read another member's account).
+// `aliases` ({ league, event }) are the other names UDisc exports for this player; left out, they aren't changed
+export const updateUsersUDiscName = async (user, name, aliases) => {
+  const db = getDatabase()
   try {
-    const db = getDatabase()
-    const users = (await get(ref(db, 'users'))).val() || {}
-    const writes = {}
-    Object.entries(users).forEach(([key, u]) => {
-      const leagues = Array.isArray(u?.leagues) ? u.leagues : Object.values(u?.leagues || {})
-      if (leagues.some(x => x?.id === league)) writes[`users/${key}/leagues`] = leagues.filter(x => x?.id && x.id !== league)
+    await update(ref(db, '/users/' + user.displayName + " " + user.uid), {
+      uDiscDisplayName: name,
+      ...(aliases && { uDiscAliases: aliases })
     })
-    writes[league] = null
-    writes[`leagueIndex/${league}`] = null
-    await update(ref(db), writes)
-    return {code: "success", message: "League deleted"}
   } catch (error) {
-    logEvent(analytics, 'Could not delete league', {error: error} );
-    return {code: "error", message: "League not deleted"}
+    logEvent(analytics, "Error updating your league membership", {error: error} );
+    return {code: "error", message: "League Not Updated"}
   }
-}
-
-// Removes the user's record and their spot in every league. Their sign-in account itself has to be removed in the
-// Firebase console (it can't be done from the browser).
-export async function deleteUserCompletely (userKey, uid) {
-  try {
-    const db = getDatabase()
-    const index = (await get(ref(db, 'leagueIndex'))).val() || {}
-    const writes = { [`users/${userKey}`]: null }
-    await Promise.all(Object.keys(index).map(async (id) => {
-      const players = (await get(ref(db, id + '/players'))).val() || {}
-      Object.entries(players).forEach(([slot, member]) => {
-        if (member?.id === uid) writes[`${id}/players/${slot}`] = null
-      })
-    }))
-    await update(ref(db), writes)
-    return {code: "success", message: "User removed"}
-  } catch (error) {
-    logEvent(analytics, 'Could not remove user', {error: error} );
-    return {code: "error", message: "User not removed"}
-  }
+  // The name itself is saved; if the leagues can't be updated now, an admin can sync them from the players tab
+  const synced = await syncMyNames()
+  if (synced.code === "error") console.error("[updateUsersUDiscName] could not copy the name to the leagues", synced.message)
+  return {code: "success", message: "League membership updated successfully!"}
 }

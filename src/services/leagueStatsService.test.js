@@ -30,11 +30,11 @@ const seedLeague = (league = "maftb", info = {}) => {
   db.reset(data)
 }
 
-test("getMemberNames uses both the user records and the league's player list", async () => {
+test("getMemberNames reads the names saved on the league's player list", async () => {
   const data = leagueData("maftb", ["Alice", "Bob"])
   data.maftb.players[1].uDiscDisplayName = "Bobby"
   db.reset(data)
-  expect(await getMemberNames("maftb")).toEqual(["Alice", "Bobby", "Alice", "Bob"])
+  expect(await getMemberNames("maftb")).toEqual(["Alice", "Bobby"])
 })
 
 describe("getLeagueStats", () => {

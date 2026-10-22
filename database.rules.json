@@ -1,0 +1,82 @@
+{
+  "rules": {
+    "siteSettings": {
+      ".read": true
+    },
+    "siteAdmins": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "leagueIndex": {
+      ".read": "auth != null"
+    },
+    "users": {
+      ".read": "auth != null && root.child('siteAdmins').child(auth.uid).val() === true",
+      "$key": {
+        ".read": "auth != null && $key.endsWith(' ' + auth.uid)",
+        "$field": {
+          ".write": "auth != null && $key.endsWith(' ' + auth.uid) && ($field === 'name' || $field === 'uDiscDisplayName' || $field === 'uDiscAliases' || $field === 'uid' || $field === 'email' || $field === 'authProvider')"
+        },
+        "uid": {
+          ".write": "auth != null && $key.endsWith(' ' + auth.uid)",
+          ".validate": "newData.val() === auth.uid"
+        },
+        "email": {
+          ".write": "auth != null && $key.endsWith(' ' + auth.uid)",
+          ".validate": "newData.val() === auth.token.email"
+        }
+      }
+    },
+    "$league": {
+      ".read": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)",
+      "info": {
+        ".read": "auth != null",
+        "$field": {
+          ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).val() === 'Admin' || root.child('siteAdmins').child(auth.uid).val() === true) && !($field === 'plan' || $field === 'planSource' || $field === 'billingSummary' || $field === 'suspended')"
+        }
+      },
+      "scorecards": {
+        "$season": {
+          ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).val() === 'Admin' || root.child('siteAdmins').child(auth.uid).val() === true)",
+          "$card": {
+            ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true) && !data.exists()",
+            "hatWinners": {
+              ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+            }
+          }
+        }
+      },
+      "doinkfund": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).val() === 'Admin' || root.child('siteAdmins').child(auth.uid).val() === true)",
+        "players": {
+          ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+        }
+      },
+      "eloTracking": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+      },
+      "playerEloHistory": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+      },
+      "currentElo": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+      },
+      "eloDelta": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+      },
+      "eloGraphData": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+      },
+      "stats": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+      },
+      "hatCount": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+      },
+      "handicaps": {
+        ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true)"
+      }
+    }
+  }
+}

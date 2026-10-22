@@ -1,4 +1,4 @@
-import { getLeagueSettings, getScorecards, getELOHistory, getCurrentElo, getSeasonStats, getElosOfAllPlayers, getLeagueMembers, getUserDataV2, getDoinkFundPlayers, getHatCounts } from '../firebase';
+import { getLeagueSettings, getScorecards, getELOHistory, getCurrentElo, getSeasonStats, getElosOfAllPlayers, getLeagueMembers, getDoinkFundPlayers, getHatCounts } from '../firebase';
 import { getEloStats } from './eloService';
 import { isOffSeasonCard, normalizeCourse, getCardStrokesPerHole, pickTop, getPreviousSeason, getAces, leagueHasHats } from './statsUtils';
 
@@ -72,12 +72,11 @@ const getDoinkStats = (players) => {
   }
 }
 
-// UDisc names of league members, used to match them on scorecards. A member's name is kept in two places — their user
-// record (what Elo uses) and the league's player list — which can drift apart if they change it, so both count.
+// UDisc names of league members, used to match them on scorecards, from the league's player list (which keeps a copy
+// of each member's name)
 export const getMemberNames = async (league) => {
   const members = Object.values((await getLeagueMembers(league)) || {})
-  const users = await Promise.all(members.map(member => getUserDataV2({ displayName: member.name, uid: member.id })))
-  return [...members.map(member => member.uDiscDisplayName), ...users.map(user => user?.uDiscDisplayName)].filter(Boolean)
+  return members.map(member => member.uDiscDisplayName).filter(Boolean)
 }
 
 // Everything in the league stats plus the stats that only make sense once the season is over

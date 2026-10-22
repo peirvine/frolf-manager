@@ -3,7 +3,7 @@
 import {useState, useEffect} from 'react'
 import { Button, TextField, FormControl, Grid, Paper, Snackbar, Alert, IconButton, FormControlLabel, Switch, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, CircularProgress, Tooltip } from '@mui/material'
 import { Close, HelpOutline } from '@mui/icons-material'
-import { getLeagueSettings, updateLeagueSettings, deleteLeague, removeLeagueMember, getLeagueMembers, getUserDataV2, updateUsersLeaguesV2, getLeagueNames, updateLeagueNames } from '../../firebase'
+import { getLeagueSettings, updateLeagueSettings, deleteLeague } from '../../firebase'
 import { startNewSeason, nameNumberedSeason, isNumberedSeason } from '../../services/leagueService'
 import { refreshHandicaps } from '../../services/handicapStore'
 import { Link, Navigate } from 'react-router-dom'
@@ -81,41 +81,19 @@ export default function LeagueSettingsManager(props) {
     setDialogOpen(true)
   }
 
-  const reallyDeleteLeague = () => {
+  // The function removes the league, its entry in the league list and its place on every member's account
+  const reallyDeleteLeague = async () => {
     setLoading(true)
-    getLeagueMembers(props.league.leagueId).then(res => {
-      // eslint-disable-next-line array-callback-return
-      res.map(player => {
-        const newUser = {
-          displayName: player.name,
-          uid: player.id
-        }
-        getUserDataV2(newUser).then(res => {
-          const newLeagues = res.leagues.filter( l => { return l.id !== props.league.leagueId})
-          updateUsersLeaguesV2(newUser, newLeagues)
-        })
-        removeLeagueMember(props.league.leagueId, player)
-      })
-
-      deleteLeague(props.league.leagueId).then(res => {
-        if (res.code === "success") {
-          setDialogOpen(false)
-          setLoading(false)
-          setFinalDialogOpen(true)
-        } else {
-          setDialogOpen(false)
-          setLoading(false)
-          setAlertOpen(true)
-          setAlertMessage(res.message)
-          setAlertLevel(res.code)
-        }
-        
-        getLeagueNames().then(res => {
-          delete res[id]
-          updateLeagueNames(res)
-        })
-      })
-    })
+    const res = await deleteLeague(props.league.leagueId)
+    setDialogOpen(false)
+    setLoading(false)
+    if (res.code === "success") {
+      setFinalDialogOpen(true)
+    } else {
+      setAlertOpen(true)
+      setAlertMessage(res.message)
+      setAlertLevel(res.code)
+    }
   }
 
   const handleRenameSeason = async (id) => {

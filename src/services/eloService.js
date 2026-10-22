@@ -1,5 +1,5 @@
 /* eslint-disable array-callback-return */
-import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, getUserDataV2, incrementHatCount, setSeasonStats } from "../firebase";
+import { writeEloTracking, getCurrentElo, addEloToPlayerV2, getElosOfPlayer, updateCurrentEloV2, getElosOfAllPlayers, setDeltaV2, setEloGraphDataV2, getLeagueMembers, incrementHatCount, setSeasonStats } from "../firebase";
 import { weighting, pointPerThrowRef } from "./eloConstants";
 import { pickTop, leagueHasHats } from "./statsUtils";
 
@@ -140,21 +140,11 @@ export const changeHatWinners = async (league, oldWinners, newWinners) => {
   return true
 }
 
+// The UDisc names of the league's members, read from the league's own players list (each league keeps a copy of
+// every member's name, since members can't read each other's accounts)
 async function getPlayers (league) {
   const leaguePlayers = await getLeagueMembers(league)
-  let players = []
-
-  for (let i = 0; i < leaguePlayers.length; i++) {
-    let userPayload = {
-      displayName: leaguePlayers[i].name,
-      uid: leaguePlayers[i].id
-    }
-
-    const res = await getUserDataV2(userPayload)
-    players.push(res.uDiscDisplayName)
-  }
-
-  return players
+  return leaguePlayers.map(member => member.uDiscDisplayName)
 }
 
 const holesPlayed = (player) => (player.holes || []).filter(hole => Number(hole) > 0).length

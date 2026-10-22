@@ -1,4 +1,4 @@
-import { startNewSeason, resetCurrentSeason, syncMemberUDiscNames, nameNumberedSeason } from './leagueService'
+import { startNewSeason, resetCurrentSeason, nameNumberedSeason } from './leagueService'
 import * as db from './testUtils/fakeFirebase'
 import { leagueData } from './testUtils/fixtures'
 
@@ -98,45 +98,6 @@ describe("resetCurrentSeason", () => {
   test("reports which step failed", async () => {
     db.fail("resetEloData")
     expect(await resetCurrentSeason("maftb", season)).toEqual({ code: "error", message: "Could not reset Elo Graph Data" })
-  })
-})
-
-describe("syncMemberUDiscNames", () => {
-  test("copies each member's current name from their account", async () => {
-    const data = leagueData("maftb", ["Alice", "Bob"])
-    data.users["Bob Google uid1"].uDiscDisplayName = "Bobby"
-    db.reset(data)
-
-    expect(await syncMemberUDiscNames("maftb")).toEqual({ code: "success", message: "Updated 1 UDisc name" })
-    expect(db.read("maftb/players").map(member => member.uDiscDisplayName)).toEqual(["Alice", "Bobby"])
-  })
-
-  test("leaves the list alone when the names already match", async () => {
-    db.reset(leagueData("maftb", ["Alice"]))
-    db.fail("updateLeagueMembers")
-    expect(await syncMemberUDiscNames("maftb")).toEqual({ code: "success", message: "UDisc names are already up to date" })
-  })
-
-  test("keeps a member's name when their account has none", async () => {
-    const data = leagueData("maftb", ["Alice"])
-    delete data.users["Alice Google uid0"].uDiscDisplayName
-    db.reset(data)
-    await syncMemberUDiscNames("maftb")
-    expect(db.read("maftb/players/0/uDiscDisplayName")).toBe("Alice")
-  })
-
-  test("reports a list that couldn't be saved", async () => {
-    const data = leagueData("maftb", ["Alice"])
-    data.users["Alice Google uid0"].uDiscDisplayName = "Ali"
-    db.reset(data)
-    db.fail("updateLeagueMembers")
-    expect((await syncMemberUDiscNames("maftb")).code).toBe("error")
-  })
-
-  test("fails if the members can't be read", async () => {
-    db.reset(leagueData("maftb", ["Alice"]))
-    db.fail("getLeagueMembers")
-    expect((await syncMemberUDiscNames("maftb")).code).toBe("error")
   })
 })
 

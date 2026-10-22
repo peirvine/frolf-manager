@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, FormControlLabel, Skeleton, Snackbar, Switch, TextField } from '@mui/material'
-import { getSiteSettings, setSiteSetting } from '../../firebase'
+import { getSiteSettings, setSiteSetting, bootstrapAccess, PERMANENT_SITE_ADMIN_UID } from '../../firebase'
+import { useLeague } from '../../context/leagueContext'
 
 // Site-wide settings that apply to everyone. Which settings exist is still to be decided; anything saved here is
 // stored under siteSettings/ and can be read from there by the rest of the site. Starts with a maintenance banner.
@@ -15,6 +16,8 @@ export default function SiteSettingsManager () {
   const [settings, setSettings] = useState(null)
   const [notice, setNotice] = useState(null)
   const [newKey, setNewKey] = useState('')
+  const { user } = useLeague()
+  const [settingUp, setSettingUp] = useState(false)
 
   useEffect(() => { getSiteSettings().then(setSettings) }, [])
 
@@ -22,6 +25,16 @@ export default function SiteSettingsManager () {
     const res = await setSiteSetting(key, value)
     setNotice({ code: res.code, message: res.message })
     if (res.code === "success") setSettings(current => ({ ...current, [key]: value }))
+  }
+
+  // The site owner runs this once after the database rules go in, and again if member lists are ever edited by hand
+  const runAccessSetup = async () => {
+    setSettingUp(true)
+    const res = await bootstrapAccess()
+    setSettingUp(false)
+    setNotice(res.code === "success"
+      ? { code: "success", message: `Access set up: ${res.data.siteAdmins} site admin(s), ${res.data.leagues} league(s), ${res.data.namesCopied} name(s) copied.` }
+      : res)
   }
 
   if (!settings) return <section className="manageCard"><Skeleton variant="rounded" animation="wave" height={60} /></section>
@@ -45,6 +58,13 @@ export default function SiteSettingsManager () {
           ))}
         </div>
       </section>
+      {user?.uid === PERMANENT_SITE_ADMIN_UID && (
+        <section className="manageCard">
+          <h3>Access setup</h3>
+          <p className="manageIntro">Rebuilds the lists the database rules use to know who the site admins and each league's members are. Safe to run again.</p>
+          <Button variant="outlined" disabled={settingUp} onClick={runAccessSetup}>{settingUp ? "Running..." : "Run access setup"}</Button>
+        </section>
+      )}
       <section className="manageCard">
         <h3>Add a setting</h3>
         <div className="ruleAdd">

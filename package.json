@@ -43,7 +43,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "emulators": "firebase emulators:start --import=./emulator-data --export-on-exit",
-    "frolf": "node scripts/frolf.js"
+    "frolf": "node scripts/frolf.js",
+    "rules": "node scripts/buildDatabaseRules.js",
+    "test:rules": "node scripts/buildDatabaseRules.js && firebase emulators:exec --only database --config firebase.rules-test.json --project demo-dgm-rules \"node --test functions/rules.test.js functions/functions.test.js\""
   },
   "eslintConfig": {
     "extends": [

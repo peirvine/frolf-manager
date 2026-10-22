@@ -7,7 +7,8 @@ jest.mock('../firebase', () => require('./testUtils/fakeFirebase'))
 // Members Alice (uid0) and Bob (uid1), with alternate names per uid
 const seed = (aliases = {}) => {
   const data = leagueData("maftb", ["Alice", "Bob"])
-  Object.values(data.users).forEach(user => { if (aliases[user.uid]) user.uDiscAliases = aliases[user.uid] })
+  // Each member's own alternate names are copied onto their entry in the league's players list as userAliases
+  data.maftb.players.forEach(member => { if (aliases[member.id]) member.userAliases = aliases[member.id] })
   db.reset(data)
 }
 
@@ -21,14 +22,13 @@ describe("getUDiscNameLookup", () => {
   test("also uses the names an admin saved on the league's player list", async () => {
     seed()
     db.write("maftb/players/0/uDiscAliases", { league: "", event: "Alice S" })
-    db.write("maftb/players/1/uDiscDisplayName", "Robert")
+    db.write("maftb/players/1/uDiscAliases", { league: "Robert" })
     const lookup = await getUDiscNameLookup("maftb")
     expect(["Alice S", "Robert", "Bob"].map(name => toMainUDiscName(lookup, name))).toEqual(["Alice", "Bob", "Bob"])
   })
 
-  test("falls back to the admin's main name for a member who never set one", async () => {
+  test("uses the admin's alternate names for a member who set none", async () => {
     seed()
-    db.write("users/Alice Google uid0/uDiscDisplayName", "")
     db.write("maftb/players/0/uDiscAliases", { event: "Alice S" })
     expect(toMainUDiscName(await getUDiscNameLookup("maftb"), "Alice S")).toBe("Alice")
   })

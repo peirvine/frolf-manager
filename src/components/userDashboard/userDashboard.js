@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useMemo, useState} from 'react'
-import { updateLeagueMembers, getLeagueMembers, removeLeagueMember, createNewLeague, updateUsersLeaguesV2, getLeagueSettings } from "../../firebase"
+import { joinLeague, leaveLeague, createLeague, getLeagueSettings } from "../../firebase"
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar, Chip } from '@mui/material'
 import { Help, Close } from '@mui/icons-material'
 import { Link } from "react-router-dom";
@@ -69,122 +69,26 @@ export default function UserDashboard () {
   const leaguesToJoin = useMemo(() => Object.keys(leagueSettings)
     .filter(id => leagueSettings[id]?.acceptingPlayers && !(userData.leagues || []).some(x => x.id === id)), [leagueSettings, userData])
 
-  const handleLeaveLeague = async league => {
-    const members = await getLeagueMembers(league)
-    const newLeagueList = userData.leagues.filter( l => { return l.id !== league})
-    updateUsersLeaguesV2(user, newLeagueList).then(res => {
-      setAlertOpen(true)
-      setAlertMessage(res.message)
-      setAlertLevel(res.code)
-    })
-    const newMembers = members.filter( l => { return l.id !== userData.uid})
-
-    removeLeagueMember(league, newMembers).then(res => {
-      setAlertOpen(true)
-      setAlertMessage(res.message)
-      setAlertLevel(res.code)
-    })
+  // Joining, leaving and making leagues go through the Cloud Functions, which check who is asking and keep the league's
+  // players and the person's own list of leagues in step
+  const showResult = (res) => {
+    setAlertOpen(true)
+    setAlertMessage(res.message)
+    setAlertLevel(res.code)
   }
 
-  const handleJoinLeague = (league, user, isAdmin = false) => {
-    let updatedLeagueList
-    if (userData.leagues && userData.leagues.length > 0) {
-      updatedLeagueList = userData.leagues.concat({
-        id: league,
-        isAdmin: isAdmin,
-        membershipStatus: isAdmin ? "Admin" : "Pending"
-      })
-    } else {
-      updatedLeagueList = [{
-        id: league,
-        isAdmin: isAdmin,
-        membershipStatus: isAdmin ? "Admin" : "Pending"
-      }]
-    }
-    
-    updateUsersLeaguesV2(user, updatedLeagueList).then(res => {
-      setAlertOpen(true)
-      setAlertMessage(res.message)
-      setAlertLevel(res.code)
-    })
+  const handleLeaveLeague = async league => showResult(await leaveLeague(league))
 
-    handleUpdateLeagueMembers(league, user, isAdmin)
-  }
+  const handleJoinLeague = async league => showResult(await joinLeague(league))
 
-
-  //todo move logic into the then or make async
-  const handleUpdateLeagueMembers = async (league, user, isAdmin = false) => {
-    const members = await getLeagueMembers(league)
-
-    const userObject = {
-      id: user.uid,
-      name: user.displayName,
-      isAdmin: isAdmin,
-      membershipStatus: isAdmin ? "Admin" : "Pending",
-      uDiscDisplayName: userData.uDiscDisplayName
-    }
-
-    const newMembers = members.length > 0 ? members.concat(userObject) : [userObject]
-    updateLeagueMembers(league, newMembers).then(res => {
-      setAlertOpen(true)
-      setAlertMessage(res.message)
-      setAlertLevel(res.code)
-    })
-  }
-
-  const handleCreateNewLeague = user => {
-    const matches = leagueName.match(/\b(\w)/g)
-    let leagueAc = matches.join('').concat(Math.floor(Math.random() * 99)).toLowerCase()
-
-    const userObject = {
-      id: user.uid,
-      name: user.displayName,
-      isAdmin: true,
-      membershipStatus: "Admin",
-      uDiscDisplayName: userData.uDiscDisplayName
-    }
-
-    const formData = {
-      leagueName: leagueName,
-      leagueAcronym: leagueAc,
-      doinkFund: doink,
-      acceptingPlayers: true,
-      blurb: '',
-      currentSeason: "Season 1",
-      isPreseason: true,
-    }
-
-    let doinkObj = {
-      players: [],
-      expenses: [],
-      maxDoink: 50,
-    }
-
-    if (doink) {
-      doinkObj.players.push({
-        doinks: 0,
-        name: user.displayName,
-        uid: user.uid
-      })
-    }
-    const newLeagues = { ...leagues, [leagueAc]: leagueName }
-
-    const combinedData = {
-      userObject,
-      formData,
-      newLeagues,
-      doinkObj
-    }
-
-    createNewLeague(combinedData).then(res => {
-      setAlertOpen(true)
-      setAlertMessage(res.message)
-      setAlertLevel(res.code)
+  const handleCreateNewLeague = async () => {
+    const res = await createLeague(leagueName, doink)
+    showResult(res)
+    if (res.code === "success") {
       setLeagueName("")
       setDoink(false)
       setOpen(false)
-      handleJoinLeague(leagueAc.toLowerCase(), user, true)
-    })
+    }
   }
 
   const confirmLeaveLeague = (league) => {

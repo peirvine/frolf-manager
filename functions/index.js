@@ -2,6 +2,10 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { onSchedule } = require('firebase-functions/v2/scheduler')
 const { defineSecret, defineString } = require('firebase-functions/params')
 const { TRIAL_DAYS, fromSubscription, expired, canChangePlan } = require('./billing')
+const { db, read, requireLeagueAdmin, requireSiteAdmin, requireLeague } = require('./access')
+
+// League, membership and site-admin functions live in their own files
+Object.assign(exports, require('./leagueFunctions'), require('./siteFunctions'))
 
 // Stripe billing for leagues: one subscription per league. The browser never changes a league's plan; the webhook
 // below does, from what Stripe reports. Set these before deploying (test-mode keys first):
@@ -14,15 +18,6 @@ const PRICE_PLUS_MONTHLY = defineString('PRICE_PLUS_MONTHLY')
 const PRICE_PLUS_YEARLY = defineString('PRICE_PLUS_YEARLY')
 const SITE_URL = defineString('SITE_URL')
 
-// firebase-admin and stripe are slow to load, so they're loaded on first use: the emulator gives up if loading the
-// functions takes too long (it does on slow disks)
-let app
-const db = () => {
-  const admin = require('firebase-admin')
-  // DATABASE_URL (in functions/.env) is only needed if the Realtime Database isn't the project's default one
-  if (!app) app = admin.initializeApp(process.env.DATABASE_URL ? { databaseURL: process.env.DATABASE_URL } : undefined)
-  return admin.database()
-}
 const stripeClient = () => {
   const Stripe = require('stripe')
   return new Stripe(STRIPE_SECRET_KEY.value())
@@ -30,22 +25,6 @@ const stripeClient = () => {
 // Just the site's address, whatever was typed into SITE_URL (a path or trailing slash would double up in the return links)
 const siteUrl = () => new URL(SITE_URL.value()).origin
 const prices = () => ({ plusMonthly: PRICE_PLUS_MONTHLY.value(), plusYearly: PRICE_PLUS_YEARLY.value() })
-
-const read = async (path) => (await db().ref(path).get()).val()
-
-// Whether this signed-in person is a site admin. Users are saved under "<name> <uid>", so they're found by reading the
-// list, not by searching it (the database rules have no index for a search by uid).
-const isSiteAdmin = async (uid) => Object.values((await read('users')) || {}).some(user => user && user.uid === uid && user.siteAdmin === true)
-
-// League admins and site admins may manage a league's billing
-const assertCanManage = async (auth, league) => {
-  if (!auth) throw new HttpsError('unauthenticated', 'Sign in first.')
-  if (typeof league !== 'string' || !league) throw new HttpsError('invalid-argument', 'No league given.')
-  const members = Object.values((await read(`${league}/players`)) || {})
-  if (members.some(member => member && member.id === auth.uid && member.membershipStatus === 'Admin')) return
-  if (await isSiteAdmin(auth.uid)) return
-  throw new HttpsError('permission-denied', 'Only league admins can manage billing.')
-}
 
 // One Stripe customer per league, remembered so later purchases use the same one
 const customerFor = async (stripe, league, email) => {
@@ -59,7 +38,7 @@ const customerFor = async (stripe, league, email) => {
 
 exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async ({ auth, data }) => {
   const { league, interval } = data || {}
-  await assertCanManage(auth, league)
+  await requireLeagueAdmin(auth, league)
   if (interval !== 'month' && interval !== 'year') throw new HttpsError('invalid-argument', 'Pick monthly or yearly.')
 
   const stripe = stripeClient()
@@ -87,7 +66,7 @@ exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (
 
 exports.createPortalSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async ({ auth, data }) => {
   const { league } = data || {}
-  await assertCanManage(auth, league)
+  await requireLeagueAdmin(auth, league)
   const customer = await read(`${league}/billing/customerId`)
   if (!customer) throw new HttpsError('failed-precondition', 'This league has no billing yet.')
   const session = await stripeClient().billingPortal.sessions.create({ customer, return_url: `${siteUrl()}/dashboard` })
@@ -98,10 +77,9 @@ exports.createPortalSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async ({ 
 // league subscribes itself.
 exports.setLeaguePlan = onCall(async ({ auth, data }) => {
   const { league, plan } = data || {}
-  if (!auth) throw new HttpsError('unauthenticated', 'Sign in first.')
-  if (!(await isSiteAdmin(auth.uid))) throw new HttpsError('permission-denied', 'Site admins only.')
+  await requireSiteAdmin(auth)
   if (!['free', 'plus', 'pro'].includes(plan)) throw new HttpsError('invalid-argument', 'Unknown plan.')
-  if (!(await read(`leagueIndex/${league}`))) throw new HttpsError('not-found', 'No such league.')
+  await requireLeague(league)
   await db().ref(`${league}/info`).update({ plan, planSource: 'manual' })
   return { ok: true }
 })

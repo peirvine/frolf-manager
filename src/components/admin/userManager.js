@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Chip, Skeleton, Snackbar, TextField } from '@mui/material'
-import { getAllUsers, deleteUserCompletely, setSiteAdmin, PERMANENT_SITE_ADMIN_UID } from '../../firebase'
+import { listUsers, deleteUser, setSiteAdmin, PERMANENT_SITE_ADMIN_UID } from '../../firebase'
 import ConfirmDialog from '../confirmDialog/confirmDialog'
 
 export default function UserManager () {
@@ -10,12 +10,16 @@ export default function UserManager () {
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState(null)
 
-  const load = () => getAllUsers().then(all => setUsers(all || {}))
+  // Site admins get everyone from the functions, as a list; keyed here by each user's record name
+  const load = () => listUsers().then(res => {
+    if (res.code === "error") setNotice({ code: "error", message: res.message })
+    setUsers(Object.fromEntries((res.data || []).map(user => [user.key, user])))
+  })
   useEffect(() => { load() }, [])
 
   const remove = async () => {
     setBusy(true)
-    const res = await deleteUserCompletely(target.key, target.user.uid)
+    const res = await deleteUser(target.user.uid)
     setNotice({ code: res.code, message: res.message })
     setBusy(false)
     setTarget(null)
@@ -23,7 +27,7 @@ export default function UserManager () {
   }
 
   const toggleSiteAdmin = async (key, u) => {
-    const res = await setSiteAdmin(key, u.uid, !u.siteAdmin)
+    const res = await setSiteAdmin(u.uid, !u.siteAdmin)
     setNotice({ code: res.code, message: res.message })
     load()
   }

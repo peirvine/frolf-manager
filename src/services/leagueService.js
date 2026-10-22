@@ -1,25 +1,4 @@
-import { getLeagueMembers, getLeagueSettings, getUserDataV2, setDeltaV2, updateCurrentEloV2, updateLeagueMembers, updateLeagueSettings, resetEloData, resetHatCounts, renameSeasonData } from "../firebase";
-
-// Pages read each member's UDisc name from the league's players list, which is kept in step as players save their name.
-// This copies every member's current name over from their account, for names changed before that happened.
-export async function syncMemberUDiscNames ( league ) {
-  const members = await getLeagueMembers(league)
-  if (!Array.isArray(members)) return {code: "error", message: "Could not get the league members"}
-
-  const users = await Promise.all(members.map(member => getUserDataV2({ displayName: member.name, uid: member.id })))
-  let changed = 0
-  const updated = members.map((member, i) => {
-    const name = users[i]?.uDiscDisplayName
-    if (!name || name === member.uDiscDisplayName) return member
-    changed++
-    return { ...member, uDiscDisplayName: name }
-  })
-  if (changed === 0) return {code: "success", message: "UDisc names are already up to date"}
-
-  const res = await updateLeagueMembers(league, updated)
-  if (res.code === "error") return res
-  return {code: "success", message: `Updated ${changed} UDisc ${changed === 1 ? "name" : "names"}`}
-}
+import { getLeagueMembers, getLeagueSettings, setDeltaV2, updateCurrentEloV2, updateLeagueSettings, resetEloData, resetHatCounts, renameSeasonData } from "../firebase";
 
 // Leagues made from the dashboard used to start on the bare number 1 instead of "Season 1"
 export const isNumberedSeason = (season) => /^\d+$/.test(String(season ?? ""))
@@ -115,21 +94,11 @@ async function getCurrentSeason ( league ) {
   return info.currentSeason
 }
 
+// The UDisc names of the league's members, read from the league's own players list (each league keeps a copy of
+// every member's name, since members can't read each other's accounts)
 async function getPlayers (league) {
   const leaguePlayers = await getLeagueMembers(league)
-  let players = []
-
-  for (let i = 0; i < leaguePlayers.length; i++) {
-    let userPayload = {
-      displayName: leaguePlayers[i].name,
-      uid: leaguePlayers[i].id
-    }
-
-    const res = await getUserDataV2(userPayload)
-    players.push(res.uDiscDisplayName)
-  }
-
-  return players
+  return leaguePlayers.map(member => member.uDiscDisplayName)
 }
 
 async function newCurrentElo (league, newSeason, players) {
