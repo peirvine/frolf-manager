@@ -11,9 +11,15 @@ const day = (iso) => new Date(iso).toLocaleDateString(undefined, { year: 'numeri
 // One line on where the subscription stands, from the summary the billing webhook keeps on the league
 const statusLine = (summary) => {
   if (!summary?.status) return null
-  const { status, trialEndsAt, renewsAt, cancelAtPeriodEnd, accessUntil } = summary
+  const { status, trialEndsAt, renewsAt, cancelAtPeriodEnd, endsAt, accessUntil } = summary
+  // A cancelled subscription keeps going until the end of what's paid for (or the trial), then stops
+  if ((status === "trialing" || status === "active") && cancelAtPeriodEnd) {
+    const ends = endsAt || renewsAt
+    return status === "trialing"
+      ? { severity: "warning", text: `Cancelled. Your free trial and Plus end on ${day(ends)}, and you won't be charged.` }
+      : { severity: "warning", text: `Cancelled. Plus stays until ${day(ends)}.` }
+  }
   if (status === "trialing") return { severity: "info", text: `Free trial until ${day(trialEndsAt)}, then billing starts.` }
-  if (status === "active" && cancelAtPeriodEnd) return { severity: "warning", text: `Cancelled. Plus stays until ${day(renewsAt)}.` }
   if (status === "active") return { severity: "success", text: `Renews on ${day(renewsAt)}.` }
   if (status === "past_due" || status === "unpaid") return { severity: "error", text: `Your last payment failed. Update your card by ${day(accessUntil)} to keep Plus.` }
   if (status === "canceled") return { severity: "warning", text: accessUntil ? `Subscription ended. Plus stays until ${day(accessUntil)}.` : "Subscription ended." }

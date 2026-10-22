@@ -38,6 +38,16 @@ test("cancelling at period end is flagged but the league stays in good standing 
   assert.equal(result.accessUntil, null)
 })
 
+test("a cancellation set for a date is flagged too, with the date it ends", () => {
+  const endDate = Math.floor((NOW + 5 * DAY) / 1000)
+  const byDate = fromSubscription(sub({ status: "trialing", cancel_at: endDate }), prices, {}, NOW)
+  assert.equal(byDate.summary.cancelAtPeriodEnd, true)
+  assert.equal(byDate.summary.endsAt, new Date(NOW + 5 * DAY).toISOString())
+  const atPeriodEnd = fromSubscription(sub({ cancel_at_period_end: true }), prices, {}, NOW)
+  assert.equal(atPeriodEnd.summary.endsAt, new Date(NOW + 20 * DAY).toISOString())
+  assert.equal(fromSubscription(sub(), prices, {}, NOW).summary.endsAt, null)
+})
+
 test("a failed payment starts a week's grace, and the week doesn't restart on later updates", () => {
   const first = fromSubscription(sub({ status: "past_due" }), prices, {}, NOW)
   assert.equal(first.accessUntil, new Date(NOW + GRACE_DAYS * DAY).toISOString())

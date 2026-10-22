@@ -48,7 +48,11 @@ const fromSubscription = (subscription, prices, previous = {}, now = Date.now())
       interval: subscription.items?.data?.[0]?.price?.recurring?.interval || null,
       renewsAt: renewsAt && iso(renewsAt),
       trialEndsAt: trialEndsAt && iso(trialEndsAt),
-      cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+      // Stripe records a cancellation either as "at the end of the period" or as a set date (cancel_at), depending on
+      // where it was done; both mean the subscription is ending on `endsAt`
+      cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end || subscription.cancel_at),
+      endsAt: (subscription.cancel_at_period_end || subscription.cancel_at) && (fromUnix(subscription.cancel_at) || renewsAt)
+        ? iso(fromUnix(subscription.cancel_at) || renewsAt) : null,
       pastDueSince: status === "past_due" || status === "unpaid" ? iso(previous.pastDueSince ? Date.parse(previous.pastDueSince) : now) : null,
       accessUntil: accessUntil && iso(accessUntil),
     },
