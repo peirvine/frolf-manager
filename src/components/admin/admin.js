@@ -6,6 +6,7 @@ import UserManager from './userManager';
 import SiteSettingsManager from './siteSettingsManager';
 import LeagueAdminManager from './leagueAdminManager';
 import BillingManager from './billingManager';
+import FeedbackManager from './feedbackManager';
 import { useLeague } from '../../context/leagueContext';
 import { Alert, Skeleton } from '@mui/material';
 
@@ -42,6 +43,7 @@ const TABS = [
   { label: "users", Panel: UserManager },
   { label: "scorecards", Panel: ScorecardManager },
   { label: "billing", Panel: BillingManager },
+  { label: "feedback", Panel: FeedbackManager },
 ]
 
 export default function Admin () {

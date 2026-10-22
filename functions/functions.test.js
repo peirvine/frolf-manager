@@ -238,3 +238,16 @@ test("a member who sets their UDisc name later is rated then", async () => {
   await run(league.syncMyNames, DAVE, {})
   assert.equal(await read('lg/currentElo/Season 1/Davey'), 1000)
 })
+
+test('feedback: signed-in people send it, only site admins delete it', async () => {
+  await rejects(run(site.submitFeedback, null, { kind: 'bug', message: 'broken' }), 'unauthenticated')
+  await rejects(run(site.submitFeedback, CAROL, { kind: 'bug', message: '  ' }), 'invalid-argument')
+  await run(site.submitFeedback, CAROL, { kind: 'nonsense', message: 'The chart is blank', page: '/rankings' })
+  const [id, saved] = Object.entries(await read('feedback'))[0]
+  assert.equal(saved.kind, 'other')
+  assert.equal(saved.uid, CAROL)
+  assert.equal(saved.page, '/rankings')
+  await rejects(run(site.deleteFeedback, CAROL, { id }), 'permission-denied')
+  await run(site.deleteFeedback, OWNER, { id })
+  assert.equal(await read('feedback'), null)
+})

@@ -3,6 +3,48 @@ const access = require('./access')
 const { PERMANENT_SITE_ADMIN_UID, db, read, requireSignIn, requireText, allUsers, requireSiteAdmin, requireLeague } = access
 const { memberList, rolesOf } = require('./membership')
 const { bootstrap } = require('./bootstrap')
+const { defineString } = require('firebase-functions/params')
+
+// Where to announce new feedback: a Slack or Discord incoming-webhook URL, set in functions/.env as
+// FEEDBACK_WEBHOOK_URL. Left empty, feedback is only saved.
+const FEEDBACK_WEBHOOK_URL = defineString('FEEDBACK_WEBHOOK_URL', { default: '' })
+
+// Never fails the submission: the feedback is already saved by the time this runs
+const announce = async (entry) => {
+  const url = FEEDBACK_WEBHOOK_URL.value()
+  if (!url) return
+  const text = `New ${entry.kind} feedback from ${entry.name || 'someone'}${entry.email ? ` (${entry.email})` : ''}${entry.page ? ` on ${entry.page}` : ''}:\n${entry.message}`
+  try {
+    // "text" is Slack's field and "content" is Discord's; each ignores the other
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, content: text.slice(0, 2000) }) })
+    if (!res.ok) console.error('Feedback notification failed:', res.status)
+  } catch (error) {
+    console.error('Feedback notification failed:', error?.message)
+  }
+}
+
+// Feedback from signed-in users, read by site admins on the admin page. The browser can't write it directly, so it
+// can be checked and capped here.
+const FEEDBACK_KINDS = ['bug', 'idea', 'other']
+
+exports.submitFeedback = onCall(async ({ auth, data }) => {
+  const uid = requireSignIn(auth)
+  const kind = FEEDBACK_KINDS.includes(data?.kind) ? data.kind : 'other'
+  const message = requireText(data?.message, 'message', 2000)
+  const page = typeof data?.page === 'string' ? data.page.slice(0, 200) : ''
+  const entry = { kind, message, page, uid, name: auth.token?.name || '', email: auth.token?.email || '', createdAt: Date.now() }
+  await db().ref('feedback').push(entry)
+  await announce(entry)
+  return { ok: true }
+})
+
+exports.deleteFeedback = onCall(async ({ auth, data }) => {
+  await requireSiteAdmin(auth)
+  const id = requireText(data?.id, 'feedback', 100)
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new HttpsError('invalid-argument', 'Missing or invalid feedback.')
+  await db().ref(`feedback/${id}`).remove()
+  return { ok: true }
+})
 
 // Changes only a site admin can make
 
