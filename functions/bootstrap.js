@@ -1,5 +1,5 @@
 const { memberList, rolesOf } = require('./membership')
-const { PERMANENT_SITE_ADMIN_UID, db, read, allUsers } = require('./access')
+const { PERMANENT_SITE_ADMIN_UID, db, read, allUsers, seedLeagueElo } = require('./access')
 
 // One-time (and safe to run again): fills in what the database rules rely on from the data as it stands now.
 //  - siteAdmins/<uid>: every site admin
@@ -35,6 +35,8 @@ const bootstrap = async () => {
     writes[`${id}/memberRoles`] = rolesOf(synced)
   }))
   await db().ref().update(writes)
+  // Every active member of every league has a rating this season (existing ones are left alone)
+  await Promise.all(Object.keys(index).map(id => seedLeagueElo(id)))
   return { siteAdmins: Object.keys(siteAdmins).length, leagues, namesCopied: names }
 }
 

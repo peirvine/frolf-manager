@@ -71,6 +71,19 @@ const changePlayers = async (league, change) => {
   return { committed: result.committed, players: memberList(result.snapshot.val()) }
 }
 
+// Makes sure every active member has a rating (1000) and a rating change (0) for the league's current season. It only
+// adds what's missing, so it's safe to call whenever members or their names change.
+const seedLeagueElo = async (league) => {
+  const { eloSeedWrites } = require('./seeding')
+  const season = await read(`${league}/info/currentSeason`)
+  if (season === null || season === undefined) return
+  const [players, currentElo, eloDelta] = await Promise.all([
+    read(`${league}/players`), read(`${league}/currentElo/${season}`), read(`${league}/eloDelta/${season}`),
+  ])
+  const writes = eloSeedWrites({ league, season, players, currentElo, eloDelta })
+  if (Object.keys(writes).length) await db().ref().update(writes)
+}
+
 // Sets (or, with null, removes) this league on the player's own record
 const setUserLeague = async (user, league, entry) => {
   if (!user) return
@@ -79,5 +92,5 @@ const setUserLeague = async (user, league, entry) => {
 
 module.exports = {
   PERMANENT_SITE_ADMIN_UID, db, read, requireSignIn, requireText, allUsers, findUser, isSiteAdmin, requireSiteAdmin,
-  requireLeague, roleIn, requireLeagueAdmin, changePlayers, setUserLeague,
+  requireLeague, roleIn, requireLeagueAdmin, changePlayers, setUserLeague, seedLeagueElo,
 }

@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
 const { STATUS, applyAction, newMember, leagueIdFor } = require('./membership')
 const access = require('./access')
-const { db, read, requireSignIn, requireText, allUsers, findUser, requireLeague, requireLeagueAdmin, changePlayers, setUserLeague, isSiteAdmin } = access
+const { db, read, requireSignIn, requireText, allUsers, findUser, requireLeague, requireLeagueAdmin, changePlayers, setUserLeague, isSiteAdmin, seedLeagueElo } = access
 
 // League and membership changes. The browser can't change who is in a league or what they may do, so every one of
 // these goes through here and checks who is asking.
@@ -76,6 +76,8 @@ exports.setMemberStatus = onCall(async ({ auth, data }) => {
   })
   if (problem) throw new HttpsError('failed-precondition', problem)
   await setUserLeague(user, league, entryFor(updated))
+  // Someone who becomes a member starts the season on 1000
+  await seedLeagueElo(league)
   return { ok: true }
 })
 
@@ -94,6 +96,7 @@ exports.updateMember = onCall(async ({ auth, data }) => {
     return found ? members.map(member => (member.id === memberId ? { ...member, uDiscDisplayName: name, uDiscAliases: aliases } : member)) : undefined
   })
   if (!found) throw new HttpsError('not-found', 'That person is not in the league.')
+  await seedLeagueElo(league)
   return { ok: true }
 })
 
@@ -113,6 +116,8 @@ exports.syncMyNames = onCall(async ({ auth }) => {
   await Promise.all(leagues.map(item => changePlayers(item.id, members => (
     members.some(member => member.id === uid) ? members.map(member => (member.id === uid ? copyNames(member, user) : member)) : undefined
   ))))
+  // A member who just set their UDisc name can now be rated
+  await Promise.all(leagues.map(item => seedLeagueElo(item.id)))
   return { ok: true }
 })
 
@@ -129,6 +134,7 @@ exports.syncLeagueNames = onCall(async ({ auth, data }) => {
     if (JSON.stringify(next) !== JSON.stringify(member)) changed++
     return next
   }))
+  await seedLeagueElo(league)
   return { changed }
 })
 
@@ -161,6 +167,8 @@ exports.createLeague = onCall(async ({ auth, data }) => {
   if (data?.doink) writes[`${id}/doinkfund`] = { players: [{ doinks: 0, name: user.name, uid }], maxDoink: 50 }
   await db().ref().update(writes)
   await setUserLeague(user, id, entryFor(admin))
+  // The creator starts the first season on 1000
+  await seedLeagueElo(id)
   return { league: id }
 })
 

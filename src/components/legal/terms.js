@@ -54,7 +54,7 @@ export default function Terms () {
         <h2>Plans, billing and cancelling</h2>
         <ul>
           <li><strong>Free and Plus.</strong> Leagues start on the Free plan. The Plus plan adds past seasons, league history, handicaps, the doink fund, hat tracking and custom league rules. What each plan includes is listed on the <Link to="/pricing">Pricing</Link> page and may change.</li>
-          <li><strong>Price.</strong> Plus costs $5 per month or $50 per year per league (not per player), plus any sales tax that applies. We'll tell you before a price changes, and the change applies from your next renewal.</li>
+          <li><strong>Price.</strong> Plus costs $5 per month or $50 per year per league (not per player). We'll tell you before a price changes, and the change applies from your next renewal.</li>
           <li><strong>Free trial.</strong> A league's first Plus subscription starts with a 30-day free trial. A payment method is required, and unless you cancel before the trial ends you'll be charged when it does.</li>
           <li><strong>Renewal.</strong> Subscriptions renew automatically each month or year until cancelled.</li>
           <li><strong>Cancelling.</strong> A league admin can cancel at any time from the league's billing tab (it opens our payment provider's portal). Plus stays active until the end of the period you've paid for.</li>

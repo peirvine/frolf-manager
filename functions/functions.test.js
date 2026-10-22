@@ -154,6 +154,9 @@ test('creating a league makes its creator the admin', async () => {
   assert.equal((await read(`${id}/players`))[0].membershipStatus, 'Admin')
   assert.equal(await read(`${id}/memberRoles/${CAROL}`), 'Admin')
   assert.equal((await read(`${id}/doinkfund/players`))[0].uid, CAROL)
+  // the creator starts the first season on 1000
+  assert.equal(await read(`${id}/currentElo/Season 1/Carol`), 1000)
+  assert.equal(await read(`${id}/eloDelta/Season 1/Carol`), 0)
   assert.deepEqual(await userLeagues('Carol', CAROL), [{ id, isAdmin: true, membershipStatus: 'Admin' }])
   await rejects(run(league.createLeague, CAROL, { leagueName: '' }), 'invalid-argument')
   await rejects(run(league.createLeague, undefined, { leagueName: 'x' }), 'unauthenticated')
@@ -212,4 +215,26 @@ test('bootstrap fills in the access lists, and only the owner can run it', async
   assert.deepEqual(await read('lg/memberRoles'), { [ALICE]: 'Admin', [BOB]: 'Member' })
   await run(site.bootstrapAccess, OWNER, {})
   assert.deepEqual(await read('lg/memberRoles'), { [ALICE]: 'Admin', [BOB]: 'Member' })
+})
+
+test('members start the season on 1000 when they become members, without changing existing ratings', async () => {
+  await db().ref('lg/currentElo/Season 1').set({ Alice: 1234 })
+  await run(league.setMemberStatus, ALICE, { league: 'lg', memberId: DAVE, action: 'approve' })
+  assert.equal(await read('lg/currentElo/Season 1/Dave'), 1000)
+  assert.equal(await read('lg/eloDelta/Season 1/Dave'), 0)
+  assert.equal(await read('lg/currentElo/Season 1/Alice'), 1234)
+  // pending people aren't rated
+  await db().ref(`users/Carol ${CAROL}`).update({ uDiscDisplayName: 'Carol' })
+  await run(league.joinLeague, CAROL, { league: 'lg' })
+  assert.equal(await read('lg/currentElo/Season 1/Carol'), null)
+})
+
+test("a member who sets their UDisc name later is rated then", async () => {
+  await db().ref(`users/Dave ${DAVE}`).update({ uDiscDisplayName: '' })
+  await db().ref('lg/players/2').update({ membershipStatus: 'Member', uDiscDisplayName: '' })
+  await run(site.bootstrapAccess, OWNER, {})
+  assert.equal(await read('lg/currentElo/Season 1/Dave'), null)
+  await db().ref(`users/Dave ${DAVE}`).update({ uDiscDisplayName: 'Davey' })
+  await run(league.syncMyNames, DAVE, {})
+  assert.equal(await read('lg/currentElo/Season 1/Davey'), 1000)
 })

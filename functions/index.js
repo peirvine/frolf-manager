@@ -65,10 +65,6 @@ exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (
     line_items: [{ price: interval === 'year' ? PRICE_PLUS_YEARLY.value() : PRICE_PLUS_MONTHLY.value(), quantity: 1 }],
     subscription_data: { ...trial, metadata: { league } },
     payment_method_collection: 'always',
-    automatic_tax: { enabled: true },
-    billing_address_collection: 'required',
-    tax_id_collection: { enabled: true },
-    customer_update: { address: 'auto', name: 'auto' },
     success_url: `${siteUrl()}/dashboard?billing=success&league=${encodeURIComponent(league)}`,
     cancel_url: `${siteUrl()}/dashboard?billing=cancelled`,
   }))
