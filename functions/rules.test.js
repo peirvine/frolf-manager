@@ -200,3 +200,11 @@ test("people can't read the site admin list for someone else", async () => {
   await assertFails(as(CAROL).ref('siteAdmins/' + OWNER).get())
   await assertFails(as(CAROL).ref('siteAdmins').get())
 })
+
+test('feedback is read by site admins only and never written from the browser', async () => {
+  await assertSucceeds(as(OWNER).ref('feedback').get())
+  await assertFails(as(ALICE).ref('feedback').get())
+  await assertFails(anon().ref('feedback').get())
+  await assertFails(as(CAROL).ref('feedback/x').set({ message: 'hi' }))
+  await assertFails(as(OWNER).ref('feedback/x').set({ message: 'hi' }))
+})

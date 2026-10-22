@@ -11,6 +11,9 @@
     "leagueIndex": {
       ".read": "auth != null"
     },
+    "feedback": {
+      ".read": "auth != null && root.child('siteAdmins').child(auth.uid).val() === true"
+    },
     "users": {
       ".read": "auth != null && root.child('siteAdmins').child(auth.uid).val() === true",
       "$key": {

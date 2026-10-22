@@ -978,6 +978,9 @@ export function deleteLeagueRule (league, rule) {
 
   return res
 }
+/****************** Feedback ******************/
+export const submitFeedback = (kind, message, page) => callFunction('submitFeedback', { kind, message, page }, "Thanks! Your feedback was sent.")
+
 /****************** Site admin ******************/
 // Site-wide switches, kept at siteSettings/ (the set of settings is still to be decided; any key/value works)
 export const getSiteSettings = () => (
@@ -1082,3 +1085,12 @@ export const updateUsersUDiscName = async (user, name, aliases) => {
   if (synced.code === "error") console.error("[updateUsersUDiscName] could not copy the name to the leagues", synced.message)
   return {code: "success", message: "League membership updated successfully!"}
 }
+
+export const getFeedback = () => (
+  get(ref(getDatabase(), 'feedback')).then(snapshot => (snapshot.exists() ? Object.entries(snapshot.val()).map(([id, item]) => ({ id, ...item })) : []))
+    .catch((error) => {
+      logEvent(analytics, 'Could not get feedback', {error: error} );
+      return []
+    })
+)
+export const deleteFeedback = (id) => callFunction('deleteFeedback', { id })

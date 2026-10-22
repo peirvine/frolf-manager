@@ -7,7 +7,7 @@
 //  - League members: read their league; add scorecards; write the Elo, stats, hat, handicap and doink-player data the
 //    app works out as rounds are added.
 //  - League admins: also change a league's info (except the billing fields), edit or delete scorecards, run the doink fund.
-//  - Site admins: all of the above in every league, and read the siteAdmins list.
+//  - Site admins: all of the above in every league, and read the siteAdmins list and the feedback people send in.
 //  - Nobody from the browser: who is a member or admin (players, memberRoles), site admins, the siteAdmin flag, a
 //    user's league list, billing and plan fields. Those change only through the Cloud Functions, which use the admin
 //    SDK and skip these rules.
@@ -35,6 +35,8 @@ const rules = {
     siteSettings: { '.read': true },
     siteAdmins: { $uid: { '.read': `${signedIn} && auth.uid === $uid` } },
     leagueIndex: { '.read': signedIn },
+    // Written only by the submitFeedback function
+    feedback: { '.read': `${signedIn} && ${SITE_ADMIN}` },
     users: {
       '.read': `${signedIn} && ${SITE_ADMIN}`,
       // The key is "<name> <uid>": people read and edit their own record, and only the safe parts of it

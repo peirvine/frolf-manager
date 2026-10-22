@@ -1,7 +1,9 @@
-import { Accordion, AccordionSummary, AccordionDetails, Button } from '@mui/material'
+import { useState } from 'react'
+import { Accordion, AccordionSummary, AccordionDetails, Alert, Button, Snackbar } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import { Link } from 'react-router-dom'
+import { useLeague } from '../../context/leagueContext'
+import FeedbackDialog from './feedbackDialog'
 import './faq.scss'
 
 // Each answer is JSX so it can link to the pages it talks about
@@ -126,6 +128,10 @@ const SECTIONS = [
 ]
 
 export default function Faq() {
+  const { user } = useLeague()
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [sent, setSent] = useState(null)
+
   return (
     <div className="faqPage">
       <header className="faqBanner">
@@ -151,16 +157,15 @@ export default function Faq() {
           <h2>Still stuck?</h2>
           <p>Found a bug or have an idea? Let us know.</p>
         </div>
-        <Button
-          variant="contained"
-          endIcon={<OpenInNewIcon />}
-          href="https://github.com/peirvine/frolf-manager/issues/new"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Report an issue
-        </Button>
+        {user
+          ? <Button variant="contained" onClick={() => setFeedbackOpen(true)}>Send feedback</Button>
+          : <p>Log in to send feedback.</p>}
       </section>
+
+      <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} onSent={message => { setFeedbackOpen(false); setSent(message) }} />
+      <Snackbar open={Boolean(sent)} autoHideDuration={6000} onClose={() => setSent(null)}>
+        <Alert severity="success" onClose={() => setSent(null)}>{sent}</Alert>
+      </Snackbar>
     </div>
   )
 }
