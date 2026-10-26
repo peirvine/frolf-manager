@@ -43,6 +43,7 @@ const mobileMemberPages = [
   { display: 'Home', route: "/" },
   { display: 'Doink Fund', route: "/doink" },
   { display: 'Add Scorecard', route: "/add" },
+  { display: 'Scheduled Rounds', route: "/rounds" },
   { display: 'Rankings', route: "/rankings" },
   { display: 'Scorecards', route: "/scorecards" },
   { display: 'Disc Charger', route: "/discCharger" },
@@ -134,6 +135,7 @@ export default function Nav() {
               >
                 <MenuItem disabled className="navMenuName">{user.displayName}</MenuItem>
                 <Divider />
+                <MenuItem onClick={closeMenus} component={NavLink} to="/rounds">Scheduled Rounds</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/discCharger">Disc Charger</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/about">About DGM</MenuItem>
                 <MenuItem onClick={closeMenus} component={NavLink} to="/faq">FAQ</MenuItem>

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.scss';
 import App from './App';
 import Add from './components/add/add'
+import FutureRounds from './components/futureRounds/futureRounds'
 import CurrentRankings from './components/rankings/currentRankings'
 import ViewScorecards from './components/scorecards/scorecards'
 import AllRounds from './components/scorecards/allRounds'
@@ -65,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: "/add",
         element: <Add />,
+      },
+      {
+        path: "/rounds",
+        element: <FutureRounds />,
       },
       {
         path: "/scorecards",

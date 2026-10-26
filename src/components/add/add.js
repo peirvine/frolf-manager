@@ -54,6 +54,7 @@ export default function Add() {
               </Alert>
             </Collapse>
             <div className="addGrid">
+              <div className="addColumn">
               <section className="addCard">
                 <h2>Add Card from UDisc</h2>
                 <span className="addBadge">Preferred</span>
@@ -87,6 +88,14 @@ export default function Add() {
                   </div>
                 </div>
               </section>
+              <section className="addCard">
+                <h2>Scheduled Rounds</h2>
+                <p className="addHint">Playing in several groups? Add your card to a scheduled round instead. Once the round is locked, all the cards are combined and scored as one round.</p>
+                <div className="addActions">
+                  <Button variant="outlined" component={ NavLink } to={"/rounds"}>Go to Scheduled Rounds</Button>
+                </div>
+              </section>
+              </div>
               <section className="addCard">
                 <LeagueAdd />
               </section>

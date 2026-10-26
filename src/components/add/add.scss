@@ -13,6 +13,21 @@
     align-items: start;
   }
 
+  // Scheduled rounds: always two columns, one on a phone
+  .roundsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @media (max-width: 700px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .addColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
   .addCard {
     position: relative;
     padding: 20px;

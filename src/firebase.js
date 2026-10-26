@@ -228,6 +228,57 @@ export const getAllScorecards = (league) => {
 
 
 
+/****************** Future rounds ******************/
+// Rounds an admin sets up ahead of time: members add their cards (kept as the pasted UDisc text, not scored) and
+// when the round is locked the cards are scored one by one. Lives at {league}/futureRounds/{id}.
+export async function createFutureRound(league, round) {
+  if (!league) return missingLeague()
+  try {
+    const roundRef = push(ref(getDatabase(), league + '/futureRounds'))
+    await set(roundRef, { ...round, status: "open", createdAt: Date.now() })
+    return {code: "success", message: "Round created.", key: roundRef.key}
+  } catch (error) {
+    console.error("[createFutureRound] failed", error)
+    return {code: "error", message: "Error, round not created."}
+  }
+}
+
+export async function addCardToFutureRound(league, roundId, card) {
+  if (!league) return missingLeague()
+  try {
+    const cardRef = push(ref(getDatabase(), league + '/futureRounds/' + roundId + '/cards'))
+    await set(cardRef, { ...card, submittedAt: Date.now() })
+    return {code: "success", message: "Card added to the round."}
+  } catch (error) {
+    console.error("[addCardToFutureRound] failed", error)
+    return {code: "error", message: "Error, card not added. The round may already be locked."}
+  }
+}
+
+// Merges `changes` into the round, or into one of its cards when `cardId` is given; null removes a field
+export async function updateFutureRound(league, roundId, changes, cardId) {
+  if (!league) return missingLeague()
+  try {
+    const path = league + '/futureRounds/' + roundId + (cardId ? '/cards/' + cardId : '')
+    await update(ref(getDatabase(), path), changes)
+    return {code: "success", message: "Round updated."}
+  } catch (error) {
+    console.error("[updateFutureRound] failed", error)
+    return {code: "error", message: "Error, round not updated."}
+  }
+}
+
+export async function deleteFutureRound(league, roundId, cardId) {
+  if (!league) return missingLeague()
+  try {
+    await remove(ref(getDatabase(), league + '/futureRounds/' + roundId + (cardId ? '/cards/' + cardId : '')))
+    return {code: "success", message: cardId ? "Card removed." : "Round deleted."}
+  } catch (error) {
+    console.error("[deleteFutureRound] failed", error)
+    return {code: "error", message: "Error, nothing was deleted."}
+  }
+}
+
 /****************** Handicaps ******************/
 // The league's handicaps as worked out by handicapService (see handicapStore), so pages don't rebuild them
 export function getStoredHandicaps(league) {

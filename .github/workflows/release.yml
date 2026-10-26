@@ -1,0 +1,32 @@
+name: Tag release
+
+# Every push to main (a merged PR) gets a tag and GitHub release named after the version the footer shows, so the
+# version in production can be checked against the latest release.
+"on":
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node scripts/writeVersion.js --print)
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "v$VERSION already exists"
+            exit 0
+          fi
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes
