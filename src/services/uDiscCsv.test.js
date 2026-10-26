@@ -89,3 +89,24 @@ describe("getUDiscHoleNames", () => {
     expect(getUDiscHoleNames("Par,Bryant,...")).toEqual([])
   })
 })
+
+describe('combineUDiscCards', () => {
+  const { combineUDiscCards } = require('./uDiscCsv')
+  const csv = (rows, course = "Course") => [
+    "PlayerName,CourseName,LayoutName,StartDate,EndDate,Total,+/-,RoundRating,Hole1,Hole2,Hole3",
+    ...Object.entries({ Par: [3, 3, 3], ...rows }).map(([name, holes]) => {
+      const total = holes.reduce((a, b) => a + b, 0)
+      return [name, course, "Main", "2026-05-01 1800", "2026-05-01 1900", total, name === "Par" ? "" : total - 9, "", ...holes].join(",")
+    }),
+  ].join("\n")
+
+  it('puts every card\'s players under one Par row', () => {
+    const { rows } = combineUDiscCards([csv({ Alice: [3, 3, 3] }), csv({ Bob: [3, 3, 4] })])
+    expect(rows.map(row => row.player)).toEqual(["Par", "Alice", "Bob"])
+  })
+
+  it('rejects different courses and repeated players', () => {
+    expect(combineUDiscCards([csv({ Alice: [3, 3, 3] }), csv({ Bob: [3, 3, 4] }, "Other")]).error).toMatch(/different/)
+    expect(combineUDiscCards([csv({ Alice: [3, 3, 3] }), csv({ Alice: [3, 3, 4] })]).error).toMatch(/Alice/)
+  })
+})

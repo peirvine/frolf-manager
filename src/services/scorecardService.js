@@ -2,9 +2,10 @@
 import { getLeagueSettings, writeScorecardToDatabase, setCardHatWinners } from '../firebase'
 import { calculateElo, changeHatWinners } from './eloService'
 import { refreshHandicaps, snapshotHandicaps } from './handicapStore'
-import { parseUDiscCsv, getUDiscHoleNames } from './uDiscCsv'
+import { combineUDiscCards, getUDiscHoleNames } from './uDiscCsv'
 import { getUDiscNameLookup, toMainUDiscName } from './uDiscNames'
 
+// `card` is the pasted export, or a list of exports of the same round (one per player group) to be scored as one card.
 // `handicapsApplied`: the export's scores already include the league's handicaps, so the card is saved with that flag
 // and the scorecards page doesn't add its own handicapped standings
 export async function uDiscDump (card, league, simulation = false, { handicapsApplied = false } = {}) {
@@ -20,9 +21,11 @@ export async function uDiscDump (card, league, simulation = false, { handicapsAp
   let playerArray = []
 
   try {
-    const rows = parseUDiscCsv(card)
+    const texts = (Array.isArray(card) ? card : [card]).map(text => String(text ?? ""))
+    const { rows, error } = combineUDiscCards(texts)
     if (!rows) {
-      const text = String(card ?? "")
+      const text = texts[0] ?? ""
+      if (texts.length > 1) return {code: "error", message: error}
       console.error("[uDiscDump] parseUDiscCsv rejected the pasted text", {
         length: text.length,
         startsWith: JSON.stringify(text.slice(0, 80)),
@@ -45,7 +48,7 @@ export async function uDiscDump (card, league, simulation = false, { handicapsAp
       par: parRow.total,
       date: parRow.startDate,
       playerArray,
-      rawUDiscCard: card,
+      rawUDiscCard: texts.join("\n"),
       isOffSeason: isPreseason,
       handicapsApplied: Boolean(handicapsApplied)
     }

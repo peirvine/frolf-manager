@@ -1,6 +1,6 @@
 {
   "name": "frolf-manager",
-  "version": "0.1.0",
+  "version": "2.1.0",
   "private": true,
   "dependencies": {
     "@auth0/auth0-react": "^1.12.1",
@@ -38,8 +38,12 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
+    "prestart": "node scripts/writeVersion.js",
     "start": "react-scripts start",
+    "prebuild": "node scripts/writeVersion.js",
     "build": "react-scripts build",
+    "pretest": "node scripts/writeVersion.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "emulators": "firebase emulators:start --import=./emulator-data --export-on-exit",

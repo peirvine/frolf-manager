@@ -16,6 +16,7 @@ const SITE_ADMIN = "root.child('siteAdmins').child(auth.uid).val() === true"
 const MEMBER = "root.child($league).child('memberRoles').child(auth.uid).exists()"
 const ADMIN = "root.child($league).child('memberRoles').child(auth.uid).val() === 'Admin'"
 
+const ROUND = "root.child($league).child('futureRounds').child($round)"
 const signedIn = "auth != null"
 const member = `${signedIn} && (${MEMBER} || ${SITE_ADMIN})`
 const admin = `${signedIn} && (${ADMIN} || ${SITE_ADMIN})`
@@ -61,6 +62,18 @@ const rules = {
           $card: {
             '.write': `${member} && !data.exists()`,
             hatWinners: { '.write': member },
+          },
+        },
+      },
+      // Rounds set up ahead of time: admins run them, members add cards while a round is open and before its deadline
+      futureRounds: {
+        $round: {
+          '.write': admin,
+          cards: {
+            $card: {
+              '.write': `${member} && !data.exists() && ${ROUND}.child('status').val() === 'open' && (!${ROUND}.child('deadline').exists() || now < ${ROUND}.child('deadline').val())`,
+              '.validate': "data.exists() || !newData.exists() || newData.child('submittedBy').val() === auth.uid",
+            },
           },
         },
       },

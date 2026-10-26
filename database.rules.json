@@ -50,6 +50,17 @@
           }
         }
       },
+      "futureRounds": {
+        "$round": {
+          ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).val() === 'Admin' || root.child('siteAdmins').child(auth.uid).val() === true)",
+          "cards": {
+            "$card": {
+              ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).exists() || root.child('siteAdmins').child(auth.uid).val() === true) && !data.exists() && root.child($league).child('futureRounds').child($round).child('status').val() === 'open' && (!root.child($league).child('futureRounds').child($round).child('deadline').exists() || now < root.child($league).child('futureRounds').child($round).child('deadline').val())",
+              ".validate": "data.exists() || !newData.exists() || newData.child('submittedBy').val() === auth.uid"
+            }
+          }
+        }
+      },
       "doinkfund": {
         ".write": "auth != null && (root.child($league).child('memberRoles').child(auth.uid).val() === 'Admin' || root.child('siteAdmins').child(auth.uid).val() === true)",
         "players": {

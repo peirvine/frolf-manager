@@ -52,3 +52,4 @@ amplifytools.xcconfig
 # Local Stripe secrets for the functions emulator
 functions/.secret.local
 functions/.env.local
+src/version.js

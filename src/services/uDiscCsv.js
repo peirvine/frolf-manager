@@ -58,6 +58,27 @@ const splitLastHole = (row) => {
   return [digits, name]
 }
 
+// Several exports of the same round (each player group exports its own card) as one: the first export's rows with
+// every later export's players added after them, leaving out their Par rows. Returns { rows } or { error } when the
+// exports aren't the same course, layout and number of holes, or a player is on more than one.
+export const combineUDiscCards = (texts) => {
+  const parsed = texts.map(parseUDiscCsv)
+  if (parsed.some(rows => !rows)) return { error: "Error, card input not valid. Paste the full UDisc CSV export, starting with PlayerName." }
+  const [first, ...others] = parsed
+  const rows = [...first]
+  for (const next of others) {
+    if (next[0].course !== first[0].course || next[0].layout !== first[0].layout || next[0].holes.length !== first[0].holes.length) {
+      return { error: "Error, the cards in this round are for different courses, layouts or numbers of holes." }
+    }
+    rows.push(...next.slice(1))
+  }
+  if (others.length === 0) return { rows }
+  const names = rows.slice(1).map(({ player }) => player)
+  const duplicate = names.find((name, i) => names.indexOf(name) !== i)
+  if (duplicate) return { error: `Error, ${duplicate} is on more than one card in this round.` }
+  return { rows }
+}
+
 // Hole names as written in the header ("Hole1", "Hole 3A"), or [] if the text isn't a UDisc export
 export const getUDiscHoleNames = (text) => readHeader(text)?.holeNames || []
 
