@@ -19,7 +19,7 @@
       "$key": {
         ".read": "auth != null && $key.endsWith(' ' + auth.uid)",
         "$field": {
-          ".write": "auth != null && $key.endsWith(' ' + auth.uid) && ($field === 'name' || $field === 'uDiscDisplayName' || $field === 'uDiscAliases' || $field === 'uid' || $field === 'email' || $field === 'authProvider')"
+          ".write": "auth != null && $key.endsWith(' ' + auth.uid) && ($field === 'name' || $field === 'uDiscDisplayName' || $field === 'uDiscAliases' || $field === 'favoriteLeague' || $field === 'uid' || $field === 'email' || $field === 'authProvider')"
         },
         "uid": {
           ".write": "auth != null && $key.endsWith(' ' + auth.uid)",

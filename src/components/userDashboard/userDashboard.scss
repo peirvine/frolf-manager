@@ -55,6 +55,11 @@
     gap: 12px;
   }
 
+  .leagueFavorite {
+    margin-left: auto;
+    align-self: flex-start;
+  }
+
   .leagueAvatar.MuiAvatar-root {
     font-weight: bold;
     color: $gold;

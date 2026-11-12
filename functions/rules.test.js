@@ -93,6 +93,7 @@ test('a person reads and edits only the safe parts of their own record', async (
   await assertSucceeds(db.ref(`users/Carol ${CAROL}`).get())
   await assertSucceeds(db.ref(`users/Carol ${CAROL}/uDiscDisplayName`).set('Carol D'))
   await assertSucceeds(db.ref(`users/Carol ${CAROL}`).update({ uDiscDisplayName: 'C', uDiscAliases: { league: 'cd' } }))
+  await assertSucceeds(db.ref(`users/Carol ${CAROL}/favoriteLeague`).set('lg'))
   await assertFails(db.ref(`users/Carol ${CAROL}/siteAdmin`).set(true))
   await assertFails(db.ref(`users/Carol ${CAROL}`).update({ siteAdmin: true }))
   await assertFails(db.ref(`users/Carol ${CAROL}/leagues`).set([{ id: 'lg', membershipStatus: 'Admin' }]))

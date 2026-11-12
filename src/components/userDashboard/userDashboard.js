@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 import react, {useEffect, useMemo, useState} from 'react'
-import { joinLeague, leaveLeague, createLeague, getLeagueSettings } from "../../firebase"
+import { joinLeague, leaveLeague, createLeague, getLeagueSettings, setFavoriteLeague } from "../../firebase"
 import { Table, TableHead, TableBody, TableContainer, TableCell, TableRow, Button, Backdrop, Box, Modal, Fade, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Tooltip, Alert, AlertTitle, Collapse, IconButton, Snackbar, Chip } from '@mui/material'
-import { Help, Close } from '@mui/icons-material'
+import { Help, Close, Star, StarBorder } from '@mui/icons-material'
 import { Link } from "react-router-dom";
 import './userDashboard.scss'
 import FunStats from './funStats';
@@ -91,6 +91,8 @@ export default function UserDashboard () {
     }
   }
 
+  const toggleFavorite = async (league) => showResult(await setFavoriteLeague(user, userData.favoriteLeague === league ? null : league))
+
   const confirmLeaveLeague = (league) => {
     if (window.confirm(`Leave ${leagues[league]}?`)) handleLeaveLeague(league)
   }
@@ -169,6 +171,17 @@ export default function UserDashboard () {
                       variant={x.membershipStatus === "Member" ? "outlined" : "filled"}
                     />
                   </div>
+                  {x.membershipStatus !== "Pending" && (
+                    <Tooltip title={userData.favoriteLeague === x.id ? "Your favorite league. Click to clear" : "Make this your favorite league, shown first when you visit"}>
+                      <IconButton
+                        className="leagueFavorite"
+                        aria-label={userData.favoriteLeague === x.id ? `Clear ${leagues[x.id]} as your favorite league` : `Make ${leagues[x.id]} your favorite league`}
+                        onClick={() => toggleFavorite(x.id)}
+                      >
+                        {userData.favoriteLeague === x.id ? <Star color="warning" /> : <StarBorder />}
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </div>
                 {x.membershipStatus === "Pending" && (
                   <p className="leagueCardNote">Waiting for a league admin to approve your request.</p>

@@ -1,10 +1,29 @@
 #footer {
-  height: 50px;
+  min-height: 50px;
+  padding: 8px 16px;
   text-align: center;
 
   a {
     text-decoration: none;
     color: black;
     font-weight: 400;
+  }
+
+  // One line on wide screens
+  .footerCopyright::before,
+  .footerVersion::before {
+    content: " \00b7 ";
+  }
+
+  // Links, copyright and version each get their own line on small screens
+  @media (max-width: 700px) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .footerCopyright::before,
+    .footerVersion::before {
+      content: none;
+    }
   }
 }

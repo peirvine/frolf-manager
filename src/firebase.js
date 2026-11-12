@@ -1137,6 +1137,18 @@ export const updateUsersUDiscName = async (user, name, aliases) => {
   return {code: "success", message: "League membership updated successfully!"}
 }
 
+// The league shown first whenever they come to the site; null clears it. Saved on their own record so it follows them
+// to other devices.
+export const setFavoriteLeague = async (user, league) => {
+  try {
+    await update(ref(getDatabase(), '/users/' + user.displayName + " " + user.uid), { favoriteLeague: league || null })
+    return {code: "success", message: league ? "Favorite league saved" : "Favorite league cleared"}
+  } catch (error) {
+    logEvent(analytics, "Error saving favorite league", {error: error} );
+    return {code: "error", message: "Could not save your favorite league"}
+  }
+}
+
 export const getFeedback = () => (
   get(ref(getDatabase(), 'feedback')).then(snapshot => (snapshot.exists() ? Object.entries(snapshot.val()).map(([id, item]) => ({ id, ...item })) : []))
     .catch((error) => {
