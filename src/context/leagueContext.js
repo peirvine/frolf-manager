@@ -3,7 +3,8 @@ import { useLive } from './liveStore'
 
 // Everything the pages need to know about who is signed in and which league they're looking at, kept up to date
 // from the database. Pages read it from here instead of each asking the database (and each showing their own
-// league picker). The league is chosen on the home page and remembered between visits.
+// league picker). The league is chosen on the home page. Which one shows first: the one picked this visit, then their
+// favorite league, then the one they used last time.
 const ACTIVE_STATUSES = ["Member", "Admin"]
 
 const LeagueContext = createContext(null)
@@ -23,7 +24,8 @@ export function LeagueProvider ({ user, children }) {
   const namesSnap = useLive(user ? 'leagueIndex' : null)
   // Set when they pick a league this visit; until then the one saved from last time is used
   const [picked, setPicked] = useState(null)
-  const chosen = picked || readSaved(user)
+  const favorite = userSnap.value?.favoriteLeague
+  const chosen = picked || favorite || readSaved(user)
 
   const userData = userSnap.value
   const memberships = useMemo(
@@ -33,7 +35,10 @@ export function LeagueProvider ({ user, children }) {
   const activeLeagues = useMemo(() => memberships.filter(x => ACTIVE_STATUSES.includes(x.membershipStatus)), [memberships])
 
   // The saved choice only counts while it's still a league the person can use
-  const leagueId = activeLeagues.find(x => x.id === chosen)?.id || activeLeagues[0]?.id || null
+  const leagueId = activeLeagues.find(x => x.id === chosen)?.id
+    || activeLeagues.find(x => x.id === readSaved(user))?.id
+    || activeLeagues[0]?.id
+    || null
 
   const settingsSnap = useLive(leagueId ? `${leagueId}/info` : null)
   const membersSnap = useLive(leagueId ? `${leagueId}/players` : null)
@@ -62,6 +67,7 @@ export function LeagueProvider ({ user, children }) {
     leagueNames,
     activeLeagues,
     leagueId,
+    favoriteLeague: favorite || null,
     leagueName: leagueId ? leagueNames[leagueId] || leagueId : "",
     selectLeague,
     isSiteAdmin: userData?.siteAdmin === true,

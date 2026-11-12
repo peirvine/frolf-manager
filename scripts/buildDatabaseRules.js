@@ -23,7 +23,7 @@ const admin = `${signedIn} && (${ADMIN} || ${SITE_ADMIN})`
 const ownRecord = `${signedIn} && $key.endsWith(' ' + auth.uid)`
 
 // Fields of a user's own record they may write themselves
-const OWN_FIELDS = ['name', 'uDiscDisplayName', 'uDiscAliases', 'uid', 'email', 'authProvider']
+const OWN_FIELDS = ['name', 'uDiscDisplayName', 'uDiscAliases', 'favoriteLeague', 'uid', 'email', 'authProvider']
 // Fields of a league's info only the Cloud Functions write
 const SERVER_INFO_FIELDS = ['plan', 'planSource', 'billingSummary', 'suspended']
 // Everything a league's members' browsers write as rounds are added
